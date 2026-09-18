@@ -65,4 +65,4 @@ Six things not taste:
   asking itself would make it not reappear on paging back.
 
 Text follows the same player-facing style rules as the addon's patch
-notes: `../../../WeintCodex/docs/development/releases.md`.
+notes: `../../../Codex-Forever/docs/development/releases.md`.

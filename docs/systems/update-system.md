@@ -3,7 +3,9 @@
 ## GitHub-based updates (two independent channels)
 
 - **Addon updates**: `GitHubUpdater` (`core/github_updater.py`),
-  configured against `daddler/WeintCodex`, polls the GitHub Releases API
+  configured against `daddler/Codex-Forever` (the Forever edition of the
+  addon — **not** `daddler/WeintCodex`, which is the Mists of Pandaria
+  edition and has its own release channel), polls the GitHub Releases API
   (15-minute cache) and picks the release asset by OS. Version comparison
   uses `normalize_version()` (case/`v`-prefix-insensitive) between the
   addon's own reported version and the latest GitHub tag.
@@ -117,7 +119,7 @@ einer Seite (**ein** Läufer, beide Seiten lösen ihn aus).
 
 ## Every release ships its changelog — this is not optional
 
-Same rule as the addon (see `../../../WeintCodex/docs/development/releases.md`),
+Same rule as the addon (see `../../../Codex-Forever/docs/development/releases.md`),
 enforced on this repo's own release process too: `scripts/check_version.py`
 fails a tag whose `CHANGELOG.md` section is missing;
 `scripts/release_notes.py` prints that section as the GitHub release
@@ -150,7 +152,7 @@ paragraphs.
 Full rule set (kein Dateiname/Funktionsname/Konfigurationsschlüssel,
 Wirkung vor Ursache, `### Technisch` als letzte Überschrift) is documented
 once, identically for both repos, in
-`../../../WeintCodex/docs/development/releases.md` — this repo follows the
+`../../../Codex-Forever/docs/development/releases.md` — this repo follows the
 same five rules for `CHANGELOG.md`, the update card, and the "Was ist
 neu"/onboarding dialog (`../systems/whats-new-and-onboarding.md` covers
 that dialog's own mechanics).

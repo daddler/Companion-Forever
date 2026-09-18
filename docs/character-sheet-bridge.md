@@ -12,7 +12,7 @@ Vollständig umgesetzt auf beiden Seiten:
 
 | Seite | Datei | Ab Version |
 |-------|-------|------------|
-| Addon, sendend | `modules/companion.lua` (`ReportCharacterSheet`) | WeintCodex 1.3.3.1 |
+| Addon, sendend | `modules/companion.lua` (`ReportCharacterSheet`) | Forever-Fassung 5.0.0.0 (MoP-Fassung 1.3.3.1) |
 | Companion, lesend | `core/character_sheet_sync.py` | WeintCompanion 2.0.1 |
 | Companion, ablegend | `core/character_store.py` | WeintCompanion 2.0.1 |
 
@@ -150,6 +150,41 @@ bei WeintTV und der Academy in der Gegenrichtung: dort rechnet die
 Companion und das Addon zeichnet nur. Beide Male ist der Grund
 derselbe — zwei Bewertungen desselben Sachverhalts laufen
 auseinander, und dann widersprechen sich Spiel und Desktop.
+
+## Was die Forever-Fassung des Addons davon füllt
+
+Nicht alles. Und das ist kein unfertiger Stand, sondern die
+Anwendung genau der Toleranzregeln unten.
+
+| Abschnitt / Feld | Forever-Fassung |
+|---|---|
+| KOPF: `name`, `realm`, `class`, `level`, `spec_key`, `spec` | gefüllt |
+| KOPF: `item_level_equipped` / `item_level_overall` | gefüllt, wenn der Client antwortet — sonst **leer**, nie `0` |
+| KOPF: `completeness` | gefüllt (belegte durch mahnbare Plätze) |
+| KOPF: `score`, `grade`, `quality` | **leer** |
+| ZÄHLER (`ench`, `gem`) | **fehlt ganz** |
+| BIS | **fehlt ganz** |
+| SLOTS | gefüllt; beide Statusfelder tragen durchgängig `-` |
+| MÄNGEL | gefüllt: leerer Platz (`missing`) und zerbrochener Gegenstand (`wrong`) |
+
+**Der Grund ist derselbe für alle vier leeren Stellen.** Sie setzen
+eine Bewertung der Ausrüstung voraus — Verzauberungen, Sockel,
+Umschmieden, ein Sim-Ziel, eine BiS-Liste. Nichts davon gibt es in
+Forever, und nichts davon liesse sich aus Mists of Pandaria
+übernehmen, ohne jedem Spieler Mängel vorzuwerfen, die sein Spiel gar
+nicht kennt (siehe `docs/systems/forever-data.md` und die
+`CLAUDE.md` des Addons).
+
+Für diese App heisst das konkret: `readiness()` liefert für jeden
+Charakter `None`, der Vorbereitungsring bleibt **leer** statt rot, und
+`open_slots()` führt nur, was wirklich ein Loch ist. Genau so ist die
+Regel gemeint — eine `0` in `score` oder ein leerer ZÄHLER-Datensatz
+mit lauter Nullen hätte einen Befund behauptet, wo keine Messung
+stattgefunden hat.
+
+Nebenhand und Distanz zählen dabei **nicht** als mahnbare Plätze: ein
+Zweihandkämpfer trägt keine Nebenhand, und `completeness` wäre sonst
+auf jedem von ihnen dauerhaft unter 100 %.
 
 ## Toleranzregeln
 

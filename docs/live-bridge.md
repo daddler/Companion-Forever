@@ -11,8 +11,8 @@ Companion → Addon, die eine *laufende* Spielsitzung erreichen kann.
 |-------|-------|------------|
 | Companion, schreibend | `addon/live_bridge.py` | WeintCompanion 2.3.0 |
 | Companion, bündelnd | `addon/addon_inbox.py` | WeintCompanion 2.3.0 |
-| Addon, lesend | `modules/companion.lua` (`ProcessInbox`) | WeintCodex 2.3.0.0 |
-| Addon, Auslieferungsstand | `data/companion_live.lua` | WeintCodex 2.3.0.0 |
+| Addon, lesend | `modules/companion.lua` (`ProcessInbox`) | Forever-Fassung 5.0.0.0 (MoP-Fassung 2.3.0.0) |
+| Addon, Auslieferungsstand | `data/companion_live.lua` | Forever-Fassung 5.0.0.0 (MoP-Fassung 2.3.0.0) |
 
 Der Bot ist **nicht beteiligt**. Die Brücke trägt genau dieselbe
 Warteschlange wie `WeintCompanionInboxDB`; sie ist ein zweiter *Weg*,

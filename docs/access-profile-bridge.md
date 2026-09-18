@@ -11,7 +11,9 @@ Zugriffsprofil zustellen kann. Die Addon-Seite steht in WeintCodex ab
 **Der Endpunkt existiert im Bot noch nicht.** Solange er mit 404
 antwortet, stellt die Companion kein Profil zu, schreibt genau einmal
 eine Zeile ins Log und ist danach still. Im Addon bleiben dann alle
-Bereiche offen — also exakt das Verhalten vor WeintCodex 1.2.0.0.
+Bereiche offen — also exakt das Verhalten vor der Einführung der
+Zugriffsprofile (MoP-Fassung 1.2.0.0; in der Forever-Fassung gibt es
+sie seit 5.0.0.0, also von Anfang an).
 Dasselbe Muster wie bei der WarcraftLogs-Brücke: ein fehlender
 Endpunkt ist kein Fehler, sondern ein noch nicht vorhandenes Feature.
 

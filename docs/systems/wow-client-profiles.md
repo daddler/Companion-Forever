@@ -153,6 +153,6 @@ class lesson catalog are deliberately **empty**. That has its own
 document, including what fills them and in which order:
 `forever-data.md`.
 
-One thing outside both: the addon (`../WeintCodex`) needs a new
+One thing outside both: the addon (`../Codex-Forever`) needs a new
 `## Interface:` in its `.toc` — the sibling repo's business, and a
 bigger one than a number, because Forever runs on the modern client API.

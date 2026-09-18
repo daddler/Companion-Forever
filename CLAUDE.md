@@ -40,8 +40,11 @@ WeintCodex (in-game Lua)  ↕ SavedVariables file, no network  ↔  WeintCompani
 WeintCodex Bot (Discord bot backend)  ←────────────────────────────────┘
 ```
 
-- **WeintCodex** (`../WeintCodex`) — judges gear/rotation correctness;
-  this app never re-derives what it decides, only renders/relays.
+- **WeintCodex** (`../Codex-Forever`) — the in-game addon for Forever.
+  It judges what only the game client can answer; this app never
+  re-derives what it decides, only renders/relays. Its repository is
+  `daddler/Codex-Forever` — **not** `daddler/WeintCodex`, which is the
+  Mists of Pandaria edition and keeps its own release channel.
 - **WeintCodex Bot** (`../WeintCodex-Bot`) — Discord bot backend; this
   app is the only thing that talks to its HTTP API.
 
@@ -150,5 +153,5 @@ Linux/Windows/AppImage build commands.
 
 Cross-repo tasks (touches Codex and/or Bot too): start with the matching
 contract doc above, then follow its pointers into
-`../WeintCodex/docs/` and/or `../WeintCodex-Bot/docs/` for each repo's
-own implementation.
+`../Codex-Forever/docs/` and/or `../WeintCodex-Bot/docs/` for each
+repo's own implementation.

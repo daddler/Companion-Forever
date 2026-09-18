@@ -585,12 +585,20 @@ class AddonPage(Page):
         # _reorder_cards() - links steht, wer Handlungsbedarf hat.
         #
 
+        #
+        # Die Unterzeile jeder Karte nennt das Repository, aus dem die
+        # Komponente wirklich kommt - fuer diese Fassung also die
+        # Forever-Repositories und nicht die der MoP-Fassung. Sie ist
+        # die einzige Stelle in der Oberflaeche, an der ein Nutzer
+        # nachsehen kann, woher ein Update stammt; eine falsche Angabe
+        # dort waere eine Auskunft und kein Schoenheitsfehler.
+        #
         self.addon_card = ComponentCard(
-            "software", "WeintCodex", "daddler/WeintCodex",
+            "software", "WeintCodex", "daddler/Codex-Forever",
         )
 
         self.companion_card = ComponentCard(
-            "companion", "WeintCompanion", "daddler/WeintCompanion",
+            "companion", "WeintCompanion", "daddler/Companion-Forever",
         )
 
         self.companion_card.setFixedWidth(420)

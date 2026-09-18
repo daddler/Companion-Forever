@@ -100,9 +100,29 @@ class CompanionManager(QObject):
 
         self.logger = Logger()
 
+        #
+        # DAS ADDON FUER FOREVER LIEGT IN EINEM EIGENEN REPOSITORY.
+        #
+        # `daddler/WeintCodex` ist die Fassung fuer Mists of Pandaria
+        # Classic; sie laeuft weiter und hat ihren eigenen
+        # Update-Kanal. Diese App gehoert zu `daddler/Codex-Forever`.
+        #
+        # Die Verwechslung waere still und teuer gewesen: der Download
+        # laeuft, die Pruefsumme stimmt, der Installer findet seinen
+        # Ordner - und im Spielordner von Forever landet ein Addon, das
+        # fuer eine andere Spielfassung gebaut ist. Dieselbe
+        # Ueberlegung wie bei `Config.get_wow_client_id()`: ein
+        # Migrationsstand darf nicht in die falsche Installation
+        # schreiben.
+        #
+        # Der ZIP-Name und der Ordner darin heissen weiterhin
+        # `WeintCodex` - das Addon selbst hat seinen Namen behalten,
+        # nur sein Repository ist ein anderes. `core/installer.py`
+        # sucht deshalb unveraendert nach `WeintCodex/WeintCodex.toc`.
+        #
         self.github = GitHubUpdater(
             owner="daddler",
-            repo="WeintCodex",
+            repo="Codex-Forever",
             asset_filter=".zip",
         )
         self.downloader = Downloader()

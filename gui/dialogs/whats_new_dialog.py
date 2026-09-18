@@ -76,7 +76,9 @@ from gui.widgets.hero_banner import HeroButton
 
 TOUR_EDITION = 4
 
-REPO_URL = "https://github.com/daddler/WeintCodex"
+# Das Addon-Repository dieser Fassung (siehe
+# gui/pages/settings_sections/about.py).
+REPO_URL = "https://github.com/daddler/Codex-Forever"
 
 
 @dataclass(frozen=True)

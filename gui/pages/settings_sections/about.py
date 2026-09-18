@@ -20,7 +20,10 @@ from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.widgets.hero_banner import HeroButton
 
-REPO_URL = "https://github.com/daddler/WeintCodex"
+# Das Addon-Repository dieser Fassung. `daddler/WeintCodex` ist die
+# Fassung fuer Mists of Pandaria Classic - ein Link dorthin schickte
+# jeden an die falsche Stelle.
+REPO_URL = "https://github.com/daddler/Codex-Forever"
 
 # Der Feedback-Channel auf dem WeintCodex-Discord. Gilde und Channel
 # stehen in core/backend_config.py, weil die Übersicht dieselbe Gilde

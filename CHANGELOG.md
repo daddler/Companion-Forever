@@ -59,6 +59,14 @@ selbst. Discord-Verknüpfung, Einstellungen und Sicherungen bleiben
 unberührt, und die alte Fassung findet ihren Ordner weiterhin, falls
 du zurückgehst.
 
+**Und sie installiert das Addon für Forever, nicht das für Mists of
+Pandaria.** Es gibt WeintCodex jetzt zweimal: die bekannte Fassung läuft
+für MoP Classic weiter, die neue ist für Forever gebaut. Beide heissen
+im Spiel gleich und lassen sich klaglos installieren — welche bei dir
+landet, entscheidet allein diese App, und sie holt ab sofort die
+richtige. Auf der Seite *Addon & Updates* steht unter jeder Karte,
+woher das Update wirklich kommt.
+
 ## 4.1.0
 
 **Die Spielversion lässt sich umstellen.** Unter Einstellungen →
