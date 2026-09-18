@@ -1,0 +1,547 @@
+"""
+WeintCompanion 2.0
+Die eigene Titelleiste
+
+Das Fenster ist seit 2.0 rahmenlos (`Qt.FramelessWindowHint`), also
+muss die Anwendung selbst liefern, was sonst der Fenstermanager
+beisteuert: Ziehen, Maximieren per Doppelklick und drei Fensterknöpfe.
+
+Warum überhaupt: die Systemtitelleiste ist auf jeder Plattform anders
+hoch, anders gefärbt und trägt auf keiner davon die Marke. Sie sitzt
+außerdem genau dort, wo der Entwurf sein Titelleistenlicht und die
+Markenplakette haben will - der einzige Ort, an dem das
+Violett-Indigo als reines Flächenlicht auftritt.
+
+**Der Preis ist die Fensterverwaltung**, und zwei Details davon sind
+leicht zu übersehen:
+
+- Ein Doppelklick maximiert, aber ein Zug an der *maximierten* Leiste
+  muss das Fenster zuerst wiederherstellen und dann unter dem Zeiger
+  weiterziehen - sonst hängt ein bildschirmbreites Fenster starr am
+  Mauszeiger.
+- Der Zug darf nicht auf den Fensterknöpfen beginnen. Deshalb prüft
+  `mousePressEvent` die getroffene Stelle und nicht nur die Taste.
+"""
+
+from __future__ import annotations
+
+from PySide6.QtCore import QPoint, QPointF, QRectF, Qt, Signal
+from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPen
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QWidget
+
+from core.version import VERSION
+
+from gui.theme import tokens
+from gui.theme.fonts import font
+from gui.theme.restyle import restyle
+from gui.theme.theme_manager import theme
+
+
+#
+# Die drei Fensterzeichen.
+#
+
+GLYPH_MINIMISE = "minimise"
+
+GLYPH_MAXIMISE = "maximise"
+
+GLYPH_RESTORE = "restore"
+
+GLYPH_CLOSE = "close"
+
+
+class WindowButton(QLabel):
+    """
+    Einer der drei Fensterknöpfe (28 x 24 px).
+
+    Als QLabel statt QPushButton, damit die globale Knopfregel des
+    Stylesheets (Akzentverlauf, 40 px Höhe) hier nicht greift - ein
+    bernsteinfarbener Schließen-Knopf wäre grotesk.
+
+    **Das Zeichen wird gemalt, nicht gesetzt.** Der erste Entwurf
+    benutzte dafür Textzeichen ("✕", "❐", "–"), und das war aus
+    demselben Grund falsch, aus dem die Status-Emoji verschwunden
+    sind: keines dieser Zeichen ist in der beigelegten JetBrains Mono
+    enthalten (nachgeprüft über `QRawFont.supportsCharacter`). Qt hätte
+    sie also stillschweigend aus irgendeiner Systemschrift geholt -
+    auf jedem Rechner einer anderen, in anderer Strichstärke und
+    anderer optischer Größe. Zwei gemalte Linien sind überall
+    dieselben zwei Linien.
+    """
+
+    clicked = Signal()
+
+    def __init__(self, glyph: str, danger: bool = False, parent=None):
+
+        super().__init__(parent)
+
+        self.setObjectName("windowButton")
+
+        self.setAttribute(Qt.WA_StyledBackground, True)
+
+        self.setFixedSize(28, 24)
+
+        self.setCursor(Qt.ArrowCursor)
+
+        self._danger = danger
+
+        self._glyph = glyph
+
+        self._hover = False
+
+        self._apply(False)
+
+    # --------------------------------------------------
+
+    def setGlyph(self, glyph: str):
+
+        if glyph == self._glyph:
+            return
+
+        self._glyph = glyph
+
+        self.update()
+
+    def paintEvent(self, event):
+
+        #
+        # Erst die Fläche des Stylesheets, dann das Zeichen darauf.
+        #
+
+        super().paintEvent(event)
+
+        painter = QPainter(self)
+
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
+        color = QColor(
+            tokens.WHITE if self._hover else tokens.TEXT["muted"]
+        )
+
+        pen = QPen(color, 1.2)
+
+        pen.setCapStyle(Qt.RoundCap)
+
+        painter.setPen(pen)
+
+        painter.setBrush(Qt.NoBrush)
+
+        centre_x = self.width() / 2.0
+
+        centre_y = self.height() / 2.0
+
+        size = 4.5
+
+        if self._glyph == GLYPH_MINIMISE:
+
+            painter.drawLine(
+                QPointF(centre_x - size, centre_y),
+                QPointF(centre_x + size, centre_y),
+            )
+
+        elif self._glyph == GLYPH_MAXIMISE:
+
+            painter.drawRect(
+                QRectF(
+                    centre_x - size,
+                    centre_y - size,
+                    size * 2,
+                    size * 2,
+                )
+            )
+
+        elif self._glyph == GLYPH_RESTORE:
+
+            #
+            # Zwei versetzte Rechtecke - das hintere angeschnitten,
+            # damit es als "zurück in die kleinere Größe" lesbar ist.
+            #
+
+            painter.drawRect(
+                QRectF(
+                    centre_x - size,
+                    centre_y - size + 2,
+                    size * 2 - 2,
+                    size * 2 - 2,
+                )
+            )
+
+            painter.drawPolyline(
+                [
+                    QPointF(centre_x - size + 2, centre_y - size),
+                    QPointF(centre_x + size, centre_y - size),
+                    QPointF(centre_x + size, centre_y + size - 2),
+                ]
+            )
+
+        elif self._glyph == GLYPH_CLOSE:
+
+            painter.drawLine(
+                QPointF(centre_x - size, centre_y - size),
+                QPointF(centre_x + size, centre_y + size),
+            )
+
+            painter.drawLine(
+                QPointF(centre_x + size, centre_y - size),
+                QPointF(centre_x - size, centre_y + size),
+            )
+
+        painter.end()
+
+    def _apply(self, hover: bool):
+
+        if hover:
+
+            background = (
+                tokens.tint(tokens.STATE["error"], 0.90)
+                if self._danger
+                else tokens.SURFACE["raised"]
+            )
+
+            color = tokens.WHITE
+
+        else:
+
+            background = "transparent"
+
+            color = tokens.TEXT["muted"]
+
+        restyle(
+            self,
+            f"""
+            QLabel#windowButton{{
+                background:{background};
+                color:{color};
+                border:none;
+                border-radius:{tokens.RADIUS["sm"]}px;
+            }}
+            """,
+        )
+
+    def enterEvent(self, event):
+        super().enterEvent(event)
+        self._hover = True
+        self._apply(True)
+
+    def leaveEvent(self, event):
+        super().leaveEvent(event)
+        self._hover = False
+        self._apply(False)
+
+    def mousePressEvent(self, event):
+
+        if event.button() == Qt.LeftButton:
+            self.clicked.emit()
+
+        event.accept()
+
+
+class TitleBar(QFrame):
+    """
+    Markenplakette, Produktname, Version - und rechts die drei Knöpfe.
+    """
+
+    def __init__(self, window, parent=None):
+
+        super().__init__(parent)
+
+        self._window = window
+
+        self.setObjectName("titleBar")
+
+        self.setAttribute(Qt.WA_StyledBackground, True)
+
+        self.setFixedHeight(theme().metric("title_bar", 40))
+
+        #
+        # Woher der Zug begann. None heißt "es wird nicht gezogen".
+        #
+
+        self._drag_offset: QPoint | None = None
+
+        root = QHBoxLayout(self)
+
+        root.setContentsMargins(10, 0, 8, 0)
+
+        root.setSpacing(10)
+
+        #
+        # Markenplakette. Hier - und nur hier plus dem Kontofuß der
+        # Navigationsspalte - tritt der Violett-Indigo-Verlauf auf.
+        #
+
+        self.brand = QLabel("W")
+
+        self.brand.setFixedSize(22, 22)
+
+        self.brand.setAlignment(Qt.AlignCenter)
+
+        self.brand.setFont(font("mono"))
+
+        root.addWidget(self.brand)
+
+        self.name = QLabel("WeintCompanion")
+
+        self.name.setFont(font("card"))
+
+        root.addWidget(self.name)
+
+        self.version = QLabel(VERSION)
+
+        self.version.setFont(font("mono"))
+
+        root.addWidget(self.version)
+
+        root.addStretch(1)
+
+        self.minimise = WindowButton(GLYPH_MINIMISE)
+
+        self.minimise.clicked.connect(self._window.showMinimized)
+
+        root.addWidget(self.minimise)
+
+        self.maximise = WindowButton(GLYPH_MAXIMISE)
+
+        self.maximise.clicked.connect(self.toggle_maximised)
+
+        root.addWidget(self.maximise)
+
+        self.close_button = WindowButton(GLYPH_CLOSE, danger=True)
+
+        self.close_button.clicked.connect(self._window.close)
+
+        root.addWidget(self.close_button)
+
+        self._apply()
+
+        #
+        # Gebundene Methode statt Lambda: eine Lambda hält eine harte
+        # Referenz auf `self`, und der ThemeManager ist ein Singleton -
+        # die Titelleiste würde damit nie mehr freigegeben.
+        #
+
+        theme().accent_changed.connect(self._on_accent)
+
+    # --------------------------------------------------
+
+    def _on_accent(self, _name: str = ""):
+
+        self._apply()
+
+    def _apply(self):
+
+        restyle(
+            self.brand,
+            f"""
+            QLabel{{
+                background:qlineargradient(
+                    x1:0,y1:0,x2:1,y2:1,
+                    stop:0 {theme().accent_light()},
+                    stop:1 {theme().accent_base()}
+                );
+                color:{theme().accent_on_base()};
+                border-radius:7px;
+            }}
+            """,
+        )
+
+        restyle(
+            self.name,
+            f"color:{tokens.TEXT['primary']};background:transparent;",
+        )
+
+        restyle(
+            self.version,
+            f"color:{tokens.TEXT['faint']};background:transparent;",
+        )
+
+    # --------------------------------------------------
+
+    def paintEvent(self, event):
+        """
+        Senkrechter Verlauf plus 1-px-Unterkante (§4).
+
+        Gemalt und nicht per Stylesheet gesetzt, weil die Unterkante
+        eine einzelne Linie ist - ein `border-bottom` im Stylesheet
+        würde zusammen mit dem Verlauf neu berechnet und liegt bei
+        ungeraden Gerätefaktoren einen halben Pixel daneben.
+        """
+
+        painter = QPainter(self)
+
+        gradient = QLinearGradient(0, 0, 0, self.height())
+
+        gradient.setColorAt(0.0, QColor(tokens.SURFACE_EXTRA["titleBar"]))
+        gradient.setColorAt(1.0, QColor(tokens.SURFACE["sunken"]))
+
+        painter.fillRect(self.rect(), gradient)
+
+        painter.setPen(QColor(tokens.SURFACE["raised"]))
+
+        painter.drawLine(
+            0,
+            self.height() - 1,
+            self.width(),
+            self.height() - 1,
+        )
+
+    # --------------------------------------------------
+    # Ziehen und Maximieren
+    # --------------------------------------------------
+
+    def toggle_maximised(self):
+
+        if self._window.isMaximized():
+
+            self._window.showNormal()
+
+            self.maximise.setGlyph(GLYPH_MAXIMISE)
+
+            return
+
+        self._window.showMaximized()
+
+        self.maximise.setGlyph(GLYPH_RESTORE)
+
+    def _is_drag_area(self, position) -> bool:
+        """
+        Ob an dieser Stelle gezogen werden darf.
+
+        Die Knöpfe sind ausgenommen - ein Zug, der auf "Schließen"
+        beginnt, wäre sonst ein verschobenes Fenster statt eines
+        Klicks.
+        """
+
+        child = self.childAt(position.toPoint())
+
+        return not isinstance(child, WindowButton)
+
+    def _start_system_move(self) -> bool:
+        """
+        Überlässt das Ziehen dem Fenstermanager statt es selbst per
+        `move()` nachzuführen.
+
+        Unter Wayland darf eine Anwendung ihre eigene Fensterposition
+        nicht setzen - das ist bewusste Compositor-Politik, kein
+        Bug. `QWidget.move()`/`setGeometry()` auf einem Top-Level-
+        Fenster ist dort schlicht ein No-Op, ohne Fehler und ohne
+        Log-Zeile. Die Titelleiste zog das Fenster also nur unter X11
+        und Windows tatsächlich; unter Wayland (und das ist seit
+        `QT_QPA_PLATFORM=wayland;xcb` der zuerst versuchte Treiber,
+        siehe app.py) blieb jeder Zug wirkungslos - genau das
+        gemeldete Verhalten. `QWindow.startSystemMove()` fragt
+        stattdessen den Compositor selbst um die interaktive
+        Verschiebung, der einzige Weg, der unter Wayland überhaupt
+        existiert, und funktioniert unverändert unter X11 und
+        Windows.
+        """
+
+        handle = self._window.windowHandle()
+
+        return handle is not None and handle.startSystemMove()
+
+    def mousePressEvent(self, event):
+
+        if (
+            event.button() != Qt.LeftButton
+            or not self._is_drag_area(event.position())
+        ):
+
+            super().mousePressEvent(event)
+
+            return
+
+        #
+        # Ein maximiertes Fenster muss beim Ziehen erst wiederhergestellt
+        # werden (siehe mouseMoveEvent) - dafür wird weiterhin von Hand
+        # verfolgt. Im Normalfall übernimmt sofort der Fenstermanager.
+        #
+
+        if not self._window.isMaximized() and self._start_system_move():
+
+            event.accept()
+
+            return
+
+        self._drag_offset = (
+            event.globalPosition().toPoint()
+            - self._window.frameGeometry().topLeft()
+        )
+
+        event.accept()
+
+    def mouseMoveEvent(self, event):
+
+        if self._drag_offset is None:
+            return
+
+        if not (event.buttons() & Qt.LeftButton):
+            return
+
+        global_position = event.globalPosition().toPoint()
+
+        #
+        # Ein maximiertes Fenster wird beim Ziehen zuerst
+        # wiederhergestellt. Ohne das hinge ein bildschirmbreites
+        # Fenster starr am Zeiger; mit naivem Wiederherstellen spränge
+        # seine linke obere Ecke unter den Zeiger, auch wenn der
+        # rechts außen angesetzt hat. Deshalb wird der Griffpunkt
+        # anteilig auf die neue, kleinere Breite umgerechnet.
+        #
+
+        if self._window.isMaximized():
+
+            ratio = (
+                event.position().x() / max(1, self.width())
+            )
+
+            self._window.showNormal()
+
+            self.maximise.setGlyph(GLYPH_MAXIMISE)
+
+            width = self._window.width()
+
+            self._drag_offset = QPoint(
+                int(width * ratio),
+                self._drag_offset.y(),
+            )
+
+            self._window.move(global_position - self._drag_offset)
+
+            #
+            # Ab hier ist das Fenster wiederhergestellt - der
+            # Fenstermanager kann den weiteren Zug übernehmen, mit
+            # demselben Wayland-Grund wie im Normalfall oben.
+            #
+
+            if self._start_system_move():
+                self._drag_offset = None
+
+            event.accept()
+
+            return
+
+        self._window.move(global_position - self._drag_offset)
+
+        event.accept()
+
+    def mouseReleaseEvent(self, event):
+
+        self._drag_offset = None
+
+        super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+
+        if (
+            event.button() == Qt.LeftButton
+            and self._is_drag_area(event.position())
+        ):
+
+            self.toggle_maximised()
+
+            event.accept()
+
+            return
+
+        super().mouseDoubleClickEvent(event)

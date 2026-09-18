@@ -1,0 +1,474 @@
+# WeintTV and WeintAcademy: one service, one snapshot
+
+**Since 4.0 these are modules, not places.** WeintTV renders the fight
+(*Live*) and its deep analysis (*Analyse*), WeintAcademy rates your part
+in it (*Lernen*) — three of the four perspectives of one page,
+`gui/pages/raid_center.py`. The names survive because they are in the
+settings, in the addon and on the Discord; what changed is that nobody has
+to know which of them to open when. The information architecture is
+documented in `raid-center.md`; this file stays about the evaluation.
+
+Both modules read the **same** `RaidSnapshot` (`analyzer/models.py`) — an
+immutable, complete picture of one moment (boss health, pull timer,
+deaths, battle-res, heroism, DPS/HPS rankings, tanks, cooldowns,
+consumables, mechanic errors, warnings). No widget ever sees a combat-log
+event, and no page computes a metric. That is what structurally prevents
+WeintTV and the Academy from growing two divergent evaluations.
+
+Uptimes come in three lists, not two: `dot_uptimes`, `hot_uptimes` and
+`buff_uptimes` (effects on the player themselves — `UPTIME_BUFF`). The
+third exists because a tank's active mitigation is neither: filed under
+HoTs it would only ever be read for healers, and left out entirely it
+took the whole tank contribution with it. `uptimes_of(name, kind)` is the
+single accessor, `players[].buffs[]` the (optional) bridge field, and
+*Analyse* shows it as its own card next to the DoT and HoT cards.
+
+The one thing the snapshot carries *without* evaluating it is `events:
+tuple[CombatEvent, ...]` — phase changes, announced boss casts, adds.
+`CombatEvent.kind` is a free string on purpose: an unknown kind must land
+in the live view's event list unchanged rather than be dropped, so a new kind
+from the bot needs no Companion release. Everything the analyzer actually
+*reasons about* (deaths, resurrects, interrupts, dispels, mechanic
+issues) keeps its own typed field, because the Academy needs those
+separated — a dispel and a death train different areas. They are merged
+onto one time axis only in `LiveView._event_rows()`, i.e. in the
+presentation. `analyzer/replay/models.TimelineEvent` is an alias of
+`CombatEvent`, not a second class.
+
+## Finding your way around: the guide and the source strip (3.5.0)
+
+Reported as: *"Viele wissen nicht, inwieweit man alles überhaupt
+bedienen muss/kann und wo man was findet."* Three nav entries shared one
+data source, one snapshot and one archive selection — invisibly. Someone
+who didn't know that saw three pages, two of them saying "keine Daten",
+with no clue why. **4.0 removed the cause** (one area, four perspectives,
+one context header); the two devices below remain, because "which source
+is running" and "what is this for" are still questions.
+
+- **`core/analysis_guide.py`** holds the words (Qt-free, like
+  `analysis_gap.py`): an intro plus one section per perspective plus two
+  on what sits behind them (the data source, the replay), each answering
+  the *same three questions* — what it's for, what you do there, what it
+  needs. `gui/dialogs/guide_dialog.py` draws them; the *Was ist das hier?*
+  button in the Raid Center's perspective row opens it, so it is reachable
+  from every view. The onboarding tour explains each
+  area once, at first start — the right place for "what exists", the
+  wrong one for "what do I do now", because a tour can't be found again
+  when the question comes up.
+- **`gui/widgets/tv/source_strip.py`** is the one line, since 4.0 in
+  *Quelle*: which source is set, what that means, a picker to change it,
+  and the way into the guide. It reads `active_source()` (what *runs*, not
+  what is configured — an unknown key falls back to the mock in
+  `_create_provider()`), and warns in `STATE["warn"]` when
+  `is_demo_source()` says the numbers belong to nobody. **A demo source
+  being mistaken for the reader's own raid was the single most common
+  confusion in this area.** Where the numbers are *read*, the context
+  header carries a chip off the same two accessors, which navigates here on
+  click — that is not the removed `source_chip` coming back: that one
+  answered from the snapshot's own label, so the two contradicted each
+  other while switching.
+- **Switching goes through `RaidDataService.set_source()`** — the one
+  place that stores, tears the old provider down and logs. Four copies
+  of that sequence (Settings plus three pages) would clean up
+  differently after the first change. It emits `sourceChanged` so a
+  switch made in Settings doesn't leave a stale strip behind.
+- **WeintTV's `source_chip` is gone**, and so is `feed_chip`: both
+  questions ("which source" and "is data flowing") are now answered once,
+  in the context header — the source chip from the setting, the mode chip
+  from `mode_label()`, which folds `LIVE`/`DATEN AKTIV`/`KEINE DATEN`
+  together with `ARCHIV` and `WIEDERGABE`. Kept apart they could
+  contradict: a "LIVE" beside an archived pull was possible.
+- **Every perspective carries one explaining sentence**
+  (`RAID_VIEW_HINTS` in `gui/navigation.py`). The old *Verlauf* tab needed
+  its own for a second reason — the word meant two different things in
+  this app — and that trap is gone with the tab: this session's pulls now
+  sit in *Quelle* under **Diese Sitzung**, next to **Raidabende**.
+- **The default source is `warcraftlogs` since 3.5.0**, with a one-time
+  migration in `core/config.py` (`raid_data_source_migrated`) that moves
+  an existing `mock` over exactly once. The simulation was the safe
+  fallback — it needs no setup at all — and that was the problem: a
+  first-time user saw a complete pull with 25 names that don't exist.
+  Without a linked account there is now an honest "keine Daten", and the
+  simulation is one click away in the strip.
+
+## `RaidDataService`: the single place that picks and polls a data source
+
+`core/raid_data_service.py`. Key points:
+- Sources are registered in `PROVIDER_FACTORIES` keyed by the
+  `raid_data_source` config value, alongside `SOURCE_LABELS`/
+  `SOURCE_DESCRIPTIONS` for the picker in Settings → Module. A new source
+  is one entry plus a class implementing `analyzer/providers/base.py`'s
+  `RaidDataProvider`. An unknown key logs a warning and falls back to the
+  mock.
+- `attach()`/`detach()` are reference-counted; the `RaidDataThread` (a
+  plain `threading.Thread`) runs only while at least one page is
+  subscribed, on its own ~1s cadence — deliberately *not* on
+  `CompanionManager`'s 5-second sync timer.
+- Results reach the GUI through the `snapshotChanged = Signal(object)`
+  cross-thread signal.
+- It also owns the pull history (`PullSummary`).
+
+`analyzer/providers/mock.py` produces a fully deterministic 25-player pull
+from elapsed time — no randomness. Its roster and schedules live in
+`mock_schedule.py`, which *derives* every player's uptimes and cooldowns
+from their spec via `class_abilities` — hand-written rows (specific
+stories: Krallenwut leaves his Berserk unused) always win, derived ones
+fill the rest, deliberately carrying the **German** name while
+hand-written ones stay English, so the simulation exercises both paths
+through `spec_reference` and a broken match shows up as a duplicated row.
+
+## The Academy: `analyzer/academy/`
+
+The UI side is `gui/pages/raid/learn_view.py` — **one column**, not three
+tabs, in the order of the question: biggest weaknesses (`FocusCard`) → all
+six ratings → the numbers behind them → the training plan → progress and
+curve → the catalog (configuration, hence last). Through 3.6.0 the first
+question the page effectively asked was "which Academy page do I want",
+and the answer to *what should I improve* lay scattered across a
+highlighted rating tile, its small print, a lesson card one tab away, and
+a button on that card. The `FocusCard` rules are in `raid-center.md`; the
+evaluation below is unchanged.
+
+`evaluator.py` turns a snapshot into a `PlayerProfile` (star ratings for
+**six** areas — Rotation/Bewegung/Cooldowns/Mechaniken/Überleben/Leistung)
+and a `TrainingPlan`, using the `MECHANIC_*` category on each
+`MechanicIssue` to attribute errors to a trainable area. Ratings are
+**relative to the player's own role** — for damage *taken* especially (a
+tank always takes the most, which is the job), so Überleben rates the
+avoidable **share** against same-role peers, never the absolute sum.
+Relative alone rewards conformity and degenerates for the only player of
+a role — Überleben therefore takes the **stricter** of the relative and
+an absolute rating (`ABSOLUTE_AVOIDABLE_SHARE`). `core/academy_service.py`
+only handles character selection and persistence
+(`academy_progress.json` in `Paths.config()` — completed lessons are user
+data, not cache).
+
+Three rules, each reversing an earlier mistake:
+
+- **Rotation must not read the damage ranking.** The rank moved to its
+  own area, `Leistung`. *Which* uptimes count is role-dependent
+  (`_uptime_parts`): DoTs for damage, HoTs for healers, tank **active
+  mitigation** from `buff_uptimes` — rated there and *not* under
+  Überleben (which asks about the outcome), or the same incident would be
+  charged twice.
+- **No comparison group, no rating.** Being the only player of your role
+  means the ratio is always 1.0. `Leistung` and Überleben require at
+  least one other player of the same role with data, otherwise "keine
+  Daten". Bewegung used to be the third case, through the metre average;
+  since 3.6.0 it counts events instead and needs no group (see *Why the
+  metres are gone*).
+- **`stars = 0` means "no data", not "bad".** `PlayerProfile.rated`/
+  `weakest` skip zero-star ratings, `_combine()` drops parts with no data
+  instead of averaging them down. **Lesson results and the manual
+  checkbox are never merged** — `LessonResult` is log evidence,
+  `completed` is the player's own claim.
+
+**An empty Academy has to say so, and a strich is not a zero.**
+`academy_empty_text()`, `academy_empty_action()`, `next_lesson_placeholder()`
+live in `gui/widgets/tv/analysis_gap.py` (shared with WeintTV so the two
+pages can't describe one situation differently). The six metric tiles
+under the stars: **a dash means "not delivered", never "zero"** — each
+tile first asks whether the source delivered that kind of event at all.
+
+**`_apply_overview()`/`_apply_metric_tiles()` take the snapshot as an
+argument** rather than asking `service.current()` beside it — a second
+source for the same answer is provably different during a replay.
+
+`gui/widgets/tv/encounter_meta.py` says which fight is being rated —
+boss, difficulty, pull, outcome, average — Qt-free like
+`analysis_gap.py`. **Its three-valued `outcome_text()` only phrases;
+`core/raid_context.outcome_of()` decides** (since 4.0), so the rating line
+and the context header cannot disagree about what "Wipe" means. On screen
+`average_text()` is what the learn view shows: boss, difficulty, pull and
+outcome stand in the context header above it, and a second copy underneath
+was the loudest duplication of the old layout. The full sentence stays for
+the wire — `encounterText` in `addon/addon_payloads.py`, where no context
+header stands beside it. `addon/addon_payloads.py` ships the finished sentence
+as `encounterText` rather than letting the addon reassemble it. Its
+`outcome_text()` has **three** answers: while running, the outcome is
+*open*.
+
+## Progression: a curve across pulls, since 2.3.5
+
+**A single pull cannot answer "am I getting better?"**
+`analyzer/academy/progression.py` is the pure half, `core/academy_history.py`
+the store (`academy_history.json` under `Paths.config()` — measurements
+that cannot be recomputed once a WarcraftLogs report ages out are user
+data, not cache). Six rules, each the `stars == 0` line in another guise:
+
+- **Only finished pulls, from `MIN_PULL_SECONDS`.** `qualifies()`
+  requires `in_combat == False` (covers live/archive/replay paths at
+  once).
+- **An unrated area is not a point.** `record_from_profile()` drops
+  `stars == 0`.
+- **One pull, one point.** `pull_key()` is `<report>#<fight>` when known,
+  else `live:<day>:<boss>:<pull>` (day included — pull numbers repeat on
+  the next raid night).
+- **The order comes from the fight, not the click.** `sort_records()`
+  orders by raid day, then fight id, then recording time.
+- **Simulation and real reports never share a curve**, nor do two specs
+  (`select()`).
+- **Recording happens in `CompanionManager`**, not in the learn view —
+  the snapshot stream runs whenever the Raid Center is attached, whichever
+  perspective happens to be visible.
+
+`evaluator.plan_order()` reads that curve too: with a `focus` (from
+`progression.build_focus()`) an area with enough recorded points is judged
+by its **average over the curve**; three lines it must not cross: it
+changes order only, never a `SkillRating`; needs `MIN_POINTS` before a
+category counts as a pattern; and the status sort (failed → unknown →
+passed) still decides the visible card order.
+
+`HistoryCard` draws two lines — overall in the accent, weakest area
+dashed — and hides the second when it would cover the first.
+`ProgressionChart` fixes its axis at 0…`MAX_STARS` (an auto-scaled axis
+would make a 4.1→4.3 wobble look like a 1→5 climb).
+
+## The training plan verifies itself
+
+A `Lesson` carries declarative `LessonCheck`s ("active_percent >= 95"),
+and **`analyzer/academy/checks.py` is the only place** mapping metric
+names to snapshot lookups (`tests/test_lesson_catalog.py` asserts every
+metric resolves). Outcomes are three-valued (`passed`/`failed`/`unknown`)
+— a red cross for a missing field would simply be wrong.
+
+The catalog is a package (`analyzer/academy/lessons/`): `generic.py`,
+`roles.py`, `classes/<class>.py`, `encounters.py`, merged by
+`registry.py`, which **raises on a duplicate `lesson_id`** at import.
+Selection order: encounter → spec → class-wide → role → generic. Catalog
+opt-out stores **exclusions, not inclusions**.
+
+Two reference tables under `analyzer/data/` exist because the catalog is
+written in one language and the data source answers in another, and both
+failures were silent:
+
+- **`specs.py`** — all 34 specs with German name, English name and role.
+  Before this table no spec key ever matched WarcraftLogs' English
+  spelling in production. It also derives **the role from the spec** —
+  without it a missing `role` field was guessed from damage vs. healing,
+  which can never yield "tank".
+- **`player_abilities.py`** — German ↔ English for ability names checks
+  reference. Additive by design (a missing entry costs a match, never
+  invents one). `_all_names()` merges `class_abilities.translations()`
+  into it.
+- **`class_abilities.py`** — every spec's DoTs/HoTs/self-buffs/cooldowns
+  with spell IDs, English *and* German name, target uptime, category.
+  Recognised by **spell ID, English name or German name** (any one
+  suffices). A diff against the bot's own catalogues found **35 spell IDs
+  carrying a different German name on each side** — the structural fix is
+  on the wire: the bot sends `spell_id` on every ability row, and
+  `match()` reads the ID first. Two entries were plain wrong (a real
+  number under the wrong ability — `31842` filed as Avenging Wrath is
+  Divine Favor; `123040` filed as Shadowfiend is Mindbender, 60s not
+  180s). `tests/test_class_abilities.py` asserts no spell ID is claimed
+  twice.
+
+`analyzer/analysis/spec_reference.py` — `apply_spec_reference(snapshot)`
+runs at the end of every snapshot-producing path (payload mapper, mock,
+replay's `snapshot_at()`), fixing three failures that all looked
+identical in the UI ("Keine Angaben zu …"): wrong-language report, aura
+filed in the wrong list, ability simply not reported. **The line it must
+never cross is between a finding and a data gap**: a missing ability is
+filled with 0% only when the source demonstrably delivers that kind of
+uptime for *someone*. `reference_hint()`/`cooldown_hint()` say what
+*would* be shown when the source delivers nothing of that kind. Same
+restraint on `possible` for cooldowns: only `CD_PERSONAL` gets an upper
+bound (an unused Shield Wall is a fight that didn't need it, not a wasted
+use).
+
+Recognised rows are also **renamed to their German name** — which
+language a report arrives in is an accident of who uploaded it, and
+"Rallying Cry" next to "Sammelschrei" would be the same ability twice.
+`match()` takes a `prefer` argument for abilities that are both an aura
+and a cooldown under one spell ID.
+
+`analyzer/analysis/` holds derivations both the payload mapper and the
+replay need: `ranking.py`, `damage.py` (bucketing, mechanic issues,
+merging with the bot's), and since 3.6.0 `cooldowns.py` — see *The
+cooldown maths* below. `movement.py` (the map-units-to-metres constant)
+is still there but nothing in the UI or the ratings reads it any more;
+see *Why the metres are gone*.
+
+## Whether a hit was avoidable is a judgement, not a measurement
+
+Lives in `analyzer/data/avoidable.py`, **not in the bot** — must be
+identical for WeintTV and the Academy, changes with difficulty/tactics,
+stays correctable without a bot deploy. Deliberately **three-valued** —
+missing from the table is `unknown`, never `unavoidable` (treating unknown
+as unavoidable would hand every boss without reference data a flawless
+survival rating). Covers all fourteen Siege of Orgrimmar encounters plus
+Horridon; not every ability of every boss, only the ones where the
+verdict is unambiguous. Below `MIN_CLASSIFIED_SHARE` the Academy declines
+to rate rather than grade the table's gaps. `merge_mechanics()` lets **the
+bot win** per (player, ability) when it ships its own hand-written
+`mechanics[]` rows, via an alias table **derived from the rules' own
+labels** rather than hand-maintained.
+
+## WarcraftLogs as the second real source
+
+Read through the bot rather than directly (`/companion/warcraftlogs/live`)
+— credentials off 25 player machines, one shared API quota. Three files:
+`analyzer/providers/warcraftlogs_payload.py` (pure mapper, no I/O),
+`analyzer/providers/warcraftlogs.py` (provider, own 15s fetch thread so
+`snapshot()` never blocks the 1s poll), `core/warcraftlogs_client.py`
+(HTTP half). Full wire contract: `../warcraftlogs-bridge.md`.
+`RaidSnapshot.has_analysis` is the single switch the UI uses for the
+whole deep-analysis block; what it does *not* say is **why** a block is
+missing (no raid / no pull / source only sends sums) —
+`gui/widgets/tv/analysis_gap.py` is the one place that decides which,
+shared by both pages. `block_gap_text(snapshot, block)` closes the case
+where the source delivers *part* of the block and not the rest (silent
+when the block has rows or the deep analysis is entirely missing,
+otherwise names the source and states that block specifically wasn't
+delivered) — covers `cooldown_usage`, `raid_cooldowns`, `heal_cooldowns`.
+
+## The cooldown maths: one calculation, four bugs it removed (3.6.0)
+
+`analyzer/analysis/cooldowns.py` is the single place. Before it, the same
+question was answered independently in `warcraftlogs_payload.py`,
+`spec_reference.py` and `academy/evaluator.py`, and the three answers
+differed. All four reported defects were consequences:
+
+- **`int(duration // cooldown) + 1` counts one use too many.** Six
+  minutes, a three-minute cooldown: two uses were possible, three were
+  counted, and a perfect run read "2 von 3" plus "1 verschenkt".
+  `possible_uses()` counts the instants `0, cd, 2·cd …` that still lie
+  `MIN_TAIL_SECONDS` (10 s) before the end — a cooldown that comes back
+  up two seconds before the last hit is not a missed use.
+- **The payload guessed the category from a short English name list
+  that contained no defensive cooldown at all.** Every un-pressed Shield
+  Wall counted as wasted, worst for tanks; and being English, a German
+  report lost every raid cooldown too. `category_of()` asks
+  `class_abilities` (spell ID, English *and* German name), which knows
+  `CD_DEFENSIVE`. Spec-independently the first matching entry wins
+  (Tranquility is a heal cooldown for resto and a raid cooldown for the
+  rest) — irrelevant to the only question this file asks,
+  `counts_towards_usage()`, and `spec_reference` refines it per player.
+- **`possible` must be withdrawn, not only added.** The payload
+  categorises blind; only after `spec_reference` is it known that those
+  six possible uses belong to a defensive. Leaving the number would have
+  charged five wasted uses.
+- **Burst alignment was a share of all casts**, so using a one-minute
+  cooldown six times correctly scored 17 % — one star. `burst_alignment()`
+  counts **opportunities**: only cooldowns from `MAJOR_COOLDOWN_SECONDS`
+  (120 s), and only windows in which the cooldown was up, or would have
+  come up before the window ended. A cooldown that was down the whole
+  window is the price of an earlier correct use, not an error.
+
+`ready_gaps()` is the fourth answer, and it is the one that makes the
+rating actionable: *when* was the cooldown ready and unused. The rating
+names the longest such stretch and `at_seconds` jumps the replay there;
+`gui/widgets/tv/cooldown_timeline.py` draws all of them. The widget
+draws, it does not compute — a gap calculated twice is a gap that will
+eventually differ. Gaps are **hatched, not filled**: the default accent
+is amber, and a solid amber warning next to an amber cast bar was two
+yellow bars with no way to tell which was which.
+
+## Why the metres are gone (3.6.0)
+
+Reported as "everything the log can't actually answer can go". The
+movement distance was exactly that: **WarcraftLogs has no distance
+metric.** The number came from the bot summing straight lines between
+the positions attached to consecutive events — it underestimates real
+dodging systematically, and a player generating no events in between
+does not appear at all. A number that cannot be substantiated is worse
+than none in an evaluation, because it looks like a measurement.
+
+Removed end to end: WeintTV's *Laufwege* card, the metre half of
+`_rate_movement`, the `movement_ratio`/`movement_meters` lesson metrics
+and the one lesson built on them, the `movement` block in
+`addon_payloads.build_weinttv_report()` — and in Codex the *Laufweg*
+column and the "wer bin ich" row. The category stays, renamed
+**Bewegung**, rated on what the log does answer: avoidable hits with
+`MECHANIC_MOVEMENT`/`MECHANIC_POSITIONING`, each an event with a
+timestamp. If the source reports no mechanic issues *at all*, that is
+`stars == 0` — not five stars for a clean sheet nobody measured.
+
+`MovementEntry` and the bot's `movement_units` field stay in place
+(`analyzer/analysis/movement.py`, the bridge contract): the wire format
+is not this release's business, and nothing reads them. Deleting them
+would make the change hard to revisit if the bot ever gains a real
+distance metric.
+
+## Waiting for a pull is a state the UI has to show (3.6.0)
+
+Reported as: *"nowhere does it say you have to wait, how long it takes,
+or from when you can work with it"*. What stood there was "bei großen
+Pulls dauert das etwas" — no number, no movement, no statement about
+what happens afterwards. The failure mode is specific: after ten
+seconds people click the next pull, which restarts the fetch.
+
+- **`core/loading_progress.py`** is the calculating half, Qt-free like
+  `analysis_gap.py`. `estimate()` scales with *this* fight's length
+  (the bot reads the whole event stream) and blends in the durations
+  actually measured this session — `blend()` keeps the last
+  `MEMORY` (5), in memory only. `share()` never reaches 1.0: up to the
+  estimate it fills to 0.9, beyond it approaches asymptotically, so
+  "still running" and "taking longer than usual" are both readable off
+  the bar. `overdue()` and `progress_text()` say it in words too.
+- **`ArchiveState` carries `fight_started_at` / `fight_expected` /
+  `fight_label`.** `fight_started_at` is a `time.monotonic()` stamp, not
+  a wall clock: a clock adjusted mid-fetch would run the bar backwards.
+  `0.0` means "no fetch running", and `ArchiveState.elapsed(now)` is the
+  one accessor.
+- **`gui/widgets/tv/loading_card.py`** decides its own visibility — three
+  pages with their own visibility logic were three chances to leave it
+  standing. Since 4.0 there is one instance, above the view stack: while a
+  pull is being fetched, all four perspectives are empty, so the notice
+  belongs to all four. Its
+  `QTimer` runs only while the card is visible *and* something is
+  loading; teardown is an event-free `_stop()` (see
+  `../architecture/qt-pitfalls.md`).
+- **`academy_empty_text(snapshot, loading=True)` returns `""`.** "No
+  analysed fight for this character" is literally true during a fetch
+  and useless as information — one is on its way. The learn view therefore
+  has an `on_archive_changed()` that the Raid Center calls through; no
+  snapshot changes while a fetch runs, so without it the empty card would
+  have sat next to the waiting card for the whole wait.
+
+## Who is "me"? (`analyzer/names.py` + `core/character_report_sync.py`)
+
+Had **four independent answers** that nothing reconciled: the Academy
+combo box, `config["academy_player_name"]`, `PlayerProfile.name`,
+`UnitName("player")` in-game.
+
+- **The selection never guesses.** `resolve_player_name()` returns what
+  is stored, or `""`. The guess (`suggest_player_name()`) is reachable
+  only through `ensure_player_name()`, which **persists** it — a guessed
+  identity must never reach the wire unseen.
+- **`reconcile_selection()` decides *and* stores.** Deliberately on the
+  service rather than in the page, so it's testable. The original defect
+  was a missing `else`: the page refilled the combo but only restored the
+  selection *if* the stored name still occurred, leaving the box on
+  `names[0]` while the config kept the old name.
+- **The roster's spelling wins.** `match_name()` returns the *list's*
+  spelling. `analyzer/names.py` holds the three comparison rules; a
+  **missing realm is a wildcard, not a mismatch**. The addon carries the
+  same three rules in `core/names.lua` — they must stay identical.
+- **One identity per delivery.** `AddonAnalysisSync.process()` resolves
+  the name **once** for `build_profile`, `build_academy_state`,
+  `build_weinttv_report`, `build_plan` — see
+  `../academy-and-practice-bridge.md` for the wire side. `hasActor` says
+  whether the character was in the pull at all.
+- **A selection change publishes immediately** (`set_player_name()` →
+  `addon_analysis_sync.publish_now()`). The `getattr` guard there is
+  load-bearing: `AcademyService` is constructed before `AddonAnalysisSync`.
+- **The game reports who is logged in** — Codex sends `character_report`
+  (never reaches the bot, handled like `academy`/`dummy_practice_session`).
+  `note_ingame_character()` follows it, with one rule: **a manual pick
+  beats the game report for the character it was made on, and stops
+  beating it the moment the game reports a different one**
+  (`academy_manual_for`).
+- **The analysis player picker stays a display filter.** Its
+  `ALL_PLAYERS` value has no Academy equivalent. Explicit path:
+  `playerRequested` → `RaidCenterPage.show_player()` →
+  `RaidContextHeader.show_player()` → `note_manual_choice()`, which then
+  switches to *Lernen* with the pull unchanged. A muted line next to the
+  picker names the current Academy character.
+- **The character selector is part of the context, not of one view.** It
+  stood in the Academy's own head through 3.6.0 — i.e. on exactly one of
+  the three pages, although the analysis beside it means the same
+  character when it shows "just me". It now sits in the context header
+  with *Dem Spiel folgen* and the in-game line, which is also what makes
+  it survive a perspective change. `reconcile_selection()` still decides
+  *and* stores, from there.

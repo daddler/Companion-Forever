@@ -1,0 +1,403 @@
+import faulthandler
+import os
+import platform
+import sys
+from pathlib import Path
+
+
+# --------------------------------------------------
+# Crash-Diagnose (faulthandler)
+# --------------------------------------------------
+# SIGSEGV-Abstürze (z. B. in libxkbcommon/Qt) laufen an unserem
+# eigenen Logger vorbei, weil der Prozess sofort hart beendet
+# wird - es gibt keine Python-Exception, die wir abfangen
+# könnten. faulthandler schreibt in diesem Fall trotzdem einen
+# nativen Stacktrace in eine feste Log-Datei, BEVOR der Prozess
+# stirbt. Damit haben wir bei zukünftigen Crash-Reports endlich
+# einen echten Anhaltspunkt statt nur Vermutungen.
+
+try:
+
+    _crash_log_dir = (
+        Path.home()
+        / ".local"
+        / "share"
+        / "WeintCompanion"
+        / "cache"
+        / "logs"
+        if platform.system() == "Linux"
+        else Path(
+            os.getenv("LOCALAPPDATA", str(Path.home()))
+        )
+        / "WeintCompanion"
+        / "cache"
+        / "logs"
+    )
+
+    _crash_log_dir.mkdir(parents=True, exist_ok=True)
+
+    _crash_log_file = open(
+        _crash_log_dir / "crash.log",
+        "a",
+        encoding="utf-8",
+    )
+
+    faulthandler.enable(file=_crash_log_file, all_threads=True)
+
+except Exception:
+
+    # Diagnose darf niemals den App-Start verhindern.
+    pass
+
+
+# --------------------------------------------------
+# Qt-Plugin-Diagnose (QT_DEBUG_PLUGINS)
+# --------------------------------------------------
+# Beobachtung: Bei manchen Nutzern (auch auf echtem Wayland,
+# XDG_SESSION_TYPE=wayland) wählt Qt trotzdem von sich aus die
+# "xcb"-Plattform, OBWOHL wir xcb gar nicht mehr erzwingen. Das
+# bedeutet: Qt versucht das native "wayland"-Plugin zu laden,
+# scheitert dabei aber leise (z. B. weil eine System-Bibliothek
+# wie libwayland-client/libxkbcommon-Version nicht passt) und
+# fällt automatisch auf xcb zurück - ganz ohne dass wir das aus
+# Python heraus sehen oder beeinflussen.
+#
+# QT_DEBUG_PLUGINS=1 lässt Qt genau protokollieren, welche
+# Plattform-Plugins es findet, prüft und warum ein Plugin
+# abgelehnt wird. Diese Ausgabe geht direkt auf stderr (C++-Ebene,
+# nicht über unseren Python-Logger), daher leiten wir stderr für
+# die Laufzeit der App zusätzlich in eine eigene Log-Datei um.
+
+try:
+
+    os.environ.setdefault("QT_DEBUG_PLUGINS", "1")
+
+    _qt_plugin_log_path = _crash_log_dir / "qt-plugins.log"
+
+    _qt_plugin_log_file = open(
+        _qt_plugin_log_path,
+        "w",
+        encoding="utf-8",
+    )
+
+    _original_stderr_fd = os.dup(2)
+
+    os.dup2(_qt_plugin_log_file.fileno(), 2)
+
+except Exception:
+
+    # Diagnose darf niemals den App-Start verhindern.
+    pass
+
+
+# --------------------------------------------------
+# Linux Plattform-Wahl
+# --------------------------------------------------
+# ERKENNTNIS (07/2026): Unsere bisherige Logik hat
+# den xcb/XI2-Absturzschutz nur aktiviert, wenn WIR SELBST anhand
+# von XDG_SESSION_TYPE erkannt haben, dass eine Wayland-Sitzung
+# läuft. Das ist unzuverlässig: Qt kann - unabhängig von unserer
+# Erkennung - bei jedem Start selbst auf xcb zurückfallen (z. B.
+# wenn WAYLAND_DISPLAY im Prozesskontext nicht sichtbar ist, was
+# bei AppImages/bestimmten Startwegen vorkommt), OHNE dass unsere
+# Bedingung das mitbekommt. In diesem Fall griff unser SEGV-Schutz
+# (QT_XCB_NO_XI2) gar nicht - und genau das hat den
+# ursprünglichen libxkbcommon/Qt6XcbQpa-Crash reproduziert, obwohl
+# der Fix längst im Code stand.
+#
+# LÖSUNG: Statt selbst zu raten, ob xcb genutzt wird, geben wir
+# Qt eine Fallback-Liste vor ("wayland;xcb") - Qt versucht dann
+# selbst zuerst nativ Wayland zu laden und fällt nur bei Bedarf
+# automatisch auf xcb zurück. Und der SEGV-Schutz (QT_XCB_NO_XI2)
+# wird IMMER gesetzt, unabhängig davon, ob/warum xcb am Ende
+# genutzt wird - er ist unter Wayland ein no-op und schützt unter
+# xcb in jedem Fall, egal wie Qt dort gelandet ist.
+
+if platform.system() == "Linux":
+
+    os.environ.setdefault("QT_QPA_PLATFORM", "wayland;xcb")
+
+    # --------------------------------------------------
+    # Absturz-Fix: SEGV in libxkbcommon (Qt6XcbQpa)
+    # --------------------------------------------------
+    # Auf mehreren Distributionen (Fedora, openSUSE, CachyOS)
+    # stürzt Qt sporadisch mit SIGSEGV in libxkbcommon ab,
+    # aufgerufen aus dem XCB-Plugin (QXcbKeyboard). Das ist ein
+    # bekanntes Problem, wenn Qt Tastatur-/Touch-Events über die
+    # XInput2-Erweiterung (XI2) verarbeitet: Der XKB-Status wird
+    # dabei aus einem anderen Codepfad aktualisiert als über die
+    # "Core"-Events, was unter XWayland zu einer Racecondition und
+    # damit zu einem Absturz in libxkbcommon führen kann.
+    #
+    # Deaktiviert man XI2, nutzt Qt stattdessen die klassischen
+    # X11-Core-Events für Tastatur/Maus - der fehlerhafte Codepfad
+    # wird dadurch komplett umgangen. Betrifft NUR xcb, ist unter
+    # nativem Wayland wirkungslos.
+    #
+    # WEINT_FORCE_XI2=1 erlaubt betroffenen Nutzern, XI2 gezielt
+    # wieder zu aktivieren, falls dieser Fix bei ihnen selbst neue
+    # Probleme verursacht (Einzelbericht CachyOS/KDE, 07/2026).
+    if os.environ.get("WEINT_FORCE_XI2") != "1":
+
+        os.environ.setdefault("QT_XCB_NO_XI2", "1")
+
+    # --------------------------------------------------
+    # Weitere Absturz-Mitigation: SIGSEGV bleibt trotz QT_XCB_NO_XI2
+    # (Einzelbericht openSUSE/X11, 07/2026)
+    # --------------------------------------------------
+    # QT_XCB_NO_XI2 allein hat den xcb-Absturz nicht bei jedem Nutzer
+    # verhindert - der Crash-Log zeigt weiterhin ein generisches
+    # SIGSEGV ohne Python-Frame, also tief im xcb-Plugin selbst.
+    # Zwei weitere, in Qt6-Bugreports häufig genannte Auslöser für
+    # genau dieses Crash-Bild werden hier zusätzlich deaktiviert:
+    #
+    # - QT_ACCESSIBILITY=0: Qts AT-SPI/Accessibility-Bridge crasht auf
+    #   manchen Distros (u. a. wenn ein Accessibility-Dienst im
+    #   Hintergrund läuft, auch unter KDE) sporadisch beim Wechsel des
+    #   Eingabefokus - unabhängig vom XI2-Codepfad.
+    # - QT_XCB_GL_INTEGRATION=none: vermeidet GLX/EGL-Kontexterstellung
+    #   im xcb-Plugin, ein bekannter Absturzherd bei inkompatiblen
+    #   Mesa-/Grafiktreiber-Kombinationen.
+    #
+    # Beide sind reine Diagnose-/Sicherheits-Downgrades (kein
+    # sichtbarer Funktionsverlust für unsere Buttons/Listen-UI) und
+    # über WEINT_FORCE_ACCESSIBILITY=1 / WEINT_FORCE_XCB_GL=1 einzeln
+    # abschaltbar, falls sie bei jemandem neue Probleme verursachen.
+
+    if os.environ.get("WEINT_FORCE_ACCESSIBILITY") != "1":
+
+        os.environ.setdefault("QT_ACCESSIBILITY", "0")
+
+    if os.environ.get("WEINT_FORCE_XCB_GL") != "1":
+
+        os.environ.setdefault("QT_XCB_GL_INTEGRATION", "none")
+
+
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtWidgets import QApplication
+
+from gui.main_window import MainWindow
+from gui.splash import SplashScreen
+from gui.theme.fonts import install_fonts
+from gui.theme.theme_manager import init_theme
+
+
+def _system_prefers_reduced_motion() -> bool:
+    """
+    Ob das Betriebssystem "weniger Bewegung" vorgibt.
+
+    Qt hat dafuer bis heute keine zugesicherte Schnittstelle: je nach
+    Version traegt `QStyleHints` eine passende Eigenschaft oder eben
+    nicht. Deshalb wird sie nachgefragt statt vorausgesetzt, und ein
+    Fehlschlag heisst schlicht "keine Vorgabe" - nicht "keine
+    Reduktion". Die ausdrueckliche Wahl des Nutzers in den
+    Einstellungen bleibt davon unberuehrt und wirkt in jedem Fall.
+    """
+
+    try:
+
+        hints = QGuiApplication.styleHints()
+
+        for name in (
+            "prefersReducedMotion",
+            "isReducedMotionPreferred",
+        ):
+
+            value = getattr(hints, name, None)
+
+            if callable(value):
+                return bool(value())
+
+            if isinstance(value, bool):
+                return value
+
+    except Exception:
+
+        pass
+
+    return False
+
+
+def main():
+
+    app = QApplication(sys.argv)
+
+    # Die Plattform-Wahl ist zu diesem Zeitpunkt bereits getroffen -
+    # stderr wieder normal verbinden, damit spätere Laufzeitfehler
+    # weiterhin im Terminal/Log sichtbar sind und nicht dauerhaft in
+    # qt-plugins.log verschwinden.
+    try:
+
+        os.dup2(_original_stderr_fd, 2)
+
+        os.close(_original_stderr_fd)
+
+        _qt_plugin_log_file.close()
+
+        print(
+            "[WeintCompanion] Qt-Plugin-Debug-Log: "
+            f"{_qt_plugin_log_path}"
+        )
+
+    except Exception:
+
+        pass
+
+    # Optional: Ausgabe des verwendeten Qt-Backends
+    print(f"[WeintCompanion] Qt Platform: {QGuiApplication.platformName()}")
+
+    print(
+        "[WeintCompanion] QT_XCB_NO_XI2="
+        f"{os.environ.get('QT_XCB_NO_XI2', '<nicht gesetzt>')} "
+        "QT_ACCESSIBILITY="
+        f"{os.environ.get('QT_ACCESSIBILITY', '<nicht gesetzt>')} "
+        "QT_XCB_GL_INTEGRATION="
+        f"{os.environ.get('QT_XCB_GL_INTEGRATION', '<nicht gesetzt>')}"
+    )
+
+    #
+    # --------------------------------------------------
+    # Schriften und Theme
+    # --------------------------------------------------
+    #
+    # Zuerst die beigelegten Schriften registrieren, dann das Theme:
+    # das Stylesheet nennt "Inter" und "JetBrains Mono" beim Namen,
+    # und Qt loest einen unbekannten Familiennamen wortlos gegen eine
+    # Systemschrift auf. Bis 1.7 war das der Normalfall - beide
+    # Familien standen im Stylesheet, aber keine lag der App bei.
+    #
+
+    install_fonts()
+
+    #
+    # Die Konfiguration wird hier nur zum Lesen der Darstellungswerte
+    # geoeffnet; ihren eigentlichen Besitzer (CompanionManager) baut
+    # erst das Hauptfenster. Config ist eine reine JSON-Datei ohne
+    # Seiteneffekte, zwei Instanzen sind daher unkritisch.
+    #
+
+    from core.config import Config
+
+    theme = init_theme(Config())
+
+    theme.set_system_motion_reduced(
+        _system_prefers_reduced_motion()
+    )
+
+    theme.apply_stylesheet()
+
+    #
+    # --------------------------------------------------
+    # Splash-Screen (ephemer, siehe gui/splash.py)
+    # --------------------------------------------------
+    # MainWindow initialisiert seinen eigenen Zustand ohnehin
+    # verzögert/im Hintergrund-Thread (siehe
+    # CompanionManager.initialize()), der Splash verzögert also nur
+    # den sichtbaren Fensterwechsel, nicht den echten App-Start.
+    #
+    # Der Ladebalken benennt trotzdem echte Schritte und keine
+    # erfundenen: die beiden teuren stehen unten (das Fenster bauen,
+    # den ersten Bereich zeichnen), die davor sind zu diesem Zeitpunkt
+    # bereits erledigt und werden nachgetragen, damit der Balken nicht
+    # bei null steht, während sichtbar schon etwas geschehen ist.
+    #
+
+    splash = SplashScreen()
+
+    splash.setStage(0.15, "Schriften werden geladen …")
+
+    splash.show()
+
+    #
+    # Genau ein processEvents(), und zwar hier: das Fenster muss vom
+    # System einmal angelegt und zugeordnet werden, sonst hat es
+    # keine Fläche, auf der repaint() etwas ausrichten könnte. Zu
+    # diesem Zeitpunkt ist es gefahrlos - es gibt noch kein
+    # MainWindow, also auch nichts, was in dieser Schleife
+    # dazwischenkommen könnte.
+    #
+
+    app.processEvents()
+
+    #
+    # Danach zeichnet der Startbildschirm sich SELBST neu, statt die
+    # Ereignisschleife zu bemühen.
+    #
+    # Bis 2.0.4 stand hier ein `app.processEvents()` je Schritt, und
+    # das war der Grund, warum die App unter Windows nach dem Update
+    # auf 2.0.3 bei "Übersicht wird gezeichnet …" stehenblieb:
+    # MainWindow legte im Konstruktor einen 0-ms-Timer für die
+    # Start-Popups an, dieser feuerte im nächsten processEvents()
+    # (also VOR window.show()), und der modale Dialog blieb in
+    # seiner eigenen Ereignisschleife stehen - unter dem
+    # Startbildschirm, der als `WindowStaysOnTopHint` darüber liegt
+    # und nie geschlossen wurde.
+    #
+    # `repaint()` malt synchron und führt dabei nichts anderes aus.
+    # Ein Ladebalken soll zeichnen, nicht Arbeit erledigen; alles,
+    # was hier fahrlässig laufen könnte, hat einen eigenen richtigen
+    # Zeitpunkt.
+    #
+
+    def _stage(value: float, text: str):
+
+        splash.setStage(value, text)
+
+        splash.repaint()
+
+    _stage(0.3, "Darstellung wird vorbereitet …")
+
+    window_holder = {}
+
+    def _show_main_window():
+
+        _stage(0.55, "Fenster wird aufgebaut …")
+
+        window = MainWindow()
+
+        window_holder["window"] = window
+
+        _stage(0.85, "Übersicht wird gezeichnet …")
+
+        window.show()
+
+        #
+        # Einzelbericht (openSUSE/Wayland, 07/2026): Prozess läuft
+        # sichtbar (RAM/CPU), aber kein Fenster erscheint - obwohl das
+        # native Wayland-Plugin laut Log sauber lädt. show() reicht bei
+        # manchen Compositorn offenbar nicht, um die Surface tatsächlich
+        # zu mappen/in den Vordergrund zu holen. raise_()/activateWindow()
+        # sind der Standard-Workaround dafür; die Diagnose-Zeile hilft,
+        # beim nächsten Bericht zu sehen, ob Qt das Fenster überhaupt für
+        # sichtbar hält.
+        #
+
+        window.raise_()
+        window.activateWindow()
+
+        _stage(1.0, "Bereit")
+
+        print(
+            f"[WeintCompanion] Fenster sichtbar: {window.isVisible()}"
+        )
+
+        #
+        # Der Startbildschirm liegt immer oben. Er muss deshalb weg
+        # sein, BEVOR diese Funktion die Kontrolle an die
+        # Ereignisschleife zurückgibt - dort wartet das erste
+        # Start-Popup, und ein modaler Dialog unter einem
+        # "immer oben"-Fenster ist ein Programm, das hängt.
+        #
+
+        splash.close()
+
+        splash.deleteLater()
+
+    QTimer.singleShot(1500, _show_main_window)
+
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

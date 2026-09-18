@@ -1,0 +1,410 @@
+from __future__ import annotations
+
+from pathlib import Path
+import re
+
+from core.lua_table import extract_variable_body, upsert_variable
+
+
+class SyncReader:
+
+    def __init__(self, wow_path: Path):
+
+        self.wow_path = wow_path
+
+    # --------------------------------------------------
+    # SavedVariables finden
+    # --------------------------------------------------
+
+    def get_file(self):
+
+        if self.wow_path is None:
+            return None
+
+        account_root = (
+            self.wow_path
+            / "WTF"
+            / "Account"
+        )
+
+        if not account_root.exists():
+            return None
+
+        for account in sorted(account_root.iterdir()):
+
+            if not account.is_dir():
+                continue
+
+            file = (
+                account
+                / "SavedVariables"
+                / "WeintCodex.lua"
+            )
+
+            if file.is_file():
+                return file
+
+        return None
+
+    # --------------------------------------------------
+
+    def exists(self):
+
+        return self.get_file() is not None
+
+    # --------------------------------------------------
+
+    def read(self):
+        """
+        Gibt NUR den Inhalt der WeintCompanionDB-Variable zurück, nicht
+        die ganze Datei. Seit WeintCompanionInboxDB (Companion -> Addon,
+        Gegenrichtung) in derselben Datei liegt, würde ein Parser über
+        den kompletten Dateitext sonst auch dessen Warteschlange
+        mitlesen (siehe core/lua_table.py: extract_variable_body).
+        """
+
+        file = self.get_file()
+
+        if file is None:
+            return ""
+
+        text = file.read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+
+        try:
+
+            return extract_variable_body(
+                text,
+                "WeintCompanionDB",
+            ) or ""
+
+        except ValueError as exc:
+
+            #
+            # Unausgeglichene Klammern - z. B. weil die Datei genau
+            # während eines Lese-Zugriffs von WoWs Lua-VM
+            # überschrieben wurde. Ein leerer Queue-Inhalt für diesen
+            # einen Zyklus ist besser als ein Absturz des kompletten
+            # Sync-Laufs; der nächste Zyklus liest die Datei erneut.
+            #
+
+            print(
+                f"SyncReader: WeintCompanionDB konnte nicht gelesen "
+                f"werden ({exc})."
+            )
+
+            return ""
+
+    # --------------------------------------------------
+    # Nachrichten lesen
+    # --------------------------------------------------
+
+    def get_messages(self):
+
+        text = self.read()
+
+        if not text:
+            return []
+
+        messages = []
+
+        current = None
+
+        in_queue = False
+
+        for raw in text.splitlines():
+
+            line = raw.strip()
+
+            #
+            # Queue gefunden
+            #
+
+            if line.startswith('["queue"]'):
+                in_queue = True
+                continue
+
+            if not in_queue:
+                continue
+
+            #
+            # Neue Nachricht
+            #
+
+            if line == "{":
+
+                if current is None:
+                    current = {}
+
+                continue
+
+            #
+            # Nachricht beendet
+            #
+
+            if line == "},":
+
+                if current and not current.get("_malformed"):
+
+                    if "type" in current and "payload" in current:
+                        messages.append(current)
+
+                current = None
+                continue
+
+            if current is None:
+                continue
+
+            #
+            # Ein einzelnes malformed/abgeschnittenes Feld (z. B.
+            # durch einen Lese-Zugriff mitten in einem Schreibvorgang
+            # von WoWs Lua-VM) darf nicht den kompletten Sync-Zyklus
+            # abbrechen - stattdessen wird nur diese eine Nachricht
+            # verworfen, die übrigen werden normal weiterverarbeitet.
+            #
+
+            try:
+
+                #
+                # id
+                #
+
+                if line.startswith('["id"]'):
+
+                    current["id"] = int(
+                        line.split("=")[1]
+                        .strip()
+                        .rstrip(",")
+                    )
+
+                    continue
+
+                #
+                # created
+                #
+
+                if line.startswith('["created"]'):
+
+                    current["created"] = int(
+                        line.split("=")[1]
+                        .strip()
+                        .rstrip(",")
+                    )
+
+                    continue
+
+                #
+                # version
+                #
+
+                if line.startswith('["version"]'):
+
+                    current["version"] = int(
+                        line.split("=")[1]
+                        .strip()
+                        .rstrip(",")
+                    )
+
+                    continue
+
+                #
+                # type
+                #
+
+                if line.startswith('["type"]'):
+
+                    current["type"] = (
+                        line.split("=",1)[1]
+                        .strip()
+                        .rstrip(",")
+                        .strip('"')
+                    )
+
+                    continue
+
+                #
+                # community (ab WeintCodex 1.2.0.0)
+                #
+                # Die Discord-Guild-ID, mit der das Addon verknüpft
+                # ist. Immer als Zeichenkette behandeln, nie als Zahl:
+                # eine Snowflake ist zu groß für Luas 5.1-Zahlen und
+                # würde beim Vergleich als "1.23e+18" nie passen.
+                #
+                # Ältere Addon-Versionen schreiben das Feld nicht - es
+                # fehlt dann einfach, was kein Fehler ist.
+                #
+
+                if line.startswith('["community"]'):
+
+                    current["community"] = (
+                        line.split("=",1)[1]
+                        .strip()
+                        .rstrip(",")
+                        .strip('"')
+                    )
+
+                    continue
+
+                #
+                # payload
+                #
+
+                if line.startswith('["payload"]'):
+
+                    payload = (
+                        line.split("=",1)[1]
+                        .strip()
+                        .rstrip(",")
+                    )
+
+                    if payload.startswith('"'):
+                        payload = payload[1:]
+
+                    if payload.endswith('"'):
+                        payload = payload[:-1]
+
+                    payload = payload.replace('\\"','"')
+
+                    current["payload"] = payload
+
+            except (ValueError, IndexError) as exc:
+
+                print(
+                    f"SyncReader: malformed Queue-Eintrag übersprungen "
+                    f"({exc})."
+                )
+
+                current["_malformed"] = True
+
+        return messages
+
+    # --------------------------------------------------
+
+    def queue_size(self):
+
+        return len(self.get_messages())
+
+    # --------------------------------------------------
+    # Nachricht entfernen
+    # --------------------------------------------------
+
+    def remove_message(self, message_id):
+
+        file = self.get_file()
+
+        if file is None:
+            return False
+
+        messages = self.get_messages()
+
+        #
+        # Nachricht entfernen
+        #
+
+        messages = [
+            message
+            for message in messages
+            if message["id"] != message_id
+        ]
+
+        #
+        # lastId aus der bestehenden Datei übernehmen
+        #
+
+        last_id = 0
+
+        for line in self.read().splitlines():
+
+            line = line.strip()
+
+            if line.startswith('["lastId"]'):
+
+                try:
+
+                    last_id = int(
+                        line.split("=")[1]
+                        .strip()
+                        .rstrip(",")
+                    )
+
+                except (ValueError, IndexError) as exc:
+
+                    print(
+                        f"SyncReader: lastId konnte nicht gelesen werden "
+                        f"({exc}), verwende 0."
+                    )
+
+                break
+
+        #
+        # Nur den WeintCompanionDB-Block ersetzen - siehe
+        # core/lua_table.py: die Datei enthält daneben auch
+        # WeintCodex_SavedData, das hier unangetastet bleiben muss.
+        #
+
+        lines = []
+
+        lines.append('["version"] = 1,')
+        lines.append(f'["lastId"] = {last_id},')
+        lines.append('["queue"] = {')
+
+        for message in messages:
+
+            payload = (
+                message["payload"]
+                .replace("\\", "\\\\")
+                .replace('"', '\\"')
+            )
+
+            lines.extend([
+
+                "{",
+
+                f'["created"] = {message["created"]},',
+                f'["type"] = "{message["type"]}",',
+                f'["version"] = {message["version"]},',
+                f'["payload"] = "{payload}",',
+                f'["id"] = {message["id"]},',
+
+            ])
+
+            #
+            # Die verbleibenden Nachrichten werden hier komplett neu
+            # geschrieben, nicht bearbeitet. Jedes Feld, das nicht
+            # ausdrücklich mitkommt, ist danach weg - deshalb muss
+            # community mit durch, sonst verliert eine Nachricht, die
+            # auf den nächsten Zyklus wartet, still ihre Herkunft.
+            #
+
+            community = message.get("community")
+
+            if community not in (None, ""):
+
+                escaped = (
+                    str(community)
+                    .replace("\\", "\\\\")
+                    .replace('"', '\\"')
+                )
+
+                lines.append(f'["community"] = "{escaped}",')
+
+            lines.append("},")
+
+        lines.append("},")
+
+        #
+        # Auch hier der Rückgabewert von upsert_variable(): wurde die
+        # Datei zwischenzeitlich von WoW geschrieben, bleibt die
+        # gelieferte Nachricht in der Warteschlange und geht im
+        # nächsten Takt erneut hinaus. Ein zweites Zustellen ist der
+        # deutlich kleinere Schaden als ein zurückgesetzter
+        # Spielstand.
+        #
+
+        return upsert_variable(
+            file,
+            "WeintCompanionDB",
+            "\n".join(lines) + "\n",
+        )

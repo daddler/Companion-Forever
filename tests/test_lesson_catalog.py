@@ -1,0 +1,385 @@
+"""
+Die Unversehrtheit des Lektionskatalogs.
+
+Der Katalog ist auf über hundert Lektionen in fünfzehn Dateien
+gewachsen. Genau dort schleichen sich Fehler ein, die niemandem
+auffallen: eine doppelte ID vermischt den Fortschritt zweier
+Lektionen unter einem Schlüssel, ein falscher Bereich lässt eine
+Lektion nirgends erscheinen, ein falsch geschriebener Klassenname
+macht sie für jeden Spieler unsichtbar.
+
+Nichts davon wirft eine Ausnahme. Deshalb diese Datei.
+"""
+
+from analyzer.academy.lessons import (
+    ENCOUNTER_LESSONS,
+    GENERIC_LESSONS,
+    ROLE_LESSONS,
+    SPEC_LESSONS,
+    all_lessons,
+    find_lesson,
+    lessons_for_actor,
+    lessons_in_category,
+)
+from analyzer.academy.models import CATEGORY_ORDER
+from analyzer.data import avoidable, encounters
+from analyzer.models import ROLE_DPS, ROLE_HEALER, ROLE_TANK, Actor
+from gui.theme.wow_colors import CLASS_COLORS
+
+
+def test_lesson_ids_are_unique_across_the_whole_catalog():
+    """
+    Die ID ist der Schlüssel des gespeicherten Fortschritts. Eine
+    doppelte würde zwei verschiedene Lektionen unter einem Eintrag
+    zusammenwerfen - und die zweite wäre über find_lesson() nie
+    erreichbar.
+    """
+
+    ids = [lesson.lesson_id for lesson in all_lessons()]
+
+    assert len(ids) == len(set(ids))
+
+
+def test_every_lesson_uses_a_known_category():
+    """
+    Ein Tippfehler im Bereich würde die Lektion aus jeder Ansicht
+    verschwinden lassen, ohne dass etwas fehlschlägt.
+    """
+
+    for lesson in all_lessons():
+
+        assert lesson.category in CATEGORY_ORDER, lesson.lesson_id
+
+
+def test_every_lesson_has_title_and_summary():
+
+    for lesson in all_lessons():
+
+        assert lesson.title.strip(), lesson.lesson_id
+        assert lesson.summary.strip(), lesson.lesson_id
+
+
+def test_class_names_match_the_spelling_used_everywhere_else():
+    """
+    Die Klassennamen müssen exakt der Schreibweise des Combat-Logs
+    entsprechen - sonst findet weder die Klassenfarbe noch die
+    Lektionsauswahl ihren Eintrag.
+    """
+
+    for class_name, _spec in SPEC_LESSONS:
+
+        assert class_name in CLASS_COLORS, class_name
+
+
+def test_encounter_lessons_reference_known_bosses():
+
+    for name in ENCOUNTER_LESSONS:
+
+        assert encounters.instance_for(name), name
+
+
+def test_encounter_lessons_only_exist_where_reference_data_does():
+    """
+    Eine bossbezogene Lektion, deren Fähigkeiten nirgends eingeordnet
+    sind, könnte nie geprüft werden - sie wäre dauerhaft "keine
+    Daten".
+    """
+
+    for name in ENCOUNTER_LESSONS:
+
+        assert avoidable.rules_for(name), name
+
+
+def test_role_lessons_declare_their_role():
+
+    for role, lessons in ROLE_LESSONS.items():
+
+        for lesson in lessons:
+
+            assert role in lesson.roles, lesson.lesson_id
+
+
+#
+# --------------------------------------------------
+# Auswahl
+# --------------------------------------------------
+#
+
+
+def _actor(class_name="Druid", spec="Gleichgewicht", role=ROLE_DPS):
+
+    return Actor(
+        name="Testheld",
+        class_name=class_name,
+        spec=spec,
+        role=role,
+    )
+
+
+def test_selection_order_is_specific_before_general(demo_lessons):
+    """
+    Wer Inhalte für seine Spezialisierung hat, soll sie vor den
+    allgemeinen Ratschlägen bekommen - und was gerade gespielt wird,
+    steht noch davor.
+
+    Klassen- und Bosslektionen sind seit 5.0 leer (siehe
+    Modulkommentar), deshalb stellt `demo_lessons` einen kleinen
+    Bestand hin: geprüft wird die Reihenfolge, nicht der Inhalt.
+    """
+
+    lessons = lessons_for_actor(_actor(), "Übungsziel")
+
+    ids = [lesson.lesson_id for lesson in lessons]
+
+    boss = next(i for i, key in enumerate(ids) if key.startswith("boss-"))
+    spec = next(i for i, key in enumerate(ids) if key.startswith("druid-"))
+    role = next(i for i, key in enumerate(ids) if key.startswith("role-"))
+    generic = next(i for i, key in enumerate(ids) if key.startswith("generic."))
+
+    assert boss < spec < role < generic
+
+
+def test_an_unknown_class_still_gets_a_full_plan():
+    """
+    Die Zusicherung aus der ersten Fassung: jeder Spieler bekommt
+    Lektionen, auch wenn für ihn nichts hinterlegt ist.
+    """
+
+    lessons = lessons_for_actor(_actor("Demon Hunter", "Verwüstung"))
+
+    assert lessons
+
+    for category in CATEGORY_ORDER:
+
+        assert lessons_in_category(
+            _actor("Demon Hunter", "Verwüstung"),
+            category,
+        ), category
+
+
+def test_every_category_is_covered_for_every_role():
+    """
+    Sonst hätte ein Bereich mit schlechter Bewertung keine Lektion,
+    aus der der Trainingsplan schöpfen könnte.
+    """
+
+    for role in (ROLE_TANK, ROLE_HEALER, ROLE_DPS):
+
+        actor = _actor(role=role)
+
+        for category in CATEGORY_ORDER:
+
+            assert lessons_in_category(actor, category), (role, category)
+
+
+def test_role_specific_lessons_do_not_leak_to_other_roles():
+
+    healer = _actor(
+        "Priest",
+        "Heilig",
+        ROLE_HEALER,
+    )
+
+    ids = {lesson.lesson_id for lesson in lessons_for_actor(healer)}
+
+    assert "role-tank.mechanics.swap" not in ids
+    assert "role-healer.mechanics.dispel" in ids
+
+
+def test_class_wide_lessons_reach_every_specialisation(demo_lessons):
+    """
+    Nutzfähigkeiten gehören zur Klasse, nicht zu einer
+    Spezialisierung - sie sind einmal unter dem leeren Schlüssel
+    hinterlegt und müssen trotzdem in jeder ankommen.
+    """
+
+    for spec in ("Gleichgewicht", "Wilder Kampf", "Wiederherstellung"):
+
+        ids = {
+            lesson.lesson_id
+            for lesson in lessons_for_actor(_actor("Druid", spec))
+        }
+
+        assert "druid.mechanics.battle_res" in ids, spec
+
+
+def test_find_lesson_returns_none_for_unknown_ids():
+
+    assert find_lesson("gibt.es.nicht") is None
+
+    assert find_lesson(GENERIC_LESSONS[0].lesson_id) is GENERIC_LESSONS[0]
+
+
+def test_every_specialisation_has_lessons_of_its_own():
+
+    if not any(SPEC_LESSONS.values()):
+        return
+
+    """
+    Der Katalog kannte zwar alle vierunddreißig Spezialisierungen,
+    aber sehr unterschiedlich gut: manche hatten vier Lektionen,
+    mehrere Tanks genau eine. Wer nur eine hat, bekommt ab dem
+    zweiten Trainingsplan nur noch allgemeine Ratschläge - und die
+    sind notwendigerweise so allgemein, dass sie niemandem konkret
+    weiterhelfen.
+    """
+
+    from analyzer.data.specs import SPECS
+
+    for spec in SPECS:
+
+        actor = _actor(spec.class_name, spec.name, spec.role)
+
+        own = [
+            lesson
+            for lesson in lessons_for_actor(actor)
+            if lesson.class_name == spec.class_name
+        ]
+
+        assert len(own) >= 5, (spec.class_name, spec.name, len(own))
+
+
+def test_every_specialisation_covers_rotation_and_cooldowns():
+
+    if not any(SPEC_LESSONS.values()):
+        return
+
+    """
+    Die beiden Bereiche, in denen sich Spezialisierungen tatsächlich
+    unterscheiden - Bewegung und der Platz im Ranking tun das nicht
+    und dürfen deshalb auf die Rollenebene fallen.
+    """
+
+    from analyzer.data.specs import SPECS
+
+    for spec in SPECS:
+
+        actor = _actor(spec.class_name, spec.name, spec.role)
+
+        for category in ("rotation", "cooldowns"):
+
+            own = [
+                lesson
+                for lesson in lessons_in_category(actor, category)
+                if lesson.class_name == spec.class_name
+            ]
+
+            assert own, (spec.class_name, spec.name, category)
+
+
+def test_every_tank_specialisation_teaches_active_mitigation():
+
+    if not any(SPEC_LESSONS.values()):
+        return
+
+    """
+    Die aktive Schadensminderung ist der größte Beitrag eines Tanks
+    zum eigenen Überleben und seit dieser Fassung auch messbar
+    (`buff_uptime`). Fehlt sie im Katalog, kann der Trainingsplan
+    ausgerechnet die wichtigste Frage nicht stellen.
+    """
+
+    from analyzer.data.specs import specs_for_role
+
+    for spec in specs_for_role(ROLE_TANK):
+
+        actor = _actor(spec.class_name, spec.name, ROLE_TANK)
+
+        measured = [
+            check
+            for lesson in lessons_for_actor(actor)
+            if lesson.class_name == spec.class_name
+            for check in lesson.checks
+            if check.metric == "buff_uptime"
+        ]
+
+        assert measured, (spec.class_name, spec.name)
+
+
+def test_every_class_carries_its_utility_lessons():
+
+    if not any(SPEC_LESSONS.values()):
+        return
+
+    """
+    Nutzfähigkeiten gehören zur Klasse, nicht zur Spezialisierung -
+    eine Unterbrechung, ein Seelenstein, eine Anti-Magie-Zone. Ohne
+    klassenweite Ebene müssten sie in jeder Spezialisierung erneut
+    stehen, und genau das läuft mit der Zeit auseinander.
+    """
+
+    from analyzer.data.specs import SPECS
+
+    classes = {spec.class_name for spec in SPECS}
+
+    for class_name in classes:
+
+        assert SPEC_LESSONS.get((class_name, "")), class_name
+
+
+def test_the_general_fallback_is_never_empty():
+    """
+    Klassen- und Bosslektionen sind leer, solange Forever nicht
+    erschienen ist. Die Rückfallebene ist damit **alles**, was ein
+    Spieler bekommt - und sie muss deshalb für sich allein tragen:
+    jede Rolle, jeder Bereich, und genug Messbares, dass ein
+    Trainingsplan nicht nur aus Lesestoff besteht.
+    """
+
+    assert len(all_lessons()) >= 30
+
+    measurable = [
+        lesson
+        for lesson in all_lessons()
+        if lesson.is_measurable
+    ]
+
+    assert len(measurable) >= 10
+
+
+def test_every_known_boss_has_lessons():
+    """
+    Steht der Raid an einem Boss, soll die Academy dazu auch etwas zu
+    sagen haben - sonst fällt sie auf die allgemeinen Ratschläge
+    zurück, die notwendigerweise so allgemein sind, dass sie niemandem
+    konkret weiterhelfen.
+
+    Die Bosslisten von Forever sind noch nicht veröffentlicht; dieser
+    Test greift, sobald der erste Name darin steht.
+    """
+
+    from analyzer.data.encounters import INSTANCE_ENCOUNTERS
+
+    missing = [
+        name
+        for bosses in INSTANCE_ENCOUNTERS.values()
+        for name in bosses
+        if name not in ENCOUNTER_LESSONS
+    ]
+
+    assert missing == []
+
+
+def test_encounter_lessons_are_reachable_for_every_role(demo_lessons):
+    """
+    Bosslektionen tragen keine Rollenbeschränkung - was am Boden liegt,
+    schadet jedem gleich.
+    """
+
+    for role in (ROLE_TANK, ROLE_HEALER, ROLE_DPS):
+
+        ids = {
+            lesson.lesson_id
+            for lesson in lessons_for_actor(_actor(role=role), "Übungsziel")
+        }
+
+        assert any(key.startswith("boss-") for key in ids), role
+
+
+def test_encounter_lessons_declare_their_encounter():
+
+    for name, lessons in ENCOUNTER_LESSONS.items():
+
+        for lesson in lessons:
+
+            assert lesson.encounter == name, lesson.lesson_id
