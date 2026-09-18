@@ -1202,6 +1202,26 @@ class RaidDataService(QObject):
                 or self._archive.selected_fight != fight_id
             )
 
+            #
+            # Und die Wiedergabe könnte inzwischen laufen. Dann gehört
+            # `current()` ihr, und dieses Ergebnis darf den gezeigten
+            # Moment **nicht** überschreiben - sonst springt eine
+            # gerade gestartete Wiedergabe für einen Augenblick auf
+            # die Zahlen des ganzen Kampfes zurück.
+            #
+            # Wer beides schnell hintereinander macht (Pull wählen,
+            # sofort "Wiedergabe"), sieht das; wer sich Zeit lässt,
+            # nicht. Genau daran hing ein Test, der einmal von zehn
+            # Läufen rot war - das Wettrennen war echt, und der Test
+            # hatte recht.
+            #
+            # Der Abruf selbst bleibt trotzdem nützlich: sein Ergebnis
+            # ist der Stand, zu dem die Wiedergabe beim Beenden
+            # zurückkehrt (`_archive_snapshot`), und seine Dauer geht
+            # in die Schätzung des nächsten Abrufs ein. Verworfen wird
+            # also nur das *Zeigen*.
+            #
+
         if stale:
             return
 
@@ -1226,7 +1246,43 @@ class RaidDataService(QObject):
             live=False,
         )
 
-        self._publish(snapshot, track=False)
+        #
+        # Und die Wiedergabe könnte inzwischen laufen. Dann gehört
+        # `current()` ihr, und dieses Ergebnis darf den gezeigten
+        # Moment **nicht** überschreiben - sonst springt eine gerade
+        # gestartete Wiedergabe für einen Augenblick auf die Zahlen
+        # des ganzen Kampfes.
+        #
+        # Wer beides schnell hintereinander macht (Pull wählen, sofort
+        # "Wiedergabe"), sieht das; wer sich Zeit lässt, nicht. Genau
+        # deshalb fiel es nie auf.
+        #
+        # Die Prüfung steht **hier** und nicht oben bei `stale`: der
+        # Snapshot zu bauen dauert (25 Spieler mal ein ganzer Kampf),
+        # und in genau dieser Zeitspanne drückt jemand auf Wiedergabe.
+        # Eine Zeile weiter oben abgefragt wäre sie eine Auskunft über
+        # einen Zustand, den es beim Veröffentlichen nicht mehr gibt.
+        #
+        # `loading` gehört ausdrücklich **nicht** dazu: die Zeitleiste
+        # wird schon mit der Wahl des Pulls im Hintergrund geladen,
+        # ohne dass jemand etwas gedrückt hätte (siehe
+        # ReplayState.loading) - sie zeigt dann noch nichts an.
+        #
+        # Verworfen wird nur das *Zeigen*. Der Abruf bleibt nützlich:
+        # sein Ergebnis ist der Stand, zu dem die Wiedergabe beim
+        # Beenden zurückkehrt (`_archive_snapshot` weiter unten), und
+        # seine Dauer geht in die Schätzung des nächsten Abrufs ein.
+        #
+
+        with self._lock:
+
+            replaying = (
+                self._replay.playing
+                or self._replay.starting
+            )
+
+        if not replaying:
+            self._publish(snapshot, track=False)
 
         with self._lock:
 

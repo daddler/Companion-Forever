@@ -10,7 +10,7 @@ Warum überhaupt: die Systemtitelleiste ist auf jeder Plattform anders
 hoch, anders gefärbt und trägt auf keiner davon die Marke. Sie sitzt
 außerdem genau dort, wo der Entwurf sein Titelleistenlicht und die
 Markenplakette haben will - der einzige Ort, an dem das
-Violett-Indigo als reines Flächenlicht auftritt.
+der Akzentverlauf auftritt.
 
 **Der Preis ist die Fensterverwaltung**, und zwei Details davon sind
 leicht zu übersehen:
@@ -267,7 +267,7 @@ class TitleBar(QFrame):
 
         #
         # Markenplakette. Hier - und nur hier plus dem Kontofuß der
-        # Navigationsspalte - tritt der Violett-Indigo-Verlauf auf.
+        # Navigationsspalte - tritt der Akzentverlauf auf.
         #
 
         self.brand = QLabel("W")
@@ -286,9 +286,17 @@ class TitleBar(QFrame):
 
         root.addWidget(self.name)
 
-        self.version = QLabel(VERSION)
+        #
+        # Die Fassung, und wofür sie ist. Beides in einer Zeile und
+        # nicht als zwei Plaketten: "Forever Edition" ist keine
+        # Auszeichnung, sondern die Antwort auf die Frage, welche
+        # Companion hier gerade läuft - und die stellt sich genau
+        # solange, wie es noch zwei gibt.
+        #
 
-        self.version.setFont(font("mono"))
+        self.version = QLabel(f"{VERSION} · FOREVER")
+
+        self.version.setFont(font("micro"))
 
         root.addWidget(self.version)
 
