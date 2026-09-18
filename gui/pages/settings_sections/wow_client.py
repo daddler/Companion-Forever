@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 from core.platform import is_linux
 from core.wow_clients import all_clients
 from core.wow_folder import check_client_folder
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.widgets.hero_banner import HeroButton
 from gui.widgets.segmented_control import SegmentedControl
@@ -124,7 +125,7 @@ class WowClientSection(SectionContent):
         self.path_label.setWordWrap(True)
 
         self.path_label.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:13px;color:{Colors.TEXT_SECONDARY};"
         )
 

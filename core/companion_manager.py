@@ -1,4 +1,5 @@
 import threading
+import time
 
 from addon.finder import WoWFinder
 from addon.reader import AddonReader
@@ -552,6 +553,16 @@ class CompanionManager(QObject):
 
         finally:
 
+            #
+            # Der Zeitpunkt gehoert ans Ende und nicht an den Anfang:
+            # "zuletzt abgeglichen" meint einen abgeschlossenen
+            # Durchgang. Er wird auch nach einem Fehlschlag gesetzt -
+            # versucht wurde es, und genau das beantwortet die Frage
+            # "laeuft ueberhaupt noch was".
+            #
+
+            self.state.last_sync_at = time.time()
+
             with self._sync_lock:
 
                 self._sync_busy = False
@@ -746,6 +757,8 @@ class CompanionManager(QObject):
             self.state.github_sha256 = ""
             self.state.update_available = False
 
+            self.state.last_check_at = time.time()
+
             if quiet:
 
                 self.logger.info(
@@ -759,6 +772,8 @@ class CompanionManager(QObject):
                 )
 
             return
+
+        self.state.last_check_at = time.time()
 
         self.state.github_version = release.version
         self.state.github_release_name = release.name

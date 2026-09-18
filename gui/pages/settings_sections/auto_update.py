@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.widgets.toggle_switch import ToggleSwitch
 
@@ -25,7 +26,7 @@ def _version_row(label_text: str, value_text: str):
     value = QLabel(value_text)
 
     value.setStyleSheet(
-        'font-family:"JetBrains Mono";'
+        f'font-family:"{tokens.FAMILY_MONO}";'
         f"font-size:13px;color:{Colors.TEXT};"
     )
 

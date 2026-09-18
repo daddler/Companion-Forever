@@ -41,9 +41,9 @@ from gui.widgets.chip import Chip
 #
 
 ACCENT_TEXTS = {
-    "amber": "Bernstein",
-    "arcane": "Arkan-Violett",
-    "jade": "Jade",
+    "violet": "Violett",
+    "aqua": "Aqua",
+    "steel": "Stahl",
 }
 
 

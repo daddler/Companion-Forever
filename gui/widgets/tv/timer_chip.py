@@ -12,6 +12,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
+from gui.theme import tokens
 from gui.theme.colors import Colors
 
 
@@ -103,7 +104,7 @@ class TimerChip(QLabel):
             border-radius:13px;
             padding-left:12px;
             padding-right:12px;
-            font-family:"JetBrains Mono";
+            font-family:"{tokens.FAMILY_MONO}";
             font-size:12px;
             font-weight:700;
             letter-spacing:0.05em;

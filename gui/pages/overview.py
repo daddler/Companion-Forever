@@ -28,6 +28,7 @@ stehen jeweils an Ort und Stelle.
 from __future__ import annotations
 
 import threading
+import time
 
 from PySide6.QtCore import (
     QEasingCurve,
@@ -107,7 +108,15 @@ from gui.widgets.hero_banner import HeroButton
 from gui.widgets.sparkline import Sparkline
 from gui.widgets.status_dot import StatusDot
 from gui.widgets.progress_ring import ProgressRing
+from gui.widgets.bridge_tile import BridgeTile
 from gui.widgets.roster_strip import RosterStrip, SlotGroup
+from gui.widgets.task_card import (
+    URGENCY_BLOCKING,
+    URGENCY_DUE,
+    URGENCY_IDLE,
+    Task,
+    TaskCard,
+)
 from gui.widgets.academy.star_rating import Rating
 from gui.widgets.wrapped_label import enable_wrap
 
@@ -2012,359 +2021,6 @@ class PreparationCard(Card):
         )
 
 
-class SystemRow(QFrame):
-    """
-    Die Systemzeile: Addon, App, Sync, Sicherung.
-
-    **Sie klappt nur bei Handlungsbedarf auf.** Ist alles in Ordnung,
-    bleibt sie 44 px hoch und trägt keinen Knopf - vier grüne Punkte
-    sind eine Auskunft, kein Angebot. Erst wenn mindestens ein Punkt
-    nicht "ok" ist, wächst sie und zeigt je Punkt eine Zeile mit
-    Erklärung.
-    """
-
-    pageRequested = Signal(int)
-
-    COLLAPSED = 44
-
-    EXPANDED = 132
-
-    def __init__(self, manager, parent=None):
-
-        super().__init__(parent)
-
-        self.manager = manager
-
-        self.setObjectName("systemRow")
-
-        self.setAttribute(Qt.WA_StyledBackground, True)
-
-        self.setFixedHeight(self.COLLAPSED)
-
-        restyle(
-            self,
-            f"""
-            QFrame#systemRow{{
-                background:{tokens.SURFACE_EXTRA["row"]};
-                border:none;
-                border-radius:{tokens.RADIUS["md"]}px;
-                border-top:1px solid rgba(255,255,255,0.040);
-            }}
-            """,
-        )
-
-        root = QVBoxLayout(self)
-
-        root.setContentsMargins(16, 0, 12, 0)
-
-        root.setSpacing(0)
-
-        summary = QHBoxLayout()
-
-        summary.setContentsMargins(0, 0, 0, 0)
-
-        summary.setSpacing(tokens.SPACE[3])
-
-        summary.addWidget(eyebrow_label("SYSTEM"))
-
-        self.entries: dict[str, tuple[StatusDot, QLabel]] = {}
-
-        for key, label in (
-            ("addon", "Addon"),
-            ("app", "App"),
-            ("sync", "Sync"),
-            ("backup", "Sicherung"),
-        ):
-
-            item = QHBoxLayout()
-
-            item.setContentsMargins(0, 0, 0, 0)
-
-            item.setSpacing(6)
-
-            dot = StatusDot("empty")
-
-            item.addWidget(dot)
-
-            text = QLabel(label)
-
-            text.setFont(font("small"))
-
-            restyle(
-                text,
-                f"color:{tokens.TEXT['secondary']};background:transparent;",
-            )
-
-            item.addWidget(text)
-
-            summary.addLayout(item)
-
-            self.entries[key] = (dot, text)
-
-        summary.addStretch(1)
-
-        self.action = QPushButton("Öffnen")
-
-        self.action.setObjectName("secondary")
-
-        self.action.setCursor(Qt.PointingHandCursor)
-
-        self.action.setVisible(False)
-
-        self.action.clicked.connect(self._open_addon)
-
-        summary.addWidget(self.action)
-
-        self.summary_row = QWidget()
-
-        self.summary_row.setFixedHeight(self.COLLAPSED)
-
-        self.summary_row.setLayout(summary)
-
-        root.addWidget(self.summary_row)
-
-        #
-        # Der Detailbereich. Er ist immer gebaut und nur verborgen -
-        # ihn beim Aufklappen erst zu erzeugen hieße, im Moment des
-        # Aufklappens Widgets anzulegen, und das ist genau der Moment,
-        # in dem eine Animation läuft.
-        #
-
-        self.details = QWidget()
-
-        detail_layout = QVBoxLayout(self.details)
-
-        detail_layout.setContentsMargins(0, 0, 0, 8)
-
-        detail_layout.setSpacing(4)
-
-        self.detail_rows: dict[str, QLabel] = {}
-
-        for key in ("addon", "app", "sync", "backup"):
-
-            row = QHBoxLayout()
-
-            row.setContentsMargins(0, 0, 0, 0)
-
-            row.setSpacing(8)
-
-            label = QLabel()
-
-            label.setFont(font("small"))
-
-            restyle(
-                label,
-                f"color:{tokens.TEXT['secondary']};background:transparent;",
-            )
-
-            row.addWidget(label, 1)
-
-            detail_layout.addLayout(row)
-
-            self.detail_rows[key] = label
-
-        self.details.setVisible(False)
-
-        root.addWidget(self.details)
-
-        root.addStretch(1)
-
-        #
-        # Eine Animation je Zeile, wiederverwendet: das Ziel ist immer
-        # `minimumHeight` dieses Widgets. Eine neue QPropertyAnimation
-        # je Aufklappen wäre ein Kind, das liegen bleibt - siehe die
-        # Notiz zu Animationen in CLAUDE.md. Der Zustand, aus dem sie
-        # startet, wird in _set_expanded() gesetzt.
-        #
-
-        self._height_animation = QPropertyAnimation(
-            self,
-            b"minimumHeight",
-            self,
-        )
-
-        self._height_animation.setEasingCurve(
-            QEasingCurve(curve("expand"))
-        )
-
-        self._expanded: bool | None = None
-
-        #
-        # Einmal verbunden, mit einer gebundenen Methode statt einer
-        # Closure über `expanded`: eine Closure müsste vor jedem Start
-        # wieder getrennt werden (sonst stellt eine ältere den falschen
-        # Endzustand her), und `disconnect()` ohne bestehende Verbindung
-        # warnt. Den Zustand liest der Handler aus `self._expanded`.
-        #
-
-        self._height_animation.finished.connect(
-            self._on_height_animation_finished
-        )
-
-    # --------------------------------------------------
-
-    def _open_addon(self):
-
-        from gui.navigation import PageId
-
-        self.pageRequested.emit(PageId.ADDON)
-
-    def refresh(self):
-
-        state = self.manager.state
-
-        #
-        # "warn" statt "error", wo der Nutzer selbst etwas tun kann,
-        # und "empty" für alles, worüber noch nichts bekannt ist -
-        # beim Start ist der GitHub-Abruf noch unterwegs, und ein
-        # rotes Zeichen dafür wäre schlicht falsch.
-        #
-
-        states = {
-            "addon": (
-                "warn" if state.update_available
-                else "ok" if state.addon_found
-                else "error"
-            ),
-            "app": (
-                "warn" if state.companion_update_available else "ok"
-            ),
-            "sync": (
-                "ok" if state.discord_connected else "empty"
-            ),
-            "backup": "ok" if state.addon_found else "empty",
-        }
-
-        details = {
-            "addon": (
-                f"Addon {state.addon_version} installiert, "
-                f"{state.github_version} verfügbar."
-                if state.update_available
-                else "Addon nicht gefunden - Installation steht aus."
-                if not state.addon_found
-                else f"Addon {state.addon_version} ist aktuell."
-            ),
-            "app": (
-                f"WeintCompanion {state.companion_latest_version} "
-                "steht bereit."
-                if state.companion_update_available
-                else f"WeintCompanion {state.companion_version} ist aktuell."
-            ),
-            "sync": (
-                f"Mit dem Bot verbunden ({state.discord_name})."
-                if state.discord_connected
-                else "Kein Discord-Konto verknüpft."
-            ),
-            "backup": (
-                "Sicherungen werden vor jedem Addon-Update angelegt."
-                if state.addon_found
-                else "Ohne installiertes Addon gibt es nichts zu sichern."
-            ),
-        }
-
-        needs_action = False
-
-        for key, value in states.items():
-
-            dot, _label = self.entries[key]
-
-            dot.setState(value)
-
-            self.detail_rows[key].setText(details[key])
-
-            if value in ("warn", "error"):
-                needs_action = True
-
-        self.action.setVisible(needs_action)
-
-        #
-        # Aufklappen nur bei Handlungsbedarf. Vier grüne Punkte sind
-        # eine Auskunft und brauchen weder Platz noch Knopf.
-        #
-
-        self._set_expanded(needs_action)
-
-    def _set_expanded(self, expanded: bool):
-        """
-        Die Zeile auf ihre Höhe bringen - animiert (`motion.expand`).
-
-        Vorher sprang sie über `setFixedHeight()` von 44 auf 132 px.
-        Der Auslöser ist meist eine Prüfung, die im Hintergrund fertig
-        wird, also kein Klick des Nutzers: ohne Bewegung sieht es aus,
-        als hätte die Seite einen Sprung gemacht, statt dass etwas
-        dazugekommen ist. `motion.expand` ist genau für diese Zeile
-        gedacht und war bis hierher unbenutzt.
-        """
-
-        if expanded == self._expanded:
-            return
-
-        self._expanded = expanded
-
-        target = self.EXPANDED if expanded else self.COLLAPSED
-
-        #
-        # Beim Aufklappen zuerst zeigen, beim Zuklappen erst am Ende
-        # verbergen - andernfalls animiert die Zeile auf eine Höhe, in
-        # der noch nichts steht bzw. schon nichts mehr.
-        #
-
-        if expanded:
-            self.details.setVisible(True)
-
-        ms = duration("expand")
-
-        #
-        # setFixedHeight() setzt Minimum UND Maximum. Animiert wird
-        # `minimumHeight`, das Maximum muss deshalb vorher freigegeben
-        # werden, sonst hält es die Zeile auf ihrer alten Höhe fest.
-        #
-
-        self.setMaximumHeight(max(target, self.height()))
-
-        self._height_animation.stop()
-
-        if ms <= 0:
-
-            #
-            # Bewegung reduziert: setzen statt animieren. Der
-            # Endzustand muss hier von Hand hergestellt werden, weil
-            # der finished-Zweig unten nicht durchläuft.
-            #
-
-            self.setFixedHeight(target)
-
-            self.details.setVisible(expanded)
-
-            return
-
-        self._height_animation.setDuration(ms)
-
-        self._height_animation.setStartValue(self.height())
-
-        self._height_animation.setEndValue(target)
-
-        self._height_animation.start()
-
-    def _on_height_animation_finished(self):
-        """
-        Am Ziel wieder festnageln, damit das Layout die Zeile nicht
-        weiter dehnt, und den Detailbereich erst jetzt verbergen.
-
-        Liest `self._expanded`, statt den Zustand mitzuschleppen: läuft
-        das Zuklappen noch, während schon wieder aufgeklappt wird, gilt
-        der neueste Stand und nicht der, mit dem die Animation startete.
-        """
-
-        expanded = bool(self._expanded)
-
-        self.setFixedHeight(
-            self.EXPANDED if expanded else self.COLLAPSED
-        )
-
-        self.details.setVisible(expanded)
-
-
 class OverviewPage(Page):
 
     playerRequested = Signal(str)
@@ -2467,27 +2123,21 @@ class OverviewPage(Page):
 
         self.updates.changelogRequested.connect(self._open_changelog)
 
-        self.addWidget(self.updates)
-
         self._runner = None
 
-        self.roster = RosterCard()
-
-        self.roster.launch.clicked.connect(self._launch_wow)
-
-        self.roster.discord.clicked.connect(self._open_discord_roster)
-
-        self.addWidget(self.roster)
-
         #
-        # Zweispaltige Reihe
+        # ==================================================
+        # Hauptzeile: der Raidabend und was zu tun ist
+        # ==================================================
         #
-
+        # Die beiden zusammen beantworten die Frage, mit der jemand
+        # diese Seite öffnet: *wann ist Raid, und muss ich vorher noch
+        # was machen*. Alles darunter ist Rückblick.
         #
         # Als Raster statt als Reihe: unter 980 px stellt der
-        # Haltepunkt die beiden Karten untereinander, und ein
-        # QGridLayout kann eine Karte umsetzen, ohne dass sie neu
-        # gebaut werden muesste.
+        # Haltepunkt die Karten untereinander, und ein QGridLayout
+        # kann eine Karte umsetzen, ohne dass sie neu gebaut werden
+        # müsste.
         #
 
         self.row = QGridLayout()
@@ -2498,33 +2148,85 @@ class OverviewPage(Page):
 
         self.row.setVerticalSpacing(20)
 
-        self.last_pull = LastPullCard()
+        self.roster = RosterCard()
 
-        self.last_pull.raidCenterRequested.connect(self.openRaidCenter)
+        self.roster.launch.clicked.connect(self._launch_wow)
 
-        self.row.addWidget(self.last_pull, 0, 0)
+        self.roster.discord.clicked.connect(self._open_discord_roster)
 
-        self.preparation = PreparationCard()
+        self.row.addWidget(self.roster, 0, 0)
 
-        self.preparation.button.clicked.connect(self._open_preparation)
+        #
+        # Die rechte Spalte hat zwei Bewohner, und das ist Absicht:
+        #
+        # * `TaskCard` sagt, **was** zu tun ist - eine Liste mit
+        #   Knöpfen, die Aufgabe wird woanders erledigt.
+        # * `UpdateCard` ist das eine, was hier **selbst** passiert:
+        #   sie trägt Fortschrittsbalken und Fehlermeldung eines
+        #   laufenden Updates.
+        #
+        # Beides in eine Karte zu legen hiesse, eine Liste zu bauen,
+        # in der eine Zeile plötzlich einen Balken bekommt und die
+        # anderen nicht. Sie stehen deshalb untereinander, und die
+        # Update-Karte ist nur da, solange sie etwas zu zeigen hat.
+        #
 
-        self.row.addWidget(self.preparation, 0, 1)
+        self.side = QVBoxLayout()
+
+        self.side.setContentsMargins(0, 0, 0, 0)
+
+        self.side.setSpacing(20)
+
+        self.side.addWidget(self.updates)
+
+        self.tasks = TaskCard()
+
+        self.side.addWidget(self.tasks, 1)
+
+        self.row.addLayout(self.side, 0, 1)
 
         self.row.setColumnStretch(0, 1)
+
+        self.row.setColumnMinimumWidth(1, 386)
 
         self._single_column = False
 
         self.addLayout(self.row, 1)
 
         #
-        # Systemzeile
+        # ==================================================
+        # Kachelzeile: der Rückblick
+        # ==================================================
         #
 
-        self.system = SystemRow(manager)
+        self.tiles = QGridLayout()
 
-        self.system.pageRequested.connect(self.pageRequested.emit)
+        self.tiles.setContentsMargins(0, 0, 0, 0)
 
-        self.addWidget(self.system)
+        self.tiles.setHorizontalSpacing(20)
+
+        self.tiles.setVerticalSpacing(20)
+
+        self.last_pull = LastPullCard()
+
+        self.last_pull.raidCenterRequested.connect(self.openRaidCenter)
+
+        self.tiles.addWidget(self.last_pull, 0, 0)
+
+        self.preparation = PreparationCard()
+
+        self.preparation.button.clicked.connect(self._open_preparation)
+
+        self.tiles.addWidget(self.preparation, 0, 1)
+
+        self.bridges = BridgeTile()
+
+        self.tiles.addWidget(self.bridges, 0, 2)
+
+        for column in (0, 1, 2):
+            self.tiles.setColumnStretch(column, 1)
+
+        self.addLayout(self.tiles)
 
     # --------------------------------------------------
 
@@ -2996,6 +2698,22 @@ class OverviewPage(Page):
 
         self.pageRequested.emit(PageId.PREPARATION)
 
+    def _open_addon_page(self):
+        """
+        Zu "Addon & Updates" - dorthin, wo Installation, Update und
+        Sicherungen tatsächlich stattfinden.
+        """
+
+        from gui.navigation import PageId
+
+        self.pageRequested.emit(PageId.ADDON)
+
+    def _open_characters(self):
+
+        from gui.navigation import PageId
+
+        self.pageRequested.emit(PageId.CHARACTERS)
+
     # --------------------------------------------------
 
     def on_layout_changed(self, state):
@@ -3097,8 +2815,6 @@ class OverviewPage(Page):
 
     def refresh(self):
 
-        self.system.refresh()
-
         pull = self._last_pull()
 
         self.last_pull.apply(pull, self._pull_focus(pull))
@@ -3137,9 +2853,261 @@ class OverviewPage(Page):
 
         self._refresh_updates()
 
+        self.bridges.apply(
+            self.manager.state,
+            self._last_sync_text(),
+        )
+
+        #
+        # Die Aufgabenliste zuletzt vor dem Kopf: sie liest den
+        # Zustand, den die Karten darüber gerade gesetzt haben, und
+        # fasst ihn zu dem zusammen, was daraus für den Nutzer folgt.
+        #
+
+        self.tasks.apply(
+            self._build_tasks(),
+            self._checked_text(),
+        )
+
         #
         # Zuletzt der Kopf: er fasst zusammen, was die Karten darunter
         # im einzelnen zeigen, und liest dafür denselben Zustand.
         #
 
         self._refresh_greeting()
+
+    # --------------------------------------------------
+    # Was jetzt zu tun ist
+    # --------------------------------------------------
+
+    def _build_tasks(self) -> list:
+        """
+        Die Aufgabenliste aus dem bereits gelesenen Zustand.
+
+        **Kein Netzzugriff.** Diese Methode läuft aus `refresh()`, und
+        `refresh()` darf nur zeichnen (siehe
+        `tests/test_update_visibility.py` und
+        `docs/architecture/navigation.md`). Alles hier stammt aus
+        `manager.state` und den lokalen Speichern.
+
+        Aufgenommen wird nur, wogegen sich etwas tun lässt - siehe den
+        Modulkommentar von `gui/widgets/task_card.py`. Eine Störung
+        beim Bot steht deshalb nicht hier, sondern unter
+        "Verbindungen".
+        """
+
+        state = self.manager.state
+
+        tasks = []
+
+        #
+        # Ohne Addon gibt es nichts zu messen, nichts zu melden und
+        # nichts zu sichern. Es steht deshalb ganz oben und als
+        # einzige Aufgabe auf "blockierend".
+        #
+
+        if not state.addon_found:
+
+            tasks.append(Task(
+                key="addon-missing",
+                title="WeintCodex ist nicht installiert",
+                detail=(
+                    "Ohne das Addon im Spiel bleiben Auswertung, "
+                    "Vorbereitung und Charakterliste leer."
+                ),
+                action="Jetzt installieren",
+                on_action=self._open_addon_page,
+                urgency=URGENCY_BLOCKING,
+                icon="software",
+            ))
+
+        elif state.update_available:
+
+            tasks.append(Task(
+                key="addon-update",
+                title="Addon-Update verfügbar",
+                detail=(
+                    f"{state.addon_version} → {state.github_version}"
+                ),
+                action="Jetzt aktualisieren",
+                on_action=self._open_addon_page,
+                urgency=URGENCY_DUE,
+                icon="download",
+            ))
+
+        if state.companion_update_available:
+
+            tasks.append(Task(
+                key="companion-update",
+                title="Neue Fassung der App",
+                detail=(
+                    f"{state.companion_version} → "
+                    f"{state.companion_latest_version}"
+                ),
+                action="Ansehen",
+                on_action=self._open_addon_page,
+                urgency=URGENCY_IDLE,
+                icon="companion",
+            ))
+
+        #
+        # Ohne Discord bleibt alles nutzbar, was den eigenen Rechner
+        # betrifft - der Termin, die Aufstellung und die Auswertung
+        # kommen aber von dort. Deshalb eine Aufgabe und keine
+        # Störung.
+        #
+
+        if not state.discord_connected:
+
+            tasks.append(Task(
+                key="discord",
+                title="Discord ist nicht verknüpft",
+                detail=(
+                    "Termin, Aufstellung und die Auswertung eurer "
+                    "Raids kommen über den Bot."
+                ),
+                action="Verbinden",
+                on_action=lambda: self.openSettingsSection.emit("discord"),
+                urgency=URGENCY_DUE,
+                icon="discord",
+            ))
+
+        tasks.extend(self._character_tasks())
+
+        return tasks
+
+    def _character_tasks(self) -> list:
+        """
+        Die Aufgaben, die aus der Charakterliste folgen.
+
+        Eigene Methode, weil sie als einzige einen Speicher braucht,
+        der fehlen kann: `CharacterStore` wird vom CompanionManager
+        aufgebaut, und die Seite wird gebaut, bevor er fertig ist.
+        """
+
+        store = getattr(self.manager, "characters", None)
+
+        if store is None:
+            return []
+
+        try:
+            summary = store.preparation_summary()
+
+        except Exception:
+
+            #
+            # Eine unlesbare characters.json ist kein Grund, die ganze
+            # Aufgabenliste ausfallen zu lassen.
+            #
+
+            return []
+
+        tasks = []
+
+        #
+        # Noch kein Charakter gemeldet: das ist keine offene
+        # Vorbereitung, sondern eine fehlende Anmeldung im Spiel. Der
+        # Unterschied ist der zwischen "du hast etwas zu tun" und "das
+        # erledigt sich beim nächsten Einloggen von selbst".
+        #
+
+        if not summary.get("characters"):
+
+            if self.manager.state.addon_found:
+
+                tasks.append(Task(
+                    key="characters-empty",
+                    title="Noch kein Charakter gemeldet",
+                    detail=(
+                        "Melde dich im Spiel einmal an - danach steht "
+                        "dein Charakter hier."
+                    ),
+                    action="Charaktere öffnen",
+                    on_action=self._open_characters,
+                    urgency=URGENCY_IDLE,
+                    icon="charaktere",
+                ))
+
+            return tasks
+
+        open_count = summary.get("open", 0)
+
+        if open_count:
+
+            tasks.append(Task(
+                key="preparation",
+                title=(
+                    "Eine offene Stelle in der Vorbereitung"
+                    if open_count == 1
+                    else f"{open_count} offene Stellen in der Vorbereitung"
+                ),
+                detail=(
+                    "Fehlende Verzauberungen und leere Sockel über "
+                    "alle Charaktere."
+                ),
+                action="Vorbereitung öffnen",
+                on_action=self._open_preparation,
+                urgency=URGENCY_DUE,
+                icon="vorbereitung",
+            ))
+
+        return tasks
+
+    @staticmethod
+    def _ago(at: float) -> str:
+        """
+        Ein Zeitpunkt als Abstand zu jetzt, grobkörnig.
+
+        `0.0` heisst "noch nie" und liefert einen leeren String - die
+        Aufrufer schreiben dafür ihren eigenen Satz. Eine Null als
+        Uhrzeit zu lesen wäre dieselbe Verwechslung wie `at == -1` im
+        Analyzer.
+
+        Grobkörnig, weil die Fusszeile im Minutentakt nachgezogen wird
+        (siehe `self._clock`): eine Sekundenangabe stünde dort
+        zwischen zwei Zeichnungen fast immer falsch.
+        """
+
+        if not at:
+            return ""
+
+        seconds = max(0, int(time.time() - at))
+
+        if seconds < 90:
+            return "gerade eben"
+
+        minutes = seconds // 60
+
+        if minutes < 60:
+            return f"vor {minutes} min"
+
+        hours = minutes // 60
+
+        if hours < 24:
+            return f"vor {hours} Std"
+
+        return f"vor {hours // 24} Tagen"
+
+    def _checked_text(self) -> str:
+        """
+        Die Fusszeile der Aufgabenkarte.
+
+        Sie nennt den Zeitpunkt der letzten Prüfung und nicht "alles in
+        Ordnung": eine Liste, die leer ist, weil noch nichts geprüft
+        wurde, sieht sonst aus wie eine, die nichts gefunden hat.
+        """
+
+        checked = self._ago(
+            getattr(self.manager.state, "last_check_at", 0.0)
+        )
+
+        if not checked:
+            return "NOCH NICHT GEPRÜFT"
+
+        return f"ZULETZT GEPRÜFT {checked}"
+
+    def _last_sync_text(self) -> str:
+
+        return self._ago(
+            getattr(self.manager.state, "last_sync_at", 0.0)
+        )

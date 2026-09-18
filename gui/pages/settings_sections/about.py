@@ -16,6 +16,7 @@ from core.backend_config import app_url, feedback_url
 from core.browser import open_url
 from core.resources import Resources
 from core.version import VERSION
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.widgets.hero_banner import HeroButton
 
@@ -174,7 +175,7 @@ def _info_row(label_text: str, value_text: str):
     value = QLabel(value_text)
 
     value.setStyleSheet(
-        'font-family:"JetBrains Mono";'
+        f'font-family:"{tokens.FAMILY_MONO}";'
         f"font-size:13px;color:{Colors.TEXT};"
     )
 
@@ -269,7 +270,7 @@ class AboutSection(QWidget):
         version = self.version_label
 
         version.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:12px;color:{Colors.TEXT_MUTED};"
         )
 

@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.logger import LogEntry
+from gui.theme import tokens
 from gui.theme.colors import Colors
 
 
@@ -93,7 +94,7 @@ class LogWidget(QWidget):
         self.live = QLabel("● LIVE")
 
         self.live.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:10px;color:{Colors.SUCCESS};"
         )
 
@@ -125,7 +126,7 @@ class LogWidget(QWidget):
             border:none;
             color:{Colors.TEXT};
             outline:none;
-            font-family:"JetBrains Mono";
+            font-family:"{tokens.FAMILY_MONO}";
             font-size:12.5px;
         }}
         QListWidget::item{{
@@ -264,7 +265,7 @@ class LogWidget(QWidget):
             self.live.setText("● LIVE")
 
             self.live.setStyleSheet(
-                'font-family:"JetBrains Mono";'
+                f'font-family:"{tokens.FAMILY_MONO}";'
                 f"font-size:10px;color:{Colors.SUCCESS};"
             )
 
@@ -273,7 +274,7 @@ class LogWidget(QWidget):
             self.live.setText("● PAUSIERT")
 
             self.live.setStyleSheet(
-                'font-family:"JetBrains Mono";'
+                f'font-family:"{tokens.FAMILY_MONO}";'
                 f"font-size:10px;color:{Colors.WARNING};"
             )
 

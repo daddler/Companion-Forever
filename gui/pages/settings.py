@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.theme.metrics import Metrics
 from gui.widgets.navigation_item import NavigationItem
@@ -77,7 +78,7 @@ class SettingsPage(QWidget):
         heading = QLabel("EINSTELLUNGEN")
 
         heading.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:10px;color:{Colors.TEXT_MUTED};"
             "letter-spacing:0.15em;"
         )

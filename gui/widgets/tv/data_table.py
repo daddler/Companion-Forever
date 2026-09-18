@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.theme.restyle import restyle
 from gui.widgets.eyebrow import eyebrow_label
@@ -136,7 +137,7 @@ class _Cell(QWidget):
         root.addWidget(self.bar)
 
         self._base_style = (
-            ('font-family:"JetBrains Mono";' if column.mono else "")
+            (f'font-family:"{tokens.FAMILY_MONO}";' if column.mono else "")
             + "font-size:12px;"
             + ("font-weight:600;" if column.mono else "")
             + "background:transparent;border:none;"

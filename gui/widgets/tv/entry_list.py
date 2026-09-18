@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.theme.restyle import restyle
 
@@ -107,7 +108,7 @@ class _Entry(QWidget):
         self.trailing.setAlignment(Qt.AlignRight | Qt.AlignTop)
 
         self.trailing.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:11px;color:{Colors.TEXT_SECONDARY};"
             "background:transparent;"
         )

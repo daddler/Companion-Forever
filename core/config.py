@@ -207,7 +207,7 @@ class Config:
             # gelesen, falls Qt sie kennt - dieser Wert hier ist die
             # ausdrueckliche Wahl des Nutzers und gewinnt.
             #
-            "accent": "amber",
+            "accent": "violet",
             "density": "comfortable",
             "motion_reduced": False,
             "nav_collapsed": False,
@@ -272,7 +272,7 @@ class Config:
                     "academy_ingame_realm": "",
                     "academy_player_source": "",
                     "academy_manual_for": "",
-                    "accent": "amber",
+                    "accent": "violet",
                     "density": "comfortable",
                     "motion_reduced": False,
                     "nav_collapsed": False,

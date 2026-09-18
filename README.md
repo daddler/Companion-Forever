@@ -1,4 +1,4 @@
-# WeintCompanion
+# WeintCompanion 5 — Forever Edition
 
 <p align="center">
   <img src="assets/companion_banner.png" alt="WeintCompanion" width="900">
@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Die offizielle Desktop-Anwendung für WeintCodex.</strong><br>
-  Installieren, aktualisieren und mit Discord synchronisieren – alles über eine zentrale Oberfläche.
+  Für <em>World of Warcraft: Forever</em>.
 </p>
 
 ---
@@ -16,6 +16,32 @@
 **WeintCompanion** ist die offizielle Desktop-Anwendung für das World of Warcraft Addon **WeintCodex**.
 
 Die Anwendung übernimmt die Installation und Aktualisierung des Addons, erstellt automatisch Backups und verbindet Addon und Discord-Bot über eine Discord-Kontoverknüpfung.
+
+## Was diese Fassung ist
+
+Dies ist die Companion für **World of Warcraft: Forever** (erscheint am
+4. November 2026). Sie ist aus der Fassung für *Mists of Pandaria
+Classic* hervorgegangen — durch Wegnehmen, nicht durch Neubau:
+
+* **Eine Spielversion.** Höchststufe 60, neun Klassen, siebenundzwanzig
+  Talentbäume. MoP ist vollständig entfernt.
+* **Ohne Simmen und WeakAuras.** Beides wird für Forever zunächst nicht
+  unterstützt.
+* **Neues Aussehen** („Graphit"): neutraler, kühler Grund, eine
+  Serifenschrift für Überschriften, ein einziger Akzent, der
+  ausschliesslich Bedeutung trägt.
+
+**Die Spieldaten sind leer, und das mit Absicht.** Forever überarbeitet
+jede Klasse, und die Bosslisten sind nicht veröffentlicht.
+Bossmechaniken, Fähigkeiten je Spezialisierung und die
+Klassenlektionen der Academy sind deshalb nicht aus MoP übernommen,
+sondern leer — und die Oberfläche sagt „noch nicht bekannt" statt
+etwas zu erfinden. Was fehlt, wann es kommt und in welcher Reihenfolge
+es gefüllt wird, steht in
+[`docs/systems/forever-data.md`](docs/systems/forever-data.md).
+
+Die alte Companion (`daddler/WeintCompanion`) läuft für MoP Classic
+weiter und behält ihren eigenen Update-Kanal.
 
 Langfristig entsteht dadurch ein geschlossenes Ökosystem aus:
 
@@ -65,7 +91,6 @@ Geplant:
 
 * Materialien
 * Bossdaten
-* WeakAuras
 
 ---
 
@@ -118,7 +143,7 @@ Zusätzlich wird eine Logdatei erstellt, die bei der Fehlersuche unterstützt.
 
 ## Version 1.1
 
-* Weitere Sync-Bridges (Materialien, Bossdaten, WeakAuras)
+* Weitere Sync-Bridges (Materialien, Bossdaten)
 * Verbesserter Installer
 
 ## Version 2.0

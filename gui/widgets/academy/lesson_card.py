@@ -29,6 +29,7 @@ from analyzer.academy.models import (
     LessonResult,
 )
 
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.widgets.card import Card
 from gui.widgets.eyebrow import eyebrow_label
@@ -226,7 +227,7 @@ class LessonCard(Card):
                 marker.setAlignment(Qt.AlignTop)
 
                 marker.setStyleSheet(
-                    'font-family:"JetBrains Mono";'
+                    f'font-family:"{tokens.FAMILY_MONO}";'
                     f"font-size:11px;color:{Colors.PRIMARY_HOVER};"
                     "background:transparent;border:none;"
                 )

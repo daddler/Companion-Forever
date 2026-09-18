@@ -1,13 +1,12 @@
 """
-WeintCompanion 2.0
+WeintCompanion 5 - Forever Edition
 Schriften
 
 Zwei Dinge, die bis 1.7 stillschweigend nicht funktioniert haben und
 hier zusammen geloest werden.
 
-**Erstens: die Schriften lagen der App nicht bei.** `Typography.FONT`
-nannte "Inter", `MONO_FONT` nannte "JetBrains Mono" - beides stand im
-Stylesheet, aber keine der beiden Dateien war im Programm enthalten.
+**Erstens: die Schriften lagen der App nicht bei.** Das Stylesheet
+nannte Familien, von denen keine Datei im Programm enthalten war.
 Qt loest einen unbekannten Familiennamen nicht mit einem Fehler auf,
 sondern wortlos gegen die naechstbeste Systemschrift. Auf einem
 Entwicklerrechner, auf dem Inter installiert ist, sah alles richtig
@@ -24,7 +23,21 @@ kommentarlos verworfen. Gesetzt wird sie nur ueber
 
 Die Umrechnung: `QFont.AbsoluteSpacing` erwartet Pixel, der Entwurf
 nennt em. Ein em ist die Schriftgroesse, also 0.18em bei 11 px rund
-2.0 px und 0.16em bei 10 px rund 1.6 px.
+2.0 px und 0.14em bei 10 px rund 1.4 px.
+
+**Drittens, neu in 5.0: statische Schnitte, keine variablen.** Die
+drei Familien des Entwurfs gibt es bei Google Fonts als *variable*
+Schriftdateien - eine Datei, in der das Gewicht eine stufenlose Achse
+ist. Qt meldet sie klaglos an, `QFont.setWeight()` bewegt die Achse
+aber nicht: Regular, SemiBold und Bold sehen danach identisch aus,
+und was nach Fettung aussieht, hat Qt selbst dazugerechnet. Genau die
+Art stiller Fehler, gegen die dieses Modul geschrieben wurde - nur
+eine Ebene tiefer.
+
+Beigelegt sind deshalb **festgenagelte Schnitte** (mit
+`fonttools varLib.instancer` aus den variablen Dateien erzeugt, opsz
+bei Newsreader auf 24). Wer eine Fassung nachziehen will, erzeugt sie
+auf demselben Weg neu; die Lizenzdateien liegen daneben.
 """
 
 from __future__ import annotations
@@ -44,11 +57,37 @@ from gui.theme import tokens
 #
 
 FONT_FILES = (
-    "assets/fonts/Inter-Regular.ttf",
-    "assets/fonts/Inter-SemiBold.ttf",
-    "assets/fonts/Inter-Bold.ttf",
-    "assets/fonts/JetBrainsMono-Regular.ttf",
-    "assets/fonts/JetBrainsMono-Bold.ttf",
+
+    #
+    # Display: Ueberschriften und einzelne grosse Saetze. Die Kursive
+    # traegt im Entwurf Bedeutung (der Nachsatz einer Zeile) und ist
+    # deshalb echt gezeichnet und nicht schraeggestellt.
+    #
+
+    "assets/fonts/Newsreader-Regular.ttf",
+    "assets/fonts/Newsreader-Medium.ttf",
+    "assets/fonts/Newsreader-SemiBold.ttf",
+    "assets/fonts/Newsreader-Italic.ttf",
+    "assets/fonts/Newsreader-MediumItalic.ttf",
+
+    #
+    # Alles Bedienbare. Vier Gewichte, weil der Entwurf 400 (Fliess),
+    # 500 (Beschriftung), 600 (Karte, Knopf) und 700 unterscheidet.
+    #
+
+    "assets/fonts/IBMPlexSans-Regular.ttf",
+    "assets/fonts/IBMPlexSans-Medium.ttf",
+    "assets/fonts/IBMPlexSans-SemiBold.ttf",
+    "assets/fonts/IBMPlexSans-Bold.ttf",
+
+    #
+    # Zahlen, Zeiten, Versionen und die gesperrten Rubriklabels.
+    #
+
+    "assets/fonts/IBMPlexMono-Regular.ttf",
+    "assets/fonts/IBMPlexMono-Medium.ttf",
+    "assets/fonts/IBMPlexMono-SemiBold.ttf",
+
 )
 
 
@@ -160,6 +199,9 @@ def font(name: str, theme=None) -> QFont:
     result.setPixelSize(size)
 
     result.setWeight(QFont.Weight(token.weight))
+
+    if token.italic:
+        result.setItalic(True)
 
     if token.letter_spacing:
 

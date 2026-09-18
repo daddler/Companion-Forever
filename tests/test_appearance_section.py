@@ -166,7 +166,7 @@ def test_every_density_can_be_chosen(section):
 # --------------------------------------------------
 
 
-@pytest.mark.parametrize("name", ["arcane", "jade", "amber"])
+@pytest.mark.parametrize("name", ["aqua", "steel", "violet"])
 def test_clicking_an_accent_applies_and_stores_it(section, name):
 
     from gui.theme.theme_manager import theme
@@ -313,9 +313,9 @@ def test_a_theme_change_from_elsewhere_updates_the_section(section):
 
     from gui.theme.theme_manager import theme
 
-    theme().set_accent("jade")
+    theme().set_accent("aqua")
 
-    assert _marked(section.accent_swatches) == ["jade"]
+    assert _marked(section.accent_swatches) == ["aqua"]
 
 
 def test_switching_the_theme_does_not_multiply_connections(section):

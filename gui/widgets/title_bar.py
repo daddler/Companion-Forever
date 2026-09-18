@@ -61,7 +61,7 @@ class WindowButton(QLabel):
     **Das Zeichen wird gemalt, nicht gesetzt.** Der erste Entwurf
     benutzte dafür Textzeichen ("✕", "❐", "–"), und das war aus
     demselben Grund falsch, aus dem die Status-Emoji verschwunden
-    sind: keines dieser Zeichen ist in der beigelegten JetBrains Mono
+    sind: keines dieser Zeichen ist in der beigelegten IBM Plex Mono
     enthalten (nachgeprüft über `QRawFont.supportsCharacter`). Qt hätte
     sie also stillschweigend aus irgendeiner Systemschrift geholt -
     auf jedem Rechner einer anderen, in anderer Strichstärke und

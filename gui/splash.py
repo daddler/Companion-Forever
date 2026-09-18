@@ -439,7 +439,7 @@ class SplashScreen(QWidget):
 
         font = painter.font()
 
-        font.setFamily("JetBrains Mono")
+        font.setFamily("IBM Plex Mono")
 
         size = max(9, int(band.height() * 0.52))
 

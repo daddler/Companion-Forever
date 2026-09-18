@@ -7,6 +7,7 @@ from core.raid_data_service import (
     SOURCE_WARCRAFTLOGS,
 )
 
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.widgets.hero_banner import HeroButton
 from gui.widgets.segmented_control import SegmentedControl
@@ -141,7 +142,7 @@ class ModulesSection(SectionContent):
         self.source_status.setWordWrap(True)
 
         self.source_status.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:11px;color:{Colors.TEXT_MUTED};"
         )
 
@@ -185,7 +186,7 @@ class ModulesSection(SectionContent):
         self.log_value.setWordWrap(True)
 
         self.log_value.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:11px;color:{Colors.TEXT_SECONDARY};"
         )
 
@@ -340,7 +341,7 @@ class ModulesSection(SectionContent):
             )
 
             self.log_value.setStyleSheet(
-                'font-family:"JetBrains Mono";'
+                f'font-family:"{tokens.FAMILY_MONO}";'
                 f"font-size:11px;color:{Colors.SUCCESS_LIGHT};"
             )
 
@@ -349,7 +350,7 @@ class ModulesSection(SectionContent):
             self.log_value.setText(location.reason)
 
             self.log_value.setStyleSheet(
-                'font-family:"JetBrains Mono";'
+                f'font-family:"{tokens.FAMILY_MONO}";'
                 f"font-size:11px;color:{Colors.WARNING_LIGHT};"
             )
 

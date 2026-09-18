@@ -1,6 +1,6 @@
 """
-WeintCompanion 2.0
-Design-Tokens
+WeintCompanion 5 - Forever Edition
+Design-Tokens, Palette "Graphit"
 
 Die einzige Stelle im Programm, an der ein Farbwert steht.
 
@@ -18,13 +18,32 @@ und damit ohne laufende Oberfläche testbar - dieselbe Trennung, die
 oder einen QPainter braucht, steht in `fonts.py`, `icons.py` oder im
 Widget selbst.
 
-Leitidee des Entwurfs, an der sich die Aufteilung hier ablesen lässt:
+WAS SICH MIT 5.0 GEÄNDERT HAT
+-----------------------------
 
-    Bernstein trägt die Bedeutung, Violett nur das Licht.
+Die **Schichtung bleibt**: Tiefe entsteht durch hellere Flächen und
+eine 1-px-Oberkante, nicht durch Rahmen oder Schatten. Was sich
+ändert, sind die Werte darin.
 
-Deshalb sind `ACCENTS` (wählbar, bedeutungstragend) und `SHEEN_VIOLET`
-(reines Flächenlicht) zwei getrennte Begriffe und nicht zwei Einträge
-derselben Tabelle.
+* Der Grund ist streng neutral und eine Spur kühl (#0C0C0F statt des
+  bräunlich getönten #0A0A0C). Der Grund dafür steht im Bild selbst:
+  fast alle Farbe darin kommt von den Klassenfarben, und ein warmer
+  Grund zieht an ihnen.
+* Der Akzent ist **einer**, und er trägt ausschliesslich Bedeutung.
+  Die Leitidee bis 4.0 war "Bernstein trägt die Bedeutung, Violett
+  nur das Licht" - zwei Farbbegriffe, von denen einer nichts
+  bedeutete. Das Flächenlicht ist ersatzlos weg; was übrig bleibt,
+  ist `ACCENTS`.
+* Violett ist die Voreinstellung. In WoW ist es keine besetzte
+  Bedeutungsfarbe und liegt neben keiner der neun Klassenfarben -
+  Bernstein lag neben Krieger und Schurke.
+* Drei Schriften statt zwei: eine Serifen-Display-Schrift für
+  Überschriften, eine humanistische Grotesk für alles Bedienbare,
+  eine Monospace für Zahlen und Rubriken.
+
+Der Akzent färbt Navigationsmarke, Hauptknopf, Fortschritt, Sterne,
+Rubriklabel im Handlungskontext und Fokusrahmen. Sonst nichts -
+deshalb bleibt die Oberfläche grau, auch wenn der Akzent wechselt.
 """
 
 from __future__ import annotations
@@ -45,15 +64,22 @@ from dataclasses import dataclass
 #
 
 SURFACE = {
-    "base": "#0A0A0C",      # Fenstergrund, Inhaltsfläche
-    "card": "#0F0F12",      # Karte, Kachel
+    "base": "#0C0C0F",      # Fenstergrund, Inhaltsfläche
+    "card": "#141419",      # Karte, Kachel
     "sunken": "#08080A",    # Navigationsspalte, Titelleiste, Balkenrinne
-    "raised": "#17171C",    # Hover, aktiver Navigationseintrag, Sekundärknopf
+    "raised": "#1C1C23",    # Hover, aktiver Navigationseintrag, Sekundärknopf
 }
 
 BORDER = {
-    "base": "#1E1E24",
-    "strong": "#2A2A34",
+    "base": "#26262E",
+    "strong": "#33333C",
+
+    #
+    # Die schwächste der drei: Rinnen, gesperrte Knöpfe, der Rahmen um
+    # eine Segmentleiste. Sie soll die Fläche gliedern, ohne selbst
+    # eine Kante zu behaupten.
+    #
+    "faint": "#1E1E25",
 }
 
 #
@@ -62,7 +88,7 @@ BORDER = {
 # Rahmen ist genau das, was der Entwurf vermeiden will.
 #
 
-EDGE_TOP = "rgba(255,255,255,0.06)"
+EDGE_TOP = "rgba(255,255,255,0.07)"
 
 #
 # Die Kartenfläche selbst ist ein senkrechter Verlauf (oben heller).
@@ -70,14 +96,14 @@ EDGE_TOP = "rgba(255,255,255,0.06)"
 # flach, sobald ihr der Rahmen fehlt.
 #
 
-CARD_GRADIENT = ("#121217", "#0C0C0F")
+CARD_GRADIENT = ("#17171C", "#101014")
 
 #
 # Variante `accent` derselben Karte (Entwurf §5): nur für die eine
 # Karte pro Ansicht, die eine Handlung trägt.
 #
 
-CARD_GRADIENT_ACCENT = ("#17141A", "#0D0C10")
+CARD_GRADIENT_ACCENT = ("#17161F", "#101014")
 
 #
 # Die eine hervorgehobene Kachel im Bewertungsraster der Academy
@@ -87,14 +113,14 @@ CARD_GRADIENT_ACCENT = ("#17141A", "#0D0C10")
 # Oberkante vorbehalten.
 #
 
-CARD_GRADIENT_WEAKEST = ("#1A1418", "#120E10")
+CARD_GRADIENT_WEAKEST = ("#1C1419", "#121016")
 
 TEXT = {
-    "primary": "#E8E8EA",
-    "secondary": "#A8A8B0",
-    "muted": "#6B6B74",
-    "faint": "#4A4A52",
-    "onAccent": "#0A0A0C",   # Text auf bernsteinfarbenem Knopf
+    "primary": "#EDEDF2",
+    "secondary": "#A0A0AC",
+    "muted": "#8A8A98",
+    "faint": "#5F5F6B",
+    "onAccent": "#14121C",   # Text auf der Akzentfläche
 }
 
 WHITE = "#FFFFFF"
@@ -114,30 +140,30 @@ SURFACE_EXTRA = {
     # Die Systemzeile der Uebersicht: eine Spur unter der Karte, damit
     # sie sich als Fuss und nicht als weitere Karte liest.
     #
-    "row": "#0C0C0F",
+    "row": "#101014",
 
     #
     # Oberkante des Titelleistenverlaufs (nach `sunken` hin).
     #
-    "titleBar": "#0C0C10",
+    "titleBar": "#101014",
 
     #
     # Flaeche eines Meldungsstreifens - identisch mit der Oberkante
     # des Kartenverlaufs, damit ein Toast wie eine angehobene Karte
     # wirkt.
     #
-    "toast": "#121217",
+    "toast": "#17171C",
 
     #
     # Der helle Punkt im Schimmer eines Skeletts.
     #
-    "shimmer": "#1B1B21",
+    "shimmer": "#1E1E25",
 
     #
     # Mitte des radialen Verlaufs im Startbildschirm - die einzige
     # Flaeche, die einen Hauch des Violetts als Grundton traegt.
     #
-    "splash": "#12101A",
+    "splash": "#14121C",
 }
 
 
@@ -192,17 +218,25 @@ SPLASH_ART = {
 # Akzent eine zweite Grundfarbe.
 #
 # `onBase` ist die Textfarbe **auf** der Akzentfläche und gehört
-# deshalb zur Variante, nicht zu TEXT: Jade ist dunkler als Bernstein
-# und verlangt einen anderen Wert.
+# deshalb zur Variante, nicht zu TEXT: Stahl ist so hell, dass darauf
+# derselbe dunkle Ton steht wie auf Violett, Aqua verlangt einen
+# eigenen.
+#
+# Violett ist die Voreinstellung, und zwar aus einem Grund, der mit
+# Geschmack nichts zu tun hat: es ist in WoW keine besetzte
+# Bedeutungsfarbe und liegt neben keiner der neun Klassenfarben. Der
+# Bernstein der Vorgängerfassung lag zwischen Krieger (#C79C6E) und
+# Schurke (#FFF569) - in einer Aufstellung war er dadurch eine
+# vierzehnte Klassenfarbe.
 #
 
 ACCENTS = {
-    "amber": {"base": "#D4A24A", "light": "#E8C96D", "onBase": "#0A0A0C"},
-    "arcane": {"base": "#A855F7", "light": "#C084FC", "onBase": "#0A0A0C"},
-    "jade": {"base": "#3ABE96", "light": "#6FD9B6", "onBase": "#04120E"},
+    "violet": {"base": "#7C6CFF", "light": "#8B7BFF", "onBase": "#14121C"},
+    "aqua": {"base": "#2DD4BF", "light": "#5FE3D2", "onBase": "#041613"},
+    "steel": {"base": "#D4D4DC", "light": "#E6E6EC", "onBase": "#14121C"},
 }
 
-ACCENT_DEFAULT = "amber"
+ACCENT_DEFAULT = "violet"
 
 #
 # Knopfverläufe je Zustand, abgeleitet aus der Akzentvariante. Der
@@ -213,25 +247,16 @@ ACCENT_DEFAULT = "amber"
 #
 
 ACCENT_PRESSED = {
-    "amber": "#B8862F",
-    "arcane": "#7E22CE",
-    "jade": "#2A9A78",
+    "violet": "#5D4FE0",
+    "aqua": "#1FA898",
+    "steel": "#A9A9B4",
 }
 
 ACCENT_HOVER = {
-    "amber": ("#F2D888", "#DFAE58"),
-    "arcane": ("#D0A0FF", "#B466F8"),
-    "jade": ("#8CE6C9", "#4ACCA4"),
+    "violet": ("#9F92FF", "#8B7BFF"),
+    "aqua": ("#7DEBDD", "#3FDCC8"),
+    "steel": ("#F2F2F6", "#D8D8E0"),
 }
-
-#
-# Violett-Indigo, **nur** als Flächenlicht: Titelleistenlicht,
-# Markenplakette, Diagrammlinie "Vergleich". Nie Statusfarbe, nie
-# Hauptknopf - außer der Nutzer wählt oben "arcane", dann kommt das
-# Violett über ACCENTS und nicht über diesen Wert.
-#
-
-SHEEN_VIOLET = ("#A855F7", "#6366F1")
 
 
 def accent(name: str | None = None) -> dict:
@@ -260,15 +285,15 @@ def accent(name: str | None = None) -> dict:
 #
 
 STATE = {
-    "ok": "#7CC06E",
-    "warn": "#D4A24A",
-    "error": "#E56B6B",
-    "live": "#E56B6B",     # pulsierend
-    "info": "#8B95F5",
+    "ok": "#34C77B",
+    "warn": "#F0A63A",
+    "error": "#F46366",
+    "live": "#F46366",     # pulsierend
+    "info": "#4EA8F5",
     "empty": None,
 }
 
-STATE_EMPTY_OUTLINE = "#4A4A52"
+STATE_EMPTY_OUTLINE = "#5F5F6B"
 
 #
 # Textfarbe auf getönter Fläche. Die Grundfarbe aus STATE ist als
@@ -277,10 +302,10 @@ STATE_EMPTY_OUTLINE = "#4A4A52"
 #
 
 STATE_TEXT = {
-    "ok": "#8FDA80",
-    "warn": "#E8C96D",
-    "error": "#F18C8C",
-    "info": "#A8B0FF",
+    "ok": "#34C77B",
+    "warn": "#F0A63A",
+    "error": "#F88C8B",
+    "info": "#4EA8F5",
 }
 
 #
@@ -366,9 +391,23 @@ def density(name: str | None = None) -> dict:
 # Typografie
 # ==========================================================
 
-FAMILY_SANS = "Inter"
+#
+# Drei Familien, drei Aufgaben - siehe `gui/theme/fonts.py` für die
+# Dateien und ihre Anmeldung.
+#
+# `FAMILY_DISPLAY` ist neu in 5.0 und ersetzt Inter im Überschriften-
+# bereich. Der Grund ist nicht Geschmack, sondern Aufgabe: eine
+# Überschrift steht einmal auf der Seite und soll Charakter haben,
+# eine Beschriftung steht dreissigmal und soll dicht und ruhig sein.
+# Beides von derselben Schrift verlangt zu haben war der Kompromiss,
+# den die Vorgängerfassung geschlossen hat.
+#
 
-FAMILY_MONO = "JetBrains Mono"
+FAMILY_DISPLAY = "Newsreader"
+
+FAMILY_SANS = "IBM Plex Sans"
+
+FAMILY_MONO = "IBM Plex Mono"
 
 
 @dataclass(frozen=True)
@@ -392,17 +431,48 @@ class TypeToken:
 
     uppercase: bool = False
 
+    italic: bool = False
+
 
 TYPE = {
-    "title": TypeToken(FAMILY_SANS, 28, 700, -0.02),
-    "section": TypeToken(FAMILY_SANS, 18, 600),
+
+    #
+    # Display: die Serifenschrift. Drei Stufen, weil es drei
+    # Überschriftenränge gibt - die Begrüssung der Übersicht, die
+    # Überschrift einer Seite, der eine grosse Satz in einer Karte.
+    #
+
+    "display": TypeToken(FAMILY_DISPLAY, 38, 500, -0.015),
+    "displayPage": TypeToken(FAMILY_DISPLAY, 30, 500, -0.01),
+    "displayCard": TypeToken(FAMILY_DISPLAY, 23, 500),
+
+    #
+    # Die kursive Fortsetzung einer Display-Zeile ("Heute ist Raid.
+    # *Noch zwei Stunden.*"). Als eigene Rolle und nicht als
+    # `italic=True` am Aufrufer: die Kursive ist im Entwurf ein
+    # Bedeutungsträger (der Nachsatz, nicht die Hauptsache) und
+    # steht deshalb hier, wo sie benannt ist.
+    #
+
+    "displayQuiet": TypeToken(FAMILY_DISPLAY, 38, 400, -0.015, italic=True),
+
+    #
+    # `title` bleibt als Name bestehen - er steht an gut hundert
+    # Stellen. Er ist jetzt die Seitenüberschrift.
+    #
+
+    "title": TypeToken(FAMILY_DISPLAY, 30, 500, -0.01),
+
+    "section": TypeToken(FAMILY_SANS, 17, 600),
     "card": TypeToken(FAMILY_SANS, 15, 600),
-    "body": TypeToken(FAMILY_SANS, 14, 400),
-    "small": TypeToken(FAMILY_SANS, 13, 400),
-    "mono": TypeToken(FAMILY_MONO, 12, 700),
-    "monoBig": TypeToken(FAMILY_MONO, 36, 700),
-    "eyebrow": TypeToken(FAMILY_MONO, 11, 400, 0.18, uppercase=True),
-    "micro": TypeToken(FAMILY_MONO, 10, 400, 0.16, uppercase=True),
+    "body": TypeToken(FAMILY_SANS, 13, 400),
+    "small": TypeToken(FAMILY_SANS, 12, 400),
+    "ui": TypeToken(FAMILY_SANS, 13, 500),
+
+    "mono": TypeToken(FAMILY_MONO, 12, 600),
+    "monoBig": TypeToken(FAMILY_MONO, 34, 600, -0.02),
+    "eyebrow": TypeToken(FAMILY_MONO, 11, 500, 0.18, uppercase=True),
+    "micro": TypeToken(FAMILY_MONO, 10, 400, 0.14, uppercase=True),
 }
 
 #

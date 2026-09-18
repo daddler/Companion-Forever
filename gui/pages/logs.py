@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 
 from core.paths import Paths
 from core.runtime import Runtime
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.widgets.filter_chip_bar import FilterChipBar
 from gui.widgets.hero_banner import HeroButton
@@ -113,7 +114,7 @@ class LogsPage(QWidget):
         self.footer_left = QLabel("")
 
         self.footer_left.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:11px;color:{Colors.TEXT_MUTED};"
         )
 
@@ -124,7 +125,7 @@ class LogsPage(QWidget):
         self.footer_right = QLabel("")
 
         self.footer_right.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:11px;color:{Colors.TEXT_MUTED};"
         )
 

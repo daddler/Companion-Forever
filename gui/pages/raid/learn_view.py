@@ -70,6 +70,7 @@ from core.raid_data_service import SOURCE_MOCK
 from core.resources import Resources
 
 from gui.navigation import RAID_VIEW_ANALYSIS, RAID_VIEW_SOURCE
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.theme.restyle import restyle
 from gui.theme.wow_colors import class_color, class_label, role_label
@@ -271,7 +272,7 @@ class LearnView(QWidget):
         self.profile_meta = QLabel("")
 
         self.profile_meta.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:11px;color:{Colors.TEXT_MUTED};"
             "background:transparent;border:none;"
         )

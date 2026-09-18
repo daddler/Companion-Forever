@@ -91,3 +91,25 @@ class AppState:
     discord_guilds: int = 0
 
     discord_latency: int | None = None
+
+    # --------------------------------------------------
+    # Wann zuletzt etwas passiert ist
+    # --------------------------------------------------
+    #
+    # Zwei Zeitpunkte als Epochensekunden, oder `0.0` für "noch nie".
+    #
+    # Die Null ist hier **keine** Uhrzeit, sondern eine Datenlücke -
+    # dieselbe Unterscheidung wie `at == -1` im Analyzer. Die
+    # Oberfläche schreibt dafür "noch nicht geprüft" und nicht
+    # "01.01.1970"; wer sie als Zeitpunkt läse, bekäme die härteste
+    # denkbare Untertreibung.
+    #
+    # Sie stehen hier und nicht in der Konfiguration: sie überleben
+    # den Programmlauf nicht und sollen es auch nicht. "Zuletzt
+    # geprüft vor drei Minuten" meint diese Sitzung; was vor dem
+    # letzten Start war, beantwortet das Protokoll.
+    #
+
+    last_check_at: float = 0.0
+
+    last_sync_at: float = 0.0

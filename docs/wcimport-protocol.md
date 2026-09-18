@@ -28,7 +28,10 @@ Umschlag-Regex und **vor** `:upper()` abgespalten — die Umschlag-Regex fasst
 Community-Suffix wird verworfen; jeder gildeninterne Typ verlangt zusätzlich
 das Feature, das seine Anzeige freischaltet (`IMPORT_FEATURE` in
 `modules/sync.lua`). `WA` (WeakAuras) und `SW` (Sim-Gewichte) sind frei —
-weder gildenintern.
+weder gildenintern. **Diese App baut seit 5.0 keinen `WA`-, `SW`- oder
+`TG`-Umschlag mehr** (Simmen und WeakAuras werden für Forever zunächst
+nicht unterstützt); im Protokoll bleiben die Typen, weil das Addon sie
+weiterhin versteht und ein Bot sie schicken darf.
 
 ## Mehrere Umschläge in einem Text (seit Codex 3.1.2.0)
 
@@ -41,16 +44,17 @@ Fehlertext. **Teilerfolg gilt als Fehler**, damit die Oberfläche das
 Eingabefeld stehen lässt (`SW` und `TG` ersetzen beide, ein zweiter
 Versuch schadet also nicht).
 
-Genutzt wird das von WeintCompanion nach einem Sim-Lauf: Gewichtung
-(`SW`) und Zielausrüstung (`TG`) kommen als zwei Zeilen in einem Zug.
+Genutzt wurde das bis 4.1 von WeintCompanion nach einem Sim-Lauf:
+Gewichtung (`SW`) und Zielausrüstung (`TG`) kamen als zwei Zeilen in
+einem Zug. Diese App schickt beides nicht mehr; die Mehrfach-Umschläge
+bleiben Teil des Protokolls.
 
-**Ältere Codex-Fassungen dürfen das nicht bekommen.** `SW.ParseTransfer`
-zerlegt an `:` und nimmt Feld 6; alles dahinter fällt weg, **ohne**
-Fehler — beide Zeilen zusammen ergäben dort eine Erfolgsmeldung, in der
-die Zielausrüstung fehlt. Die Companion prüft deshalb die installierte
-`.toc`-Fassung (`_combined_allowed()` in `gui/pages/sim.py`,
-`COMBINED_SINCE = 3.1.2.0`) und gibt im Zweifel nur eine Zeile aus. Eine
-nicht feststellbare Fassung gilt dabei wie eine zu alte.
+**Wer sie wieder schickt, muss die Codex-Fassung prüfen.**
+`SW.ParseTransfer` zerlegt an `:` und nimmt Feld 6; alles dahinter fällt
+weg, **ohne** Fehler — beide Zeilen zusammen ergäben in einer älteren
+Fassung eine Erfolgsmeldung, in der die Zielausrüstung fehlt. Die
+Grenze war `COMBINED_SINCE = 3.1.2.0`; eine nicht feststellbare Fassung
+gilt dabei wie eine zu alte.
 
 ## Typen
 
@@ -64,11 +68,12 @@ nicht feststellbare Fassung gilt dabei wie eine zu alte.
 - **`MAT`** — Materialbedarf.
 - **`WA`** — WeakAura-Metadaten (älterer Bot-Import, **kein** Importstring,
   eigener SavedVariables-Schlüssel `weakAuras`; nicht zu verwechseln mit der
-  neueren `weakaura_library`-Inbox-Brücke, siehe `weakaura-bridge.md`).
-- **`SW`** — Sim-Gewichte. Einziger Typ, der **nicht** vom Bot kommt: er wird
-  von **WeintCompanion** selbst gebaut (`core/stat_weights.py`, der
-  `WCIMPORT:SW:`-String) und über dieselbe Codex-seitige Envelope-Syntax
-  geparst (`modules/statweights.lua`). Voller Vertrag: `stat-weights-bridge.md`.
+  neueren `weakaura_library`-Inbox-Brücke, die diese App nicht mehr
+  bedient).
+- **`SW`** — Sim-Gewichte. Der einzige Typ, der nie vom Bot kam: bis 4.1
+  baute **WeintCompanion** ihn selbst und stellte ihn über dieselbe
+  Codex-seitige Envelope-Syntax zu (`modules/statweights.lua`). Diese App
+  baut ihn nicht mehr — das Addon versteht ihn weiterhin.
 
 ## Die Spieler-Zeile von RAIDWED/RAIDTHU: acht Felder
 

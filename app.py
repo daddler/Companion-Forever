@@ -262,7 +262,7 @@ def main():
     # --------------------------------------------------
     #
     # Zuerst die beigelegten Schriften registrieren, dann das Theme:
-    # das Stylesheet nennt "Inter" und "JetBrains Mono" beim Namen,
+    # das Stylesheet nennt die Familien beim Namen,
     # und Qt loest einen unbekannten Familiennamen wortlos gegen eine
     # Systemschrift auf. Bis 1.7 war das der Normalfall - beide
     # Familien standen im Stylesheet, aber keine lag der App bei.

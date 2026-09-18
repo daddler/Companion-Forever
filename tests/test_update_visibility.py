@@ -103,7 +103,7 @@ class _Manager:
 
 
 @pytest.fixture
-def row():
+def tile():
 
     _app()
 
@@ -115,17 +115,17 @@ def row():
 
     theme().set_system_motion_reduced(False)
 
-    from gui.pages.overview import SystemRow
+    from gui.widgets.bridge_tile import BridgeTile
 
     manager = _Manager()
 
-    widget = SystemRow(manager)
+    widget = BridgeTile()
 
     widget.manager = manager
 
-    widget.refresh()
+    widget.apply(manager.state)
 
-    _pump(300)
+    _pump(100)
 
     yield widget
 
@@ -133,163 +133,84 @@ def row():
 
 
 # --------------------------------------------------
-# Die Systemzeile
+# Die Kachel "Brücken"
 # --------------------------------------------------
+#
+# Sie hat die aufklappbare Systemzeile abgelöst. Der Unterschied ist
+# nicht kosmetisch: die Zeile war eine Handlungsaufforderung, die sich
+# bei Handlungsbedarf öffnete, und wiederholte damit, was die
+# Update-Karte daneben schon sagte. Die Kachel ist eine reine
+# Auskunft - sie hat keinen Knopf und keine Höhe, die sich ändert.
+#
+# Was sie dafür können muss: den Unterschied zwischen "aus" und
+# "darüber ist nichts bekannt" halten.
+#
 
 
-def _dots(row) -> dict:
+def _states(tile) -> dict:
 
     return {
-        key: dot.state()
-        for key, (dot, _label) in row.entries.items()
+        key: row.dot.state()
+        for key, row in tile.rows.items()
     }
 
 
-def test_without_updates_the_row_stays_closed(row):
+def test_an_installed_addon_and_a_linked_account_are_active(tile):
+
+    assert _states(tile)["addon"] == "ok"
+
+    assert _states(tile)["discord"] == "ok"
+
+    assert _states(tile)["roster"] == "ok"
+
+
+def test_a_missing_addon_is_empty_and_not_broken(tile):
     """
-    Vier grüne Punkte sind eine Auskunft und brauchen keinen Platz.
-    """
-
-    assert _dots(row)["addon"] == "ok"
-
-    assert _dots(row)["app"] == "ok"
-
-    assert row.height() == row.COLLAPSED
-
-    assert row.action.isHidden()
-
-
-def test_an_addon_update_opens_the_row_and_offers_a_way_there(row):
-
-    row.manager.state.update_available = True
-
-    row.manager.state.github_version = "1.8.0"
-
-    row.refresh()
-
-    _pump(400)
-
-    assert _dots(row)["addon"] == "warn"
-
-    assert row.height() == row.EXPANDED
-
-    assert not row.action.isHidden()
-
-    assert "1.8.0" in row.detail_rows["addon"].text()
-
-
-def test_a_companion_update_opens_the_row_too(row):
-    """
-    Der zweite, unabhängige Update-Kanal. Er darf nicht davon
-    abhängen, dass auch das Addon eines hat.
+    "Kein Addon installiert" ist kein Fehler dieser App, sondern ein
+    Schritt, der noch aussteht. Ein rotes Zeichen dafür wäre ein
+    Vorwurf - die Aufgabe steht nebenan in der Aufgabenkarte.
     """
 
-    row.manager.state.companion_update_available = True
+    tile.manager.state.addon_found = False
 
-    row.manager.state.companion_latest_version = "2.1.0"
+    tile.apply(tile.manager.state)
 
-    row.refresh()
+    assert _states(tile)["addon"] == "empty"
 
-    _pump(400)
-
-    assert _dots(row)["app"] == "warn"
-
-    assert row.height() == row.EXPANDED
-
-    assert "2.1.0" in row.detail_rows["app"].text()
+    assert tile.rows["addon"].value.text() == "FEHLT"
 
 
-def test_the_row_closes_again_once_everything_is_current(row):
-
-    row.manager.state.update_available = True
-
-    row.refresh()
-
-    _pump(400)
-
-    assert row.height() == row.EXPANDED
-
-    row.manager.state.update_available = False
-
-    row.refresh()
-
-    _pump(400)
-
-    assert row.height() == row.COLLAPSED
-
-    assert row.details.isHidden()
-
-
-def test_opening_the_row_is_animated(row):
+def test_without_an_account_the_roster_says_what_is_missing(tile):
     """
-    `motion.expand` ist für genau diese Zeile gedacht und war
-    unbenutzt - die Höhe sprang von 44 auf 132. Der Auslöser ist meist
-    eine Prüfung, die im Hintergrund fertig wird, also kein Klick: ohne
-    Bewegung sieht es aus, als hätte die Seite gezuckt.
+    Das Roster ist nicht abgeschaltet - ihm fehlt die Voraussetzung.
+    "AUS" wäre dort die falsche Auskunft, weil es niemanden zu der
+    Stelle führt, an der sich etwas ändern lässt.
     """
 
-    row.manager.state.update_available = True
+    tile.manager.state.discord_connected = False
 
-    row.refresh()
+    tile.apply(tile.manager.state)
 
-    seen = set()
+    assert _states(tile)["discord"] == "empty"
 
-    for _ in range(12):
-        _pump(20)
-        seen.add(row.height())
+    assert _states(tile)["roster"] == "empty"
 
-    _pump(400)
-
-    between = {
-        height
-        for height in seen
-        if row.COLLAPSED < height < row.EXPANDED
-    }
-
-    assert between, (
-        f"Keine Zwischenhöhen beobachtet ({sorted(seen)}) - die Zeile "
-        f"springt statt zu wachsen."
-    )
-
-    assert row.height() == row.EXPANDED
+    assert tile.rows["roster"].value.text() == "OHNE KONTO"
 
 
-def test_reduced_motion_sets_the_height_instead_of_animating(row):
+def test_an_unknown_sync_time_is_named_as_such(tile):
     """
-    "Bewegung reduzieren" ist eine Abschaltung, keine Abschwächung.
-    Der Endzustand muss trotzdem stimmen - eine Zeile, die auf halber
-    Höhe stehen bleibt, wäre schlimmer als eine Animation.
+    Dieselbe Trennung wie `stars == 0` und `at == -1`: aus einer
+    Datenlücke wird keine Uhrzeit.
     """
 
-    from gui.theme.theme_manager import theme
+    tile.apply(tile.manager.state)
 
-    theme().set_motion_reduced(True)
+    assert tile.synced.text() == "NOCH KEIN ABGLEICH"
 
-    try:
+    tile.apply(tile.manager.state, "vor 3 min")
 
-        row.manager.state.update_available = True
-
-        row.refresh()
-
-        _pump(20)
-
-        assert row.height() == row.EXPANDED
-
-        assert not row.details.isHidden()
-
-        row.manager.state.update_available = False
-
-        row.refresh()
-
-        _pump(20)
-
-        assert row.height() == row.COLLAPSED
-
-        assert row.details.isHidden()
-
-    finally:
-
-        theme().set_motion_reduced(False)
+    assert tile.synced.text() == "LETZTER ABGLEICH vor 3 min"
 
 
 # --------------------------------------------------

@@ -7,11 +7,18 @@ via the task-routing table below.
 
 ## What this is
 
-WeintCompanion is the official desktop companion app for the World of
-Warcraft addon **WeintCodex**. It's a PySide6 (Qt6) desktop application
+WeintCompanion 5 — **Forever Edition** — is the official desktop
+companion app for the World of Warcraft addon **WeintCodex**, for
+*World of Warcraft: Forever*. It's a PySide6 (Qt6) desktop application
 that installs/updates the addon, manages backups, and bridges data
 between the in-game addon and the **WeintCodex Bot** (Discord bot) via a
 small HTTP backend.
+
+It grew out of the Mists of Pandaria companion (`daddler/WeintCompanion`)
+by removal, not by rewrite — which is why its plumbing is mature and its
+game data is empty. The old app keeps its own repository and its own
+release channel; a later release of it will offer users a one-click
+switch over to this one.
 
 UI text, comments, and log messages are in German; code identifiers are
 in English.
@@ -58,19 +65,29 @@ WeintCodex Bot (Discord bot backend)  ←─────────────
   `core/raid_context.py` is a *projection* over `RaidDataService` — never
   a second store for mode, archive selection or replay. Detail:
   `docs/systems/raid-center.md`.
-- **A sim result is one run, not two imports.** `stat_weights` and
-  `target_gear` stay two contracts, two stores and two channels — but
-  they carry the same run id, and the UI shows one run. Never re-split
-  them in the interface. Detail: `docs/sim-run.md`.
 - **`stars == 0` means "no data", never "bad"; `at == -1` means "no
   timestamp known", never second 0.** These two conventions cross every
   layer (analyzer, Academy, addon bridge) and must never be normalized
   away. Detail: `docs/systems/weinttv-academy.md`.
 - **The game version is a table entry, never a hard-coded folder name.**
-  `core/wow_clients.py` is the one place that knows what `_classic_` is;
-  an empty `folder_names` means "not known yet" (Forever) and switches
-  detection to markers-only, and `max_level=None` means *unknown*, never
-  *none*. Detail: `docs/systems/wow-client-profiles.md`.
+  `core/wow_clients.py` holds exactly one entry (Forever) and stays a
+  table anyway: `_forever_` in it is a *guess*, detection falls back to
+  installation markers, and `max_level=None` would mean *unknown*, never
+  *none*. `Config.get_wow_client_id()` resolves the stored id before
+  anyone keys off it — a migrating user still has `mop_classic` in their
+  config, and reading their MoP folder as the Forever path would install
+  the addon into the wrong game. Detail:
+  `docs/systems/wow-client-profiles.md`.
+- **The game-data tables are empty on purpose, and that is a documented
+  state, not a gap.** `analyzer/data/avoidable.py` (boss mechanics),
+  `analyzer/data/class_abilities.py` (per-spec abilities),
+  `analyzer/data/encounters.py` (boss lists) and the class lesson
+  modules under `analyzer/academy/lessons/classes/` carry no content:
+  Forever reworks every class and its boss lists are unpublished.
+  Never backfill them from Mists of Pandaria — that would accuse players
+  of mistakes on mechanics they never meet. Tests that need a populated
+  table build their own via the `demo_abilities` / `demo_lessons` /
+  `demo_rules` / `demo_encounters` fixtures in `tests/conftest.py`.
 - **A single 401 must never unlink a Discord account.** Detail:
   `docs/companion-auth.md`.
 - **`upsert_variable()` (writing into the addon's SavedVariables) is the
@@ -105,12 +122,7 @@ Linux/Windows/AppImage build commands.
 | Ausrüstungsstand (`character_sheet`) | `docs/character-sheet-bridge.md` |
 | Live-Brücke (`companion_live.lua`, überlebt `/reload`) | `docs/live-bridge.md` |
 | Raid-Termin, Countdown, Zusagen | `docs/raid-schedule-bridge.md` |
-| Sim-Lauf (Kennung, Handshake, Zustände) | `docs/sim-run.md` |
-| Sim-Gewichte (wowsims/QE Live → Addon) | `docs/stat-weights-bridge.md` |
-| Zielausrüstung (wowsims-Optimierungsergebnis → Addon) | `docs/target-gear-bridge.md` |
 | WarcraftLogs Live/Archiv/Timeline | `docs/warcraftlogs-bridge.md` |
-| WeakAura-Bibliothek (Addon ↔ Companion ↔ Bot) | `docs/weakaura-bridge.md` |
-| Ausrüstung → wowsims-Exporter | `docs/wowsims-exporter-bridge.md` |
 | WCIMPORT-Protokoll (Bot-Slash-Commands → Addon) | `docs/wcimport-protocol.md` |
 | Charakterzuordnung, raid-roster, WeintAdmin-Backup | `docs/character-links-and-admin-bridge.md` |
 | Academy/Rotationshelfer lokale Nachrichten | `docs/academy-and-practice-bridge.md` |
@@ -127,12 +139,11 @@ Linux/Windows/AppImage build commands.
 | WeintTV/Academy (live), ratings, lesson catalog, "wer bin ich", Datenquelle/Quellenzeile/Wegweiser | `docs/systems/weinttv-academy.md` |
 | Archiv-Modus, Wiedergabe/Replay | `docs/systems/archive-and-replay.md` |
 | Addon-/Companion-Updates, Storage-Warnung, Changelog-Anzeige | `docs/systems/update-system.md` |
-| Übersicht-Seite (Termin, Roster, letzter Pull, Discord-Link) | `docs/systems/overview-page.md` |
 | Meine Charaktere, Vorbereitung, Charakterzuordnung-Seite | `docs/systems/character-pages.md` |
-| Simmen-Seite (wowsims/QE Live/WowSimsExporter) | `docs/systems/sim-pages.md` + `docs/sim-run.md` |
-| WeakAuras-Editor-Seite, Gilde-Freigabe | `docs/systems/weakauras-editor.md` |
 | Onboarding-Tour, "Was ist neu"-Popup | `docs/systems/whats-new-and-onboarding.md` |
-| Spielversion (MoP Classic ↔ Forever), Client-Erkennung, Installationspfade | `docs/systems/wow-client-profiles.md` |
+| Spielversion, Client-Erkennung, Installationspfade | `docs/systems/wow-client-profiles.md` |
+| Übersicht: Aufgabenkarte, Brücken-Kachel | `docs/systems/overview-page.md` |
+| Spieldaten (leer): Bosse, Fähigkeiten, Lektionen | `docs/systems/forever-data.md` |
 | Pfade, atomare Writes, Backups, Config/Auth-Speicherung | `docs/development/paths-and-storage.md` |
 | Tests, Build, AppImage/Windows-Installer | `docs/development/testing-and-build.md` |
 | "warum war das mal kaputt" | `docs/history/install-and-auth-incidents.md` |

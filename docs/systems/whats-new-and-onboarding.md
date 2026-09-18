@@ -26,7 +26,7 @@ Settings → Allgemein.
 ## Since 3.0: a complete, chaptered tour
 
 Reason: the tour dated from 1.0 (five pages); by 2.8 WeintTV, Academy,
-Archive+Replay, Meine Charaktere, Vorbereitung, Simmen, WeakAuras and
+Archive+Replay, Meine Charaktere, Vorbereitung and
 Charakterzuordnung had all shipped and the tour mentioned none of them.
 Six things not taste:
 

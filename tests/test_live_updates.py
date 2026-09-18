@@ -538,6 +538,14 @@ def _worker(schedule_changed: bool, update_changed: bool,
             process=lambda: storage_changed
         ),
         state_changed=_Signal(),
+        #
+        # Der Durchgang vermerkt am Ende seinen Zeitpunkt
+        # (`state.last_sync_at`) - daraus wird auf der Übersicht
+        # "letzter Abgleich". Der Platzhalter braucht deshalb einen
+        # Zustand, sonst prüft dieser Test die Verdrahtung nicht mehr,
+        # sondern stirbt an ihr.
+        #
+        state=types.SimpleNamespace(last_sync_at=0.0),
         _sync_lock=threading.Lock(),
         _sync_busy=True,
     )

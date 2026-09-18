@@ -70,10 +70,14 @@ class Colors:
     # Akzent
     # -------------------------------------------------
     #
-    # PRIMARY war bis 1.7 der Violett-Indigo-Verlauf. Seit 2.0 gilt
-    # "Bernstein traegt die Bedeutung, Violett nur das Licht": der
-    # Hauptakzent ist die gewaehlte Akzentvariante, das Violett bleibt
-    # als SHEEN uebrig und ist reines Flaechenlicht.
+    # Bis 4.0 standen hier zwei Farbbegriffe nebeneinander: der
+    # gewaehlte Akzent (bedeutungstragend) und ein violettes
+    # "Flaechenlicht" (SHEEN), das nichts bedeutete. Mit 5.0 gibt es
+    # nur noch einen - was Bedeutung traegt, ist der Akzent, alles
+    # andere ist grau. SHEEN und GOLD bleiben als Namen bestehen und
+    # zeigen auf den Akzent: sie stehen an gut zwei Dutzend Stellen,
+    # und ein Umbau dieser Stellen gehoert zur jeweiligen Seite und
+    # nicht in diese Zuordnungsdatei.
     #
 
     PRIMARY = _ACCENT["base"]
@@ -81,12 +85,12 @@ class Colors:
     PRIMARY_HOVER = _ACCENT["light"]
     PRIMARY_PRESSED = tokens.ACCENT_PRESSED[tokens.ACCENT_DEFAULT]
 
-    SHEEN = tokens.SHEEN_VIOLET[0]
-    SHEEN_2 = tokens.SHEEN_VIOLET[1]
+    SHEEN = _ACCENT["base"]
+    SHEEN_2 = _ACCENT["light"]
 
-    GOLD = tokens.ACCENTS["amber"]["base"]
-    GOLD_LIGHT = tokens.ACCENTS["amber"]["light"]
-    GOLD_HOVER = tokens.ACCENTS["amber"]["light"]
+    GOLD = _ACCENT["base"]
+    GOLD_LIGHT = _ACCENT["light"]
+    GOLD_HOVER = _ACCENT["light"]
 
     DISCORD = tokens.STATE["info"]
 

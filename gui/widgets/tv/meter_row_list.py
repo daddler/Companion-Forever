@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from gui.theme import tokens
 from gui.theme.colors import Colors
 from gui.widgets.tv.meter_bar import MeterBar
 
@@ -84,7 +85,7 @@ class _MeterRow(QWidget):
         self.value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
         self.value.setStyleSheet(
-            'font-family:"JetBrains Mono";'
+            f'font-family:"{tokens.FAMILY_MONO}";'
             f"font-size:11px;font-weight:700;color:{Colors.TEXT_SECONDARY};"
             "background:transparent;"
         )

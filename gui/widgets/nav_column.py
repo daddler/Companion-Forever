@@ -915,13 +915,15 @@ class _AccountButton(QFrame):
 
         if self._connected:
 
+            accent = theme().accent()
+
             background = (
                 "qlineargradient(x1:0,y1:0,x2:1,y2:1,"
-                f"stop:0 {tokens.SHEEN_VIOLET[0]},"
-                f"stop:1 {tokens.SHEEN_VIOLET[1]})"
+                f"stop:0 {accent['light']},"
+                f"stop:1 {accent['base']})"
             )
 
-            color = tokens.WHITE
+            color = accent["onBase"]
 
         else:
 

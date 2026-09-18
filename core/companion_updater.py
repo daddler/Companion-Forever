@@ -18,9 +18,22 @@ class CompanionUpdater:
 
         self.manager = manager
 
+        #
+        # Seit 5.0 ein anderes Repository. Die Forever-Fassung ist
+        # nicht die nächste Version der alten Companion, sondern eine
+        # eigene Anwendung - sie holt ihre Releases deshalb dort, wo
+        # sie veröffentlicht werden, und nicht dort, wo die alte
+        # weiterläuft.
+        #
+        # Die alte Companion behält ihr eigenes Repository und
+        # aktualisiert sich weiter daraus. Nur so kann sie den
+        # Umstieg später als **ein** angekündigtes Update anbieten,
+        # statt ihn den Nutzern stillschweigend unterzuschieben.
+        #
+
         self.github = GitHubUpdater(
             owner="daddler",
-            repo="WeintCompanion",
+            repo="Companion-Forever",
         )
 
         self.linux = LinuxUpdater()

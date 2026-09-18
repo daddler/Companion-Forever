@@ -104,7 +104,6 @@ calls `full_refresh()`/`refresh_update_status()`.
 The same rule shows up per-page: `ArchiveBrowser` must not rebuild its
 columns unconditionally on every `archiveChanged` (the scroll position
 would jump four times a second during a replay — see
-`../systems/archive-and-replay.md`), and `gui/pages/sim.py`'s `read_export()`
-runs only in `on_enter()`, never in `refresh()`, because reading a file on
-every redraw is the same class of cost as a network call in a click
-handler.
+`../systems/archive-and-replay.md`), and any page that reads a file does it
+in `on_enter()`, never in `refresh()` — reading a file on every redraw is
+the same class of cost as a network call in a click handler.

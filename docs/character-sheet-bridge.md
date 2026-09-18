@@ -194,7 +194,7 @@ Meldung sie noch kannte.
 ## Stufe und Anzeige (ab Companion 2.3.1)
 
 `CharacterStore` speichert **jede** Meldung, zeigt aber nur
-Charaktere ab `min_level()` (Vorgabe 90, die Höchststufe von MoP
+Charaktere ab `min_level()` (Vorgabe 60, die Höchststufe von
 Classic; `characters_min_level` in der `config.json` setzt den Wert
 herunter). "Meine Charaktere", "Vorbereitung" und die Kachel auf der
 Übersicht lesen dieselbe gefilterte Liste, damit sie nicht

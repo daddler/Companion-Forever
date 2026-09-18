@@ -72,4 +72,4 @@ Linux updater script; also lists `CHANGELOG.md` under `datas` — see
   `../systems/weinttv-academy.md`.
 - Stat-weights/QE-Live parser parity with the addon's own Lua tests:
   `tests/test_stat_weights.py`, `tests/test_qelive.py` — see
-  `../systems/sim-pages.md`.
+  `../systems/forever-data.md`.

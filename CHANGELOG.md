@@ -1,6 +1,63 @@
 # Changelog
 
-Alle nennenswerten Änderungen an WeintCompanion, von Version 0.7.2 bis 1.6.2.
+Alle nennenswerten Änderungen an WeintCompanion.
+
+## 5.0.0
+
+**Die Forever Edition.** Eine eigene Anwendung für *World of Warcraft:
+Forever*, aus der bestehenden Companion hervorgegangen — nicht neu
+gebaut, sondern abgespeckt. Alles, was funktioniert hat, funktioniert
+weiter: die Discord-Verknüpfung, die Brücke ins Addon, die
+Sicherungen, der Updater.
+
+**Mists of Pandaria ist weg.** Nicht abgeschaltet, sondern entfernt:
+eine Spielversion, Höchststufe 60, neun Klassen statt elf,
+siebenundzwanzig Talentbäume statt vierunddreissig. Todesritter und
+Mönch gibt es in Forever nicht, und Klassen, die niemand spielen kann,
+in einer Tabelle stehen zu lassen wäre kein Vorrat gewesen, sondern
+eine Einladung, ihnen anderswo Lektionen beizulegen.
+
+**Simmen und WeakAuras sind vorerst nicht dabei.** Beides wird für
+Forever zunächst nicht unterstützt. Eine Seite, die es nicht gibt, ist
+ehrlicher als eine, die ins Leere zeigt.
+
+**Neues Aussehen: „Graphit".** Die Schichtung bleibt — Tiefe entsteht
+durch hellere Flächen und eine feine Oberkante, nicht durch Rahmen und
+Schatten. Neu sind ein streng neutraler, leicht kühler Grund, eine
+Serifenschrift für Überschriften und **ein** Akzent, der
+ausschliesslich Bedeutung trägt. Voreingestellt ist Violett: in WoW ist
+es keine besetzte Bedeutungsfarbe und liegt neben keiner der neun
+Klassenfarben. Aqua und Stahl stehen daneben zur Wahl. Fast alle Farbe
+im Bild kommt jetzt von den Klassenfarben — das ist Absicht.
+
+**Die Übersicht beantwortet eine Frage statt drei.** Bis 4.1
+verteilte sich der Handlungsbedarf auf einen Update-Hinweis oben,
+einen Vorbereitungsring in der Mitte und eine aufklappbare Systemzeile
+unten. Jetzt steht links der Raidabend und rechts **„Was jetzt zu tun
+ist"** — eine Liste, auf der nur steht, wogegen sich etwas tun lässt,
+und jede Zeile hat ihren Knopf. Darunter drei Kacheln: letzter Pull,
+Vorbereitung, und was zwischen Addon, App und Bot tatsächlich läuft.
+
+**Was die App über Forever noch nicht weiss, behauptet sie nicht.**
+Das Spiel erscheint am 4. November 2026; die Bosse von Barrow Deeps,
+Hyjal Summit und Onyxias Hort sind nicht veröffentlicht, und jede
+Klasse wird überarbeitet. Bossmechaniken, Fähigkeiten je
+Spezialisierung und die Klassenlektionen der Academy sind deshalb
+**leer** — nicht aus MoP übernommen. Eine übernommene Tabelle hätte
+Spielern Fehler bei Mechaniken vorgehalten, denen sie nie begegnen,
+und ihnen Rotationen beigebracht, die es nicht gibt. Leer heisst hier
+„noch nicht bekannt" und nie „nichts gefunden": die Oberfläche sagt
+das auch so. Allgemeine Lektionen und die nach Rolle gelten
+unverändert — Bewegung, Unterbrechungen und Cooldown-Disziplin ändern
+sich mit keiner Spielfassung.
+
+**Beim Umstieg von der alten Companion** wird der Pfad deiner
+MoP-Installation **nicht** übernommen. Das ist Absicht: er zeigt auf
+eine andere Spielversion, und das Addon dorthin zu installieren liesse
+sich nicht rückgängig machen. Du wählst den Forever-Ordner einmal
+selbst. Discord-Verknüpfung, Einstellungen und Sicherungen bleiben
+unberührt, und die alte Fassung findet ihren Ordner weiterhin, falls
+du zurückgehst.
 
 ## 4.1.0
 

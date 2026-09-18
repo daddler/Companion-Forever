@@ -173,7 +173,7 @@ be dismissed unread.
 **And the backup once saved the wrong thing.**
 `BackupManager.create_backup()` archived the **addon folder**, not the
 `SavedVariables` — exactly backwards, since only the SavedVariables data
-(Bossnotizen, Twinkliste, Encounter-Fortschritt, Academy, WeakAura-
+(Bossnotizen, Twinkliste, Encounter-Fortschritt, Academy-
 Bibliothek) is unrecoverable; the addon folder is on GitHub. The archive
 now carries both, cleanly separated (`WeintCodex/…` and `WTF/…`). Three
 rules: `restore()` unpacks **only** the addon part; the game-state part
