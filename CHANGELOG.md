@@ -2,6 +2,19 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 5.0.1
+
+**Das Addon kam aus dem falschen Repository.** WeintCodex gibt es jetzt
+zweimal: die Fassung für *Mists of Pandaria Classic* und die für
+*Forever*. Diese App zeigte noch auf die MoP-Fassung — Download,
+Prüfsumme und Installation liefen dabei anstandslos durch, weil beide
+ZIPs denselben Ordnernamen und dieselbe `.toc` tragen. Bemerkt hätte
+man es erst im Spiel, an einer Oberfläche, die von Sockeln und
+Umschmieden spricht, die es in Forever nicht gibt.
+
+Betroffen waren die Update-Quelle selbst sowie die beiden sichtbaren
+Verweise auf der Seite *Addon & Updates* und unter *Über*.
+
 ## 5.0.0
 
 **Die Forever Edition.** Eine eigene Anwendung für *World of Warcraft:
