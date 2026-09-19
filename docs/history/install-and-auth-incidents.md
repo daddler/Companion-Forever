@@ -14,6 +14,18 @@ exists as a fast chronological overview.
   (permissions vs. WoW still running) and looked identical from outside.
   Fixed with a writability probe instead of a platform-dependent process
   check. Detail: `../systems/update-system.md`.
+- **With no WoW folder set, the install crashed on `Path(None)`.**
+  `state.addon_path` is `Path | None` and is `None` whenever no game
+  installation is known, but the workflow only checked it in the
+  permission probe — so it downloaded the release first and then failed
+  in `Installer.install()` with `argument should be a str or an
+  os.PathLike object where __fspath__ returns a str, not 'NoneType'`.
+  For Forever this is the normal case, not an edge case: the game is
+  unreleased, detection has nothing to find, and the "Addon
+  installieren" button is offered anyway. Fixed by asking "where to"
+  before the download (`missing_target_message()` names
+  *Einstellungen → WoW-Client*), with the installer refusing the same
+  way for its own callers. Detail: `../systems/update-system.md`.
 - **The backup archived the wrong half** — the addon folder (already on
   GitHub) instead of the SavedVariables (genuinely unrecoverable). Fixed
   by backing up both, separately. Detail: `../development/paths-and-storage.md`.

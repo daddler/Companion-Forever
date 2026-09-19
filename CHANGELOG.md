@@ -2,6 +2,30 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 5.0.2
+
+**Die Installation brach mit einer Meldung ab, die niemandem etwas
+sagt.** Im Protokoll stand
+
+    Installation fehlgeschlagen: argument should be a str or an
+    os.PathLike object where __fspath__ returns a str, not 'NoneType'
+
+— der Wortlaut einer Python-Bibliothek an einer Stelle, an der jemand
+nur wissen will, was er als Nächstes tun soll. Dahinter steckte eine
+einzige Ursache: es war **kein WoW-Ordner hinterlegt**. Damit stand
+nicht fest, wohin WeintCodex überhaupt gehört, und die Frage wurde erst
+gestellt, nachdem das Release bereits heruntergeladen war.
+
+Für *Forever* ist das kein Randfall, sondern der Normalfall: das Spiel
+ist nicht erschienen, es gibt nichts zu finden, und wer die App vorher
+einrichtet, hat noch keinen Ordner. Geprüft wird jetzt **vor** dem
+Download, und die Antwort nennt den Ort, an dem sich die Frage
+beantworten lässt — *Einstellungen → WoW-Client*.
+
+Die Karte auf *Addon & Updates* sagt in diesem Fall „KEIN SPIELORDNER"
+statt „NICHT INSTALLIERT": ohne Ordner ist nicht bekannt, dass das
+Addon fehlt — nur, dass niemand nachsehen konnte.
+
 ## 5.0.1
 
 **Das Addon kam aus dem falschen Repository.** WeintCodex gibt es jetzt

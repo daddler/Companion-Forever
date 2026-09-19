@@ -31,8 +31,10 @@ import pytest
 
 from core.install_errors import (
     InstallPermissionError,
+    InstallTargetError,
     in_protected_location,
     is_permission_error,
+    missing_target_message,
     permission_message,
     probe_writable,
     translate,
@@ -413,6 +415,87 @@ def test_installer_blames_an_open_folder_when_writing_works(tmp_path, monkeypatc
     #
 
     assert (addon_path / "old.txt").exists()
+
+
+# ==========================================================
+# Kein Spielordner
+# ==========================================================
+#
+# Gemeldet wurde:
+#
+#     INFO    Starte Addon-Installation...
+#     INFO    Lade WeintCodex herunter...
+#     SUCCESS Download abgeschlossen.
+#     INFO    Installiere WeintCodex...
+#     ERROR   Installation fehlgeschlagen: argument should be a str
+#             or an os.PathLike object where __fspath__ returns a
+#             str, not 'NoneType'
+#
+# `state.addon_path` war `None` - es gab keine WoW-Installation, also
+# kein Ziel. Herunterladen liess sich trotzdem etwas.
+
+
+def test_the_message_names_where_the_folder_is_chosen():
+    """
+    Nicht "addon_path ist None", sondern der Ort, an dem die Frage
+    beantwortet wird.
+    """
+
+    message = missing_target_message()
+
+    assert "WoW-Client" in message
+
+    assert "None" not in message
+
+    assert "__fspath__" not in message
+
+
+def test_the_installer_says_what_is_missing_instead_of_crashing(tmp_path):
+    """
+    Der Installer ist ein eigener Einstieg - auch ohne den Ablauf
+    davor darf `Path(None)` nicht die Antwort sein.
+    """
+
+    zip_path = tmp_path / "WeintCodex.zip"
+
+    with zipfile.ZipFile(zip_path, "w") as archive:
+        archive.writestr("WeintCodex/WeintCodex.toc", "## Version: 5.0.0.0")
+
+    with pytest.raises(InstallTargetError) as caught:
+        Installer().install(zip_path, None)
+
+    assert "WoW-Client" in str(caught.value)
+
+    #
+    # Und nicht der Wortlaut der Bibliothek.
+    #
+
+    assert "__fspath__" not in str(caught.value)
+
+
+def test_workflow_refuses_before_downloading_when_there_is_no_target(
+    tmp_path,
+):
+    """
+    Die Frage "wohin" steht vor dem Download, genauso wie die
+    Rechtefrage: beide Antworten stehen schon vorher fest.
+    """
+
+    manager = _Manager(tmp_path / "WoW" / "Interface" / "AddOns" / "WeintCodex")
+
+    manager.state.addon_path = None
+
+    manager.state.addon_found = False
+
+    result = InstallerWorkflow(manager).run()
+
+    assert result.success is False
+
+    assert "WoW-Client" in result.message
+
+    assert manager.downloader.calls == 0
+
+    assert "success" not in manager.logger.levels()
 
 
 def test_workflow_refuses_when_the_probe_says_no(tmp_path, monkeypatch):

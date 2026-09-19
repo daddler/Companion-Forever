@@ -117,6 +117,45 @@ Download**; `WorkflowResult.message` trägt den Satz aus der Ausnahme; die
 Einblendung hängt an `UpdateRunner.finished` in `MainWindow`, nicht an
 einer Seite (**ein** Läufer, beide Seiten lösen ihn aus).
 
+## Ohne Spielordner gibt es kein Ziel — und das ist keine Ausnahme
+
+Gemeldet: im Protokoll stand nach einem sauberen Download
+
+```
+ERROR Installation fehlgeschlagen: argument should be a str or an
+      os.PathLike object where __fspath__ returns a str, not 'NoneType'
+```
+
+**`AppState.addon_path` ist `Path | None`.** Es wird in
+`CompanionManager.detect_addon()` gesetzt und bleibt `None`, solange
+`addons_path` fehlt — also solange keine WoW-Installation hinterlegt
+ist. `InstallerWorkflow.run()` kannte den Fall bereits (die
+Rechte-Probe stand unter `if state.addon_path and …`), zog daraus aber
+keine Folge: der Ablauf lief weiter, lud das Release, und erst
+`Path(addon_path)` im Installer stiess auf `None`.
+
+**Für Forever ist das der Normalfall.** Das Spiel ist nicht
+erschienen, der Ordnername in `core/wow_clients.py` ist eine Vermutung,
+die Kennzeichensuche findet nichts, solange nichts installiert ist —
+und die Karte auf *Addon & Updates* bietet „Addon installieren"
+trotzdem an. Wer die App vor dem Spiel einrichtet, landet genau hier.
+
+Drei Folgen:
+
+- `InstallerWorkflow.run()` fragt **vor dem Download** „wohin", aus
+  demselben Grund wie bei der Rechtefrage darüber: die Antwort steht
+  schon vorher fest. Danach ist die Probe unbedingt
+  (`if not probe_writable(state.addon_path.parent)`), weil `None` hier
+  nicht mehr ankommen kann.
+- `core/install_errors.missing_target_message()` ist der Satz, und er
+  nennt den Ort statt der Variablen: *Einstellungen → WoW-Client*.
+  `Installer.install()` wirft ihn als `InstallTargetError` für eigene
+  Aufrufer — die Frage „wohin" steht vor jeder anderen.
+- Die Karte sagt **„KEIN SPIELORDNER"** statt „NICHT INSTALLIERT".
+  Ohne Ordner ist nicht bekannt, dass das Addon fehlt, sondern nur,
+  dass niemand nachsehen konnte (`unknown` ist nicht `0`). Der Knopf
+  bleibt bedienbar: ein toter Knopf nennt keinen nächsten Schritt.
+
 ## Every release ships its changelog — this is not optional
 
 Same rule as the addon (see `../../../Codex-Forever/docs/development/releases.md`),

@@ -4,7 +4,12 @@ import shutil
 import tempfile
 import zipfile
 
-from core.install_errors import probe_writable, translate
+from core.install_errors import (
+    InstallTargetError,
+    missing_target_message,
+    probe_writable,
+    translate,
+)
 
 
 class Installer:
@@ -12,6 +17,27 @@ class Installer:
     # --------------------------------------------------
 
     def install(self, zip_file, addon_path):
+
+        #
+        # KEIN ZIEL IST EINE ANTWORT, KEIN ABSTURZ.
+        #
+        # `addon_path` ist `None`, solange kein WoW-Ordner hinterlegt
+        # ist - `AppState.addon_path` ist ausdruecklich `Path | None`.
+        # `Path(None)` wirft darauf
+        #
+        #   argument should be a str or an os.PathLike object where
+        #   __fspath__ returns a str, not 'NoneType'
+        #
+        # und genau dieser Satz stand im Protokoll eines Nutzers, der
+        # nur WeintCodex installieren wollte. Der Ablauf in
+        # core/installer_workflow.py faengt den Fall inzwischen vor
+        # dem Download ab; hier steht er trotzdem, weil diese Methode
+        # ein eigener Einstieg ist und die Frage "wohin" vor jeder
+        # anderen kommt.
+        #
+
+        if addon_path is None:
+            raise InstallTargetError(missing_target_message())
 
         zip_file = Path(zip_file)
         addon_path = Path(addon_path)
