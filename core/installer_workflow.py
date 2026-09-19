@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from core.downloader import ChecksumError
-from core.install_errors import permission_message, probe_writable
+from core.install_errors import (
+    missing_target_message,
+    permission_message,
+    probe_writable,
+)
 from core.paths import Paths
 from core.workflow_result import WorkflowResult
 
@@ -35,6 +39,35 @@ class InstallerWorkflow:
             )
 
         #
+        # WOHIN ÜBERHAUPT?
+        #
+        # `state.addon_path` ist `None`, solange kein WoW-Ordner
+        # hinterlegt ist (siehe `CompanionManager.detect_addon()`:
+        # ohne `addons_path` gibt es kein Ziel). Bis 5.0.1 lief der
+        # Ablauf trotzdem weiter, lud das Release herunter und
+        # scheiterte erst im Installer an `Path(None)`:
+        #
+        #   ERROR Installation fehlgeschlagen: argument should be a
+        #         str or an os.PathLike object where __fspath__
+        #         returns a str, not 'NoneType'
+        #
+        # Für Forever ist das der Normalfall und nicht der Randfall -
+        # das Spiel ist nicht erschienen, es gibt nichts zu finden,
+        # und der Knopf "Addon installieren" steht trotzdem bereit.
+        #
+        # Vor dem Download, aus demselben Grund wie die Rechtefrage
+        # darunter: die Antwort steht schon vorher fest.
+        #
+
+        if state.addon_path is None:
+
+            reason = missing_target_message()
+
+            logger.error(reason)
+
+            return WorkflowResult(success=False, message=reason)
+
+        #
         # SCHREIBRECHT ZUERST, VOR DEM DOWNLOAD.
         #
         # Gemeldet wurde: "der Download startet normal, bricht dann aber
@@ -51,7 +84,7 @@ class InstallerWorkflow:
         # entscheiden statt einer Vermutung.
         #
 
-        if state.addon_path and not probe_writable(state.addon_path.parent):
+        if not probe_writable(state.addon_path.parent):
 
             reason = permission_message(
                 state.addon_path.parent, folder_writable=False

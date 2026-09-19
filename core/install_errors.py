@@ -47,6 +47,24 @@ import tempfile
 from pathlib import Path
 
 
+class InstallTargetError(RuntimeError):
+    """
+    Es steht nicht fest, **wohin** installiert werden soll.
+
+    Der Fall liegt noch vor der Rechtefrage: ohne hinterlegten
+    WoW-Ordner gibt es kein `Interface/AddOns`, über dessen Rechte
+    sich streiten ließe. Er ist bis 5.0.1 gar nicht geprüft worden -
+    `state.addon_path` war dann `None`, und `Path(None)` warf
+
+        argument should be a str or an os.PathLike object where
+        __fspath__ returns a str, not 'NoneType'
+
+    also die Innereien einer Bibliothek an eine Stelle, an der jemand
+    nur wissen will, was er tun soll. `str(exc)` ist hier wie bei
+    `InstallPermissionError` der fertige deutsche Satz.
+    """
+
+
 class InstallPermissionError(PermissionError):
     """
     Ein Zugriffsfehler, der seinen Grund und den nächsten Schritt schon
@@ -210,6 +228,31 @@ def probe_writable(path) -> bool:
         pass
 
     return True
+
+
+def missing_target_message() -> str:
+    """
+    Der Satz für "es ist gar kein Spielordner hinterlegt".
+
+    Er nennt den Ort, an dem die Frage beantwortet wird, und nicht die
+    fehlende Variable: dass intern `addon_path` leer ist, hilft
+    niemandem weiter - dass unter "Einstellungen → WoW-Client" ein
+    Ordner fehlt, schon.
+
+    Für Forever ist das **kein Randfall**: die Spielversion ist noch
+    nicht erschienen, der Ordnername in `core/wow_clients.py` ist eine
+    Vermutung, und die Kennzeichensuche findet nichts, solange nichts
+    installiert ist. Wer die App vor dem Spiel einrichtet, landet
+    genau hier.
+    """
+
+    return (
+        "Es ist kein World-of-Warcraft-Ordner hinterlegt - damit steht "
+        "nicht fest, wohin WeintCodex installiert werden soll. Wähle "
+        "deine Installation unter „Einstellungen → WoW-Client“ aus "
+        "(dort liegt auch die Suche) und starte die Installation "
+        "danach erneut."
+    )
 
 
 def permission_message(path, *, folder_writable: bool) -> str:

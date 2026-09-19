@@ -837,7 +837,32 @@ class AddonPage(Page):
             update_note(ADDON, state)
         )
 
-        if not state.addon_found:
+        #
+        # OHNE SPIELORDNER GIBT ES KEIN "NICHT INSTALLIERT".
+        #
+        # `addon_path` ist `None`, solange keine WoW-Installation
+        # hinterlegt ist - dann ist nicht bekannt, dass das Addon
+        # fehlt, sondern nur, dass niemand nachsehen konnte. Die Karte
+        # sagt das jetzt, statt eine Abwesenheit zu behaupten, die sie
+        # nicht geprüft hat (`unknown` ist nicht `0`).
+        #
+        # Der Knopf bleibt trotzdem bedienbar: ein toter Knopf nennt
+        # keinen nächsten Schritt, und der Ablauf antwortet seit 5.0.2
+        # mit dem Satz aus `core/install_errors.missing_target_message()`
+        # - vor dem Download, nicht danach.
+        #
+
+        if state.addon_path is None:
+
+            self.addon_card.set_status("KEIN SPIELORDNER", "warn")
+
+            self.addon_card.primary_button.setText("Addon installieren")
+
+            self.addon_card.primary_button.setEnabled(True)
+
+            self.addon_card.secondary_button.setEnabled(False)
+
+        elif not state.addon_found:
 
             self.addon_card.set_status("NICHT INSTALLIERT", "neutral")
 
