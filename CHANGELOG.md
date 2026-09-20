@@ -2,6 +2,48 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 5.0.3
+
+**Die Charakterliste zeigte die falschen Charaktere — und zwar
+ausgerechnet die aus dem alten Spiel.** Wer von der Companion für
+*Mists of Pandaria* herüberkam, fand in *Meine Charaktere* und
+*Vorbereitung* seine 90er wieder, während von Forever nichts ankam.
+Zwei Ursachen — und dazu eine Vorgabe, die für ein Spiel am
+Erscheinungstag nicht mehr passt:
+
+**Die Liste liegt im selben Ordner wie die der alten Companion.**
+`characters.json` steht seit jeher unter
+`~/.local/share/WeintCompanion` bzw. `%LOCALAPPDATA%/WeintCompanion`,
+und dieser Ordner gehört beiden Anwendungen. Die mitgebrachten
+Charaktere standen hier also als Forever-Charaktere: Stufe 90 in einem
+Spiel, das bei 60 endet, mit einer Ausrüstung, die es dort nicht gibt.
+Jeder Eintrag trägt jetzt die **Spielversion**, die ihn gemeldet hat,
+und gezeigt wird nur die aktive. Gelöscht wird nichts: die alten
+Charaktere bleiben gespeichert, werden gezählt und benannt — in der
+Fußzeile und, wenn sonst nichts zu zeigen ist, in einem eigenen
+Leerzustand. Auch ein gleichnamiger Charakter überschreibt den alten
+nicht mehr: Name und Realm dürfen sich zwischen zwei Spielen
+wiederholen. Wer zur alten Companion zurückgeht, findet dort alles
+unverändert vor.
+
+**Die Mindeststufe stand auf 90.** Sie kam aus derselben
+Konfiguration, und in Forever erreicht sie niemand — die Seite wäre
+also auch ohne die erste Ursache leer geblieben, ohne jeden Hinweis
+darauf, warum. Eine Mindeststufe über der Höchststufe der
+Spielversion wird jetzt ignoriert, genau wie eine 0 oder ein Text.
+
+**Und die Vorgabe für Forever ist die 1.** Bis 5.0.2 zeigten beide
+Seiten nur Charaktere auf Höchststufe — richtig für eine Spielversion,
+die seit Jahren läuft, falsch für eine, die gerade erscheint: dort hat
+wochenlang niemand eine 60, und eine Seite, die genau in dieser Zeit
+leer bleibt, beantwortet gar nichts. Die Zahl gehört zur Spielversion
+und steht bei ihr; wer seine Liste später wieder auf die Raidfähigen
+eingrenzen will, setzt `characters_min_level` in der `config.json`.
+
+Nebenbei: die mitgelieferte `config.example.json` trug noch
+`mop_classic` als Spielversion — eine Vorlage für ein Spiel, das diese
+App nicht mehr bedient.
+
 ## 5.0.2
 
 **Die Installation brach mit einer Meldung ab, die niemandem etwas

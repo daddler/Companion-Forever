@@ -112,6 +112,23 @@ class WowClient:
     max_level: int | None = None
 
     #
+    # Ab welcher Stufe ein Charakter in "Meine Charaktere" und
+    # "Vorbereitung" erscheint, solange niemand etwas anderes
+    # einstellt. **None heisst "die Höchststufe"** - die Vorgabe, aus
+    # der die Regel entstanden ist: beide Seiten fragen, womit man in
+    # den Raid geht, und das fragt sich nur für Charaktere, die
+    # mitkönnen.
+    #
+    # Eine frisch erschienene Spielversion kehrt das um: dort hat
+    # wochenlang niemand die Höchststufe, und eine Seite, die deshalb
+    # leer bleibt, beantwortet gar nichts mehr. Deshalb steht die Zahl
+    # hier und nicht fest in `core/character_store.py` - sie gehört
+    # zur Spielversion, genau wie ihre Höchststufe.
+    #
+
+    character_min_level: int | None = None
+
+    #
     # Erschienen? Eine nicht erschienene Version lässt sich bereits
     # einrichten - der Ordner wird dann von Hand gewählt, weil es
     # nichts zu finden gibt.
@@ -167,6 +184,18 @@ FOREVER = WowClient(
     #
 
     max_level=60,
+
+    #
+    # Forever fängt bei null an: am Erscheinungstag hat niemand eine
+    # 60, und die ersten Wochen verbringen alle mit dem Hochspielen.
+    # Eine Liste, die erst ab Stufe 60 etwas zeigt, wäre in dieser
+    # Zeit leer - und zwar genau für die Nutzer, die am meisten
+    # spielen. Deshalb zählt hier **jeder** Charakter; wer seine Liste
+    # später auf die Raidfähigen eingrenzen will, setzt
+    # `characters_min_level` in der `config.json`.
+    #
+
+    character_min_level=1,
 
     #
     # Erscheint am 4. November 2026. Bis dahin gibt es nichts zu
@@ -225,9 +254,70 @@ FOREIGN_FLAVOR_FOLDERS: tuple[str, ...] = (
 )
 
 
+#
+# Spielversionen, die diese App **einmal** bedient hat und nicht mehr
+# bedient.
+#
+# Sie stehen hier nicht, um sie anzubieten, sondern um sie benennen zu
+# können: die Konfiguration und die Charakterliste eines Nutzers, der
+# von der alten Companion herüberkommt, tragen `mop_classic`, und
+# "3 Charaktere aus Mists of Pandaria Classic" ist eine Auskunft,
+# "3 Charaktere aus einer anderen Spielversion" nur eine Ausrede.
+#
+# `client()` fällt für diese Kennungen weiterhin auf Forever zurück -
+# eine Spielversion, die es in dieser App nicht mehr gibt, darf keine
+# Ausnahme werfen und erst recht nicht auswählbar sein.
+#
+
+RETIRED_CLIENTS: dict[str, str] = {
+
+    "mop_classic": "Mists of Pandaria Classic",
+
+}
+
+
 # --------------------------------------------------
 # Zugriff
 # --------------------------------------------------
+
+
+def is_known_client(client_id) -> bool:
+    """
+    Kennt diese App die Kennung als eine ihrer Spielversionen?
+
+    Der Unterschied zu `client()`: dort ist eine unbekannte Kennung
+    ein Rückfall auf die Vorgabe, hier ist sie eine **Auskunft**.
+    `mop_classic` in einer Konfiguration heisst nämlich nicht
+    "Tippfehler", sondern "diese Installation kommt von der alten
+    Companion" - und das ist die einzige Spur, an der sich die
+    mitgebrachten Charaktere erkennen lassen
+    (`core/character_store.py`).
+    """
+
+    return any(
+        candidate.id == client_id
+        for candidate in CLIENTS
+    )
+
+
+def client_label(client_id) -> str:
+    """
+    Der Name einer Spielversion für die Oberfläche - auch einer, die
+    es hier nicht mehr gibt.
+
+    Leer heisst "diese Kennung sagt nichts mehr": weder eine aktuelle
+    Version noch eine, die diese App je bedient hat. Die Oberfläche
+    sagt dann "eine frühere Spielversion" und erfindet keinen Namen.
+    """
+
+    client_id = str(client_id or "")
+
+    for candidate in CLIENTS:
+
+        if candidate.id == client_id:
+            return candidate.name
+
+    return RETIRED_CLIENTS.get(client_id, "")
 
 
 def all_clients() -> tuple[WowClient, ...]:

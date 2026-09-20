@@ -229,11 +229,19 @@ Meldung sie noch kannte.
 ## Stufe und Anzeige (ab Companion 2.3.1)
 
 `CharacterStore` speichert **jede** Meldung, zeigt aber nur
-Charaktere ab `min_level()` (Vorgabe 60, die Höchststufe von
-Classic; `characters_min_level` in der `config.json` setzt den Wert
-herunter). "Meine Charaktere", "Vorbereitung" und die Kachel auf der
-Übersicht lesen dieselbe gefilterte Liste, damit sie nicht
-auseinanderlaufen.
+Charaktere ab `min_level()`. Die Vorgabe kommt aus der Spielversion
+und ist für Forever die **1** - ein frisch erschienenes Spiel hat
+wochenlang keine Höchststufe; `characters_min_level` in der
+`config.json` setzt sie herauf. "Meine Charaktere", "Vorbereitung" und
+die Kachel auf der Übersicht lesen dieselbe gefilterte Liste, damit
+sie nicht auseinanderlaufen.
+
+Seit Companion 5.0.3 trägt jeder Eintrag zusätzlich die
+**Spielversion**, die ihn gemeldet hat, und gezeigt wird nur die
+aktive: die Liste liegt in demselben Ordner, den die alte Companion
+für Mists of Pandaria benutzt, und deren Charaktere sind keine
+Forever-Charaktere. Einzelheiten:
+`systems/character-pages.md`.
 
 Für das Addon ändert sich dadurch nichts: es meldet weiterhin jeden
 angemeldeten Charakter, und ein **fehlendes** Feld 3 gilt als hohe

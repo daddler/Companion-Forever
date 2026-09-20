@@ -24,19 +24,31 @@ Zwei Dinge, die die Seite über ihre Daten sagt und nicht verschweigt:
   wurde. Er nennt jetzt aber den nächsten Schritt ("einmal im Spiel
   anmelden") statt "wird nicht übertragen".
 
-Seit 2.3.1 zeigt die Seite **nur Charaktere auf hoher Stufe**
-(`CharacterStore.min_level()` - die Höchststufe der eingestellten
-Spielversion, in MoP Classic die 90). Die Frage vor
-dieser Seite ist "womit gehe ich in den Raid", und die stellt sich für
-einen Twink der Stufe 34 nicht; vier Karten, die sie nicht
-beantworten, machen die eine, die es tut, unauffindbar. Zwei Dinge
-gehören dazu, sonst wäre das Ausblenden von einem Fehler nicht zu
-unterscheiden:
+Seit 2.3.1 zeigt die Seite **nur Charaktere ab einer Mindeststufe**
+(`CharacterStore.min_level()`). Die Frage vor dieser Seite ist "womit
+gehe ich in den Raid", und die stellt sich für einen Twink der Stufe
+34 nicht; vier Karten, die sie nicht beantworten, machen die eine, die
+es tut, unauffindbar. Zwei Dinge gehören dazu, sonst wäre das
+Ausblenden von einem Fehler nicht zu unterscheiden:
 
 * **Die Fußzeile sagt, wie viele ausgeblendet sind**, und warum.
 * **"Nur Twinks gemeldet" ist ein eigener Leerzustand.** Der alte Satz
   ("Das Addon hat noch keinen Charakter gemeldet.") wäre dort schlicht
   falsch - gemeldet wurde etwas, es passt nur nicht zur Frage.
+
+**Für Forever steht diese Grenze bei 1** und blendet damit niemanden
+aus: ein frisch erschienenes Spiel hat wochenlang keine Höchststufe,
+und eine Seite, die in dieser Zeit leer bleibt, beantwortet gar nichts
+mehr. Die Zahl steht bei der Spielversion (`core/wow_clients.py`), die
+beiden Zustände oben bleiben - wer `characters_min_level` setzt,
+bekommt sie wieder.
+
+Seit 5.0.3 gilt dasselbe Paar noch einmal, eine Ebene höher: **die
+Seite zeigt nur Charaktere dieser Spielversion.** Die Charakterliste
+liegt in demselben Ordner, den die alte Companion für Mists of Pandaria
+benutzt; wer herüberkommt, bringt seine 90er mit. Sie verschwinden hier
+nicht wortlos, sondern werden gezählt und benannt - in der Fußzeile und,
+wenn es sonst nichts zu zeigen gibt, im Leerzustand.
 
 Seit 2.0.9 trägt jede Karte links ein **Klassenbild**
 (`gui/widgets/class_avatar.py`), an derselben Stelle und in derselben
@@ -91,6 +103,31 @@ COLUMNS = 3
 #
 
 AVATAR = 56
+
+
+def _client_name(manager) -> str:
+    """
+    Der Kurzname der eingestellten Spielversion ("Forever").
+
+    Er wird gebraucht, um die mitgebrachten Charaktere einer anderen
+    Version zu erklären, und kommt deshalb aus der Tabelle und nicht
+    aus einem Text - eine festgeschriebene Version wäre genau der
+    Fehler, den `core/wow_clients.py` abgestellt hat.
+    """
+
+    config = getattr(manager, "config", None)
+
+    getter = getattr(config, "get_wow_client", None)
+
+    if callable(getter):
+
+        try:
+            return getter().short_name
+
+        except Exception:
+            pass
+
+    return "dieses Spiel"
 
 
 def _ago(stamp: int) -> str:
@@ -414,11 +451,26 @@ class CharactersPage(Page):
 
         return (len(store.hidden()), store.min_level())
 
+    def _foreign(self) -> tuple[int, str]:
+        """
+        Wie viele Charaktere aus einer anderen Spielversion stammen -
+        und wie sie heisst, falls sie sich benennen lässt.
+        """
+
+        store = self._store()
+
+        if store is None:
+            return (0, "")
+
+        return (len(store.foreign()), store.foreign_label())
+
     def refresh(self):
 
         sheets = self._sheets()
 
         hidden, minimum = self._hidden()
+
+        foreign, foreign_label = self._foreign()
 
         #
         # `refresh()` läuft bei jedem Seitenwechsel und bei jedem
@@ -440,6 +492,8 @@ class CharactersPage(Page):
             ),
             hidden,
             minimum,
+            foreign,
+            foreign_label,
         )
 
         if signature == self._signature:
@@ -448,7 +502,7 @@ class CharactersPage(Page):
 
         self._signature = signature
 
-        self._fill(sheets, hidden, minimum)
+        self._fill(sheets, hidden, minimum, foreign, foreign_label)
 
         self._apply_title(sheets)
 
@@ -511,7 +565,14 @@ class CharactersPage(Page):
 
         self.header.setTitle("Deine Charaktere sammeln sich hier.")
 
-    def _fill(self, sheets: list[dict], hidden: int = 0, minimum: int = 0):
+    def _fill(
+        self,
+        sheets: list[dict],
+        hidden: int = 0,
+        minimum: int = 0,
+        foreign: int = 0,
+        foreign_label: str = "",
+    ):
 
         while self.grid.count():
 
@@ -549,6 +610,34 @@ class CharactersPage(Page):
                         f"{minimum}. Melde dich einmal mit einem an - "
                         f"danach steht er hier, auch wenn du ihn längere "
                         f"Zeit nicht spielst."
+                    ),
+                    action="",
+                )
+
+            elif foreign:
+
+                #
+                # Der häufigste Fall am Tag des Umstiegs: die Liste ist
+                # voll, nur eben mit den Charakteren des alten Spiels.
+                # "Noch keine Daten" wäre hier die falscheste aller
+                # Antworten - sie schickt jemanden ins Addon, um einen
+                # Fehler zu suchen, den es nicht gibt.
+                #
+
+                self.empty.update_texts(
+                    eyebrow="AUS EINER ANDEREN SPIELVERSION",
+                    title=(
+                        f"{foreign} Charakter"
+                        f"{'e' if foreign != 1 else ''} aus "
+                        f"{foreign_label or 'einer früheren Spielversion'}."
+                    ),
+                    explanation=(
+                        f"Diese App zeigt {_client_name(self.manager)}. "
+                        f"Deine bisherigen Charaktere bleiben "
+                        f"gespeichert, gehören aber zu einem anderen "
+                        f"Spiel - melde dich einmal in "
+                        f"{_client_name(self.manager)} an, danach steht "
+                        f"der Charakter hier."
                     ),
                     action="",
                 )
@@ -622,6 +711,22 @@ class CharactersPage(Page):
                 f"Stufe {minimum} {'sind' if hidden != 1 else 'ist'} "
                 f"ausgeblendet, damit hier steht, womit du in den Raid "
                 f"gehst."
+            )
+
+        #
+        # Dieselbe Regel für die Charaktere aus dem alten Spiel: sie
+        # sind nicht gelöscht, sie gehören nur nicht hierher. Wer das
+        # nicht liest, sucht sie im Addon.
+        #
+
+        if foreign:
+
+            text += (
+                f" {foreign} Charakter{'e' if foreign != 1 else ''} aus "
+                f"{foreign_label or 'einer früheren Spielversion'} "
+                f"{'werden' if foreign != 1 else 'wird'} nicht "
+                f"angezeigt - gespeichert "
+                f"{'bleiben sie' if foreign != 1 else 'bleibt er'}."
             )
 
         self.note.setText(text)

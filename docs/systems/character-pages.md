@@ -4,7 +4,7 @@ Both pages were empty through 2.0.0, and that was honest: the app knew
 *nothing* about gear. WeintCodex 1.3.3.1 supplies the measurement as
 `character_sheet`, a local message (full wire contract:
 `../character-sheet-bridge.md`, dispatched by `core/character_sheet_sync.py`,
-never sent to the bot). Four things worth knowing before touching it:
+never sent to the bot). Six things worth knowing before touching it:
 
 - **The addon judges, the Companion draws** — exactly the reverse of
   WeintTV/Academy, for the same reason (two evaluations of one fact
@@ -20,13 +20,36 @@ never sent to the bot). Four things worth knowing before touching it:
   for this spec"; a slot status of `-` means "this slot has no such
   thing". **Open BiS slots deliberately do not count toward the ring** —
   they hang on loot luck, not preparation.
-- **Only high-level characters are listed** — both pages and the
-  Overview tile read `CharacterStore.characters()`, dropping everything
-  below `min_level()` (90, overridable via `characters_min_level`). Hidden
-  is not deleted (`all_characters()` still has them); the footer names
-  how many are hidden and why; a **missing** level counts as high (0
-  means "not reported", reading it as a twink would turn a data gap into
-  a finding).
+- **Only characters at or above `min_level()` are listed** — both pages
+  and the Overview tile read `CharacterStore.characters()`. **For
+  Forever that threshold is 1**, so nobody is dropped: a freshly
+  released game has no level caps for weeks, and a page that stays empty
+  through exactly those weeks answers nothing. The number is a property
+  of the game version (`character_min_level` in `core/wow_clients.py`),
+  overridable per install via `characters_min_level`; a configured value
+  **above** the version's cap is ignored like a 0 or a typo (every
+  migrating config carries MoP's 90, which nobody in a level-60 game
+  will ever reach). Hidden is not deleted (`all_characters()` still has
+  them); the footer names how many are hidden and why; a **missing**
+  level counts as high (0 means "not reported", reading it as a twink
+  would turn a data gap into a finding).
+- **Only characters of the *active game version* are listed.**
+  `characters.json` lives in the same folder the old Mists of Pandaria
+  Companion uses, so whoever switches over brings their level-90 roster
+  with them — through 5.0.2 those were the only characters the Forever
+  edition showed, while nothing from Forever ever passed the level
+  filter. Every entry now carries the version that reported it
+  (`CLIENT_KEY`, set in `apply()` from the configured client). Entries
+  written before 5.0.3 carry none, and `adopt_untagged()` assigns them
+  **once, into the file**, from two pieces of evidence: a `wow_client`
+  the app doesn't know (`mop_classic` — never overwritten, see
+  `Config.get_wow_client_id()`) names the old edition outright; failing
+  that, a level above this version's cap says "not from this game"
+  without saying where from (`UNKNOWN_CLIENT`). Neither applies →
+  the list belongs to the active version, because a character shown too
+  many is the cheaper mistake than one that vanished. They are not
+  deleted (`all_characters()`, `foreign()`), and both pages name them —
+  footer and, when nothing else is left to show, an own empty state.
 - **The version gate needed a third digit.** `companionVersion` ≥ 2.0.1
   is required because 2.0.0 was already shipped and doesn't know the
   type — `CompanionAtLeast(2, 0)` would have included exactly the version
