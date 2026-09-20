@@ -2,6 +2,26 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 5.0.4
+
+**Derselbe Fehler noch einmal, eine Ebene weiter: beim Bot.** Die
+Twinkliste, die diese App an den Bot meldet (Name, Klasse, Realm —
+nicht die Charakterliste der Seiten, die bleibt lokal), landete dort in
+einer Tabelle ohne Spielversion. Ein Bot bedient aber **zwei**
+Companion-Fassungen: die für Mists of Pandaria und diese. Beide melden
+mit demselben Discord-Konto, beide ersetzen dabei die komplette Liste —
+also gegenseitig, im Takt ihres Sync-Intervalls. Der Kalender-Invite
+hätte je nach Zufall einen Charakter benannt, den es im Spiel dieses
+Raids gar nicht gibt.
+
+Die Meldung nennt jetzt die Spielversion, und der Bot ersetzt nur noch,
+was aus derselben stammt. Die Angabe ist auf der Bot-Seite optional: die
+alte Companion kennt sie nicht, meldet weiter gültig, und ihre
+Charaktere bleiben unangetastet. Derselbe Name in zwei Spielen sind
+dort ab sofort zwei Einträge — Charakter- und Realmnamen wiederholen
+sich zwischen zwei Spielen. Die Bot-Seite gehört zum selben Stand
+(`services/companion_characters.py`, `services/database.py`).
+
 ## 5.0.3
 
 **Die Charakterliste zeigte die falschen Charaktere — und zwar
@@ -39,24 +59,6 @@ wochenlang niemand eine 60, und eine Seite, die genau in dieser Zeit
 leer bleibt, beantwortet gar nichts. Die Zahl gehört zur Spielversion
 und steht bei ihr; wer seine Liste später wieder auf die Raidfähigen
 eingrenzen will, setzt `characters_min_level` in der `config.json`.
-
-**Und derselbe Fehler noch einmal, eine Ebene weiter: beim Bot.** Die
-Twinkliste, die diese App an den Bot meldet (Name, Klasse, Realm —
-nicht die Charakterliste der Seiten, die bleibt lokal), landete dort in
-einer Tabelle ohne Spielversion. Ein Bot bedient aber **zwei**
-Companion-Fassungen: die für Mists of Pandaria und diese. Beide melden
-mit demselben Discord-Konto, beide ersetzen dabei die komplette Liste —
-also gegenseitig, im Takt ihres Sync-Intervalls. Der Kalender-Invite
-hätte je nach Zufall einen Charakter benannt, den es im Spiel dieses
-Raids gar nicht gibt.
-
-Die Meldung nennt jetzt die Spielversion, und der Bot ersetzt nur noch,
-was aus derselben stammt. Die Angabe ist auf der Bot-Seite optional: die
-alte Companion kennt sie nicht, meldet weiter gültig, und ihre
-Charaktere bleiben unangetastet. Derselbe Name in zwei Spielen sind
-dort ab sofort zwei Einträge — Charakter- und Realmnamen wiederholen
-sich zwischen zwei Spielen. Die Bot-Seite gehört zum selben Stand
-(`services/companion_characters.py`, `services/database.py`).
 
 Nebenbei: die mitgelieferte `config.example.json` trug noch
 `mop_classic` als Spielversion — eine Vorlage für ein Spiel, das diese
