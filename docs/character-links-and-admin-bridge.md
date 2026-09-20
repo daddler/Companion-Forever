@@ -72,6 +72,64 @@ Nach jedem Schreiben wird der **ganze** Stand neu geholt statt eine Zeile
 lokal nachzuziehen — der Bot entscheidet über den Vorrang. Jeder Abruf läuft
 in einem kurzlebigen Thread mit Rückmeldung über ein Signal (`loaded`).
 
+## Die eigene Meldung: `POST /companion/characters`
+
+Jeder verknüpfte Spieler meldet seine eigene Twinkliste — keine
+Raidlead-Rolle, sonst funktionierte der Klassen-Abgleich nur für den
+Raidleiter. Der Rumpf:
+
+```json
+{
+  "characters": [
+    {"name": "Njiah", "class": "WARRIOR", "realm": "Everlook"}
+  ],
+  "wow_client": "forever"
+}
+```
+
+Die Liste kommt aus der Twinkverwaltung des Addons (`character`-Meldung,
+`Name|Klasse|Realm`, siehe `core/character_sync_client.py`) und **nicht**
+aus der Charakterliste der Companion: `character_sheet` bleibt lokal
+(siehe `character-sheet-bridge.md`). Der Bot legt sie in
+`companion_characters` ab und ersetzt dabei vollständig, was dasselbe
+Discord-Konto **für dieselbe Spielversion** zuletzt gemeldet hat.
+
+**`wow_client` ist die Spielversion, aus der gemeldet wird**
+(`Config.get_wow_client_id()`, also `"forever"`). Sie steht seit
+Companion 5.0.3 dabei, und sie ist der Unterschied zwischen zwei
+Listen und einer:
+
+- Ein Bot bedient **zwei** Companion-Fassungen — die für Mists of
+  Pandaria und die für Forever. Beide melden mit demselben Discord-Konto
+  an denselben Endpunkt, beide im Takt ihres Sync-Intervalls.
+- Ohne die Angabe ersetzte jede Meldung die der anderen. Wessen Sync
+  zuletzt lief, dessen Charaktere standen da — alle fünf Minuten die
+  anderen, und der Kalender-Invite benannte je nach Zufall einen
+  Charakter aus dem Spiel, in dem dieser Raid nicht stattfindet.
+- Derselbe Name in zwei Spielen sind **zwei** Charaktere. Die
+  Spielversion gehört deshalb in den Primärschlüssel und nicht nur in
+  eine Spalte daneben; Realmnamen wiederholen sich zwischen zwei
+  Spielen ebenso wie Charakternamen.
+
+**Das Feld ist optional, und das bleibt es.** Eine Companion, die es
+nicht kennt (jede vor 5.0.3, und das ist die gesamte MoP-Fassung),
+meldet weiter gültig; ihre Meldungen zählen als Spielversion
+„unbekannt" (der Leerstring) und ersetzen einander wie bisher. Eine
+Fassung, die die Version nennt, lässt sie in Ruhe — was dort
+liegenbleibt, ist entweder die lebende Liste der alten Fassung oder
+ein Rest davon, und das ist von der Bot-Seite aus nicht zu
+unterscheiden. Ein Rest, den die neueste Meldung verdrängt, ist der
+kleinere Schaden gegenüber einer gelöschten lebenden Liste.
+
+**Bei der Auflösung filtert der Bot nicht nach Spielversion**
+(`get_character_for_class()`), und das ist Absicht: dafür müsste sie am
+*Raid* hängen, und ein Raid ist ein Discord-Beitrag mit Datum und
+Anmeldungen — in welchem Spiel er stattfindet, weiss der Bot nirgends.
+Es entscheidet der Zeitstempel: die neueste passende Meldung gewinnt,
+also das Spiel, aus dem zuletzt gemeldet wurde. Solange der Bot keine
+Spielversion am Raid kennt, ist das die beste Antwort, die sich geben
+lässt, und sie wird von selbst richtig, sobald jemand wieder spielt.
+
 ## WeintAdmin-Brücke (`services/admin_sync.py`, Bot)
 
 Ein viertes, unabhängiges Backup der laufenden Anmeldung — für den Fall, dass

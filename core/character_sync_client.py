@@ -31,7 +31,20 @@ class CharacterSyncClient:
 
     # --------------------------------------------------
 
-    def send(self, payload: str) -> bool:
+    def send(self, payload: str, wow_client: str = "") -> bool:
+        """
+        `wow_client` ist die Spielversion, aus der die Twinkliste
+        stammt. Der Bot bedient beide Companion-Fassungen mit einer
+        Tabelle; ohne diese Angabe ersetzt jede Meldung die der
+        anderen, und der Kalender-Invite benennt je nach Zufall einen
+        Charakter aus dem falschen Spiel. Gegenstück:
+        `services/companion_characters.report_characters()` im Bot.
+
+        Die Angabe ist dort **optional** - eine ältere Companion kennt
+        sie nicht und bleibt gültig. Genau deshalb steht sie auch hier
+        als Vorgabe leer: ein Aufrufer, der sie nicht mitgibt, meldet
+        wie bisher.
+        """
 
         account = self.account_store.load()
 
@@ -65,7 +78,10 @@ class CharacterSyncClient:
 
             response = httpx.post(
                 f"{BOT_BASE_URL}/companion/characters",
-                json={"characters": characters},
+                json={
+                    "characters": characters,
+                    "wow_client": wow_client,
+                },
                 headers={
                     "Authorization": f"Bearer {account['companion_token']}",
                 },

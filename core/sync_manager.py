@@ -210,8 +210,17 @@ class SyncManager:
                     )
                     continue
 
+                #
+                # Mit der Spielversion: der Bot führt die Meldungen
+                # beider Companion-Fassungen in einer Tabelle und muss
+                # sie auseinanderhalten können - sonst ersetzt die eine
+                # die Charaktere der anderen. Siehe
+                # `core/character_sync_client.py`.
+                #
+
                 success = self.character_client.send(
-                    message["payload"]
+                    message["payload"],
+                    self.manager.config.get_wow_client_id(),
                 )
 
             #
