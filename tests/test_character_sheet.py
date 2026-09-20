@@ -15,6 +15,7 @@ falsch werden kann:
   einen Befund - dieselbe Regel wie `stars == 0` im Analyzer.
 """
 
+import json
 import time
 
 import pytest
@@ -26,11 +27,15 @@ from core.character_sheet_sync import (
     sheet_key,
 )
 from core.character_store import (
+    CLIENT_KEY,
     MIN_LEVEL,
+    UNKNOWN_CLIENT,
     CharacterStore,
+    default_min_level,
     is_high_level,
 )
 from core.paths import Paths
+from core.wow_clients import DEFAULT_CLIENT_ID
 
 
 #
@@ -84,6 +89,46 @@ def store(tmp_path, monkeypatch):
     monkeypatch.setattr(Paths, "config", staticmethod(lambda: tmp_path))
 
     return CharacterStore(_Manager())
+
+
+@pytest.fixture
+def make_store(tmp_path, monkeypatch):
+    """
+    Eine Ablage mit eigener Konfiguration.
+
+    Sie wird gebraucht, seit die Vorgabe der Mindeststufe für Forever
+    die 1 ist: wer den Stufenfilter prüft, muss ihn ausdrücklich
+    einstellen - genau wie ein Nutzer, der ihn haben will.
+    """
+
+    monkeypatch.setattr(Paths, "config", staticmethod(lambda: tmp_path))
+
+    def build(**config):
+        return CharacterStore(_Manager(**config))
+
+    return build
+
+
+@pytest.fixture
+def old_list(tmp_path, monkeypatch):
+    """
+    Eine Charakterliste, wie eine Fassung vor 5.0.3 sie hinterlässt:
+    **ohne** Vermerk der Spielversion.
+    """
+
+    monkeypatch.setattr(Paths, "config", staticmethod(lambda: tmp_path))
+
+    def write(*sheets):
+
+        (tmp_path / "characters.json").write_text(
+            json.dumps({
+                sheet_key(sheet["name"], sheet.get("realm", "")): sheet
+                for sheet in sheets
+            }),
+            encoding="utf-8",
+        )
+
+    return write
 
 
 # --------------------------------------------------
@@ -372,11 +417,17 @@ def test_the_summary_averages_only_the_checked_characters(store):
 # --------------------------------------------------
 
 
-def test_only_high_level_characters_are_listed(store):
+def test_only_high_level_characters_are_listed(make_store):
     """
     Die Seite fragt, womit man in den Raid geht - ein Twink der Stufe
     34 beantwortet das nicht und macht die Liste unübersichtlich.
+
+    Geprüft wird hier der Filter, nicht die Vorgabe: die steht für
+    Forever bei 1 (siehe den Test darunter), und wer den Filter will,
+    trägt eine Zahl ein.
     """
+
+    store = make_store(characters_min_level=60)
 
     store.apply(FULL)
     store.apply("Twinki|Everlook|MAGE|34|||0|0|0||0|0|900")
@@ -386,13 +437,31 @@ def test_only_high_level_characters_are_listed(store):
     assert [sheet["name"] for sheet in store.hidden()] == ["Twinki"]
 
 
-def test_a_hidden_twink_is_kept_and_still_found(store):
+def test_forever_shows_the_levelling_characters_too(store):
+    """
+    Am Erscheinungstag hat niemand eine 60. Eine Liste, die erst ab
+    der Höchststufe etwas zeigt, wäre wochenlang leer - und zwar für
+    die Nutzer, die am meisten spielen.
+    """
+
+    assert store.min_level() == 1
+
+    store.apply("Frischling|Everlook|MAGE|14|||0|0|0||0|0|900")
+
+    assert [sheet["name"] for sheet in store.characters()] == ["Frischling"]
+
+    assert store.hidden() == []
+
+
+def test_a_hidden_twink_is_kept_and_still_found(make_store):
     """
     Ausgeblendet heisst nicht gelöscht: wer den Twink hochspielt, soll
     ihn am Tag der Höchststufe mit seiner Vorgeschichte wiederfinden -
     und `apply()` muss ihn währenddessen über `get()` treffen, sonst
     entstünde bei jeder Anmeldung ein zweiter Eintrag.
     """
+
+    store = make_store(characters_min_level=60)
 
     store.apply("Twinki|Everlook|MAGE|34|||0|0|0||0|0|900")
 
@@ -444,26 +513,32 @@ def test_the_minimum_level_follows_the_configuration(tmp_path, monkeypatch):
     assert [sheet["name"] for sheet in store.characters()] == ["Alt"]
 
 
-def test_an_unusable_minimum_level_is_ignored(tmp_path, monkeypatch):
+def test_an_unusable_minimum_level_is_ignored(make_store):
     """
     Eine 0 hiesse "alles anzeigen", ein Text gar nichts - übernommen
     sähe beides wie eine kaputte Seite aus.
+
+    Die 90 steht hier nicht zufällig: sie ist die Höchststufe von
+    Mists of Pandaria und steht in **jeder** Konfiguration, die von
+    der alten Companion herüberkommt. In einem Spiel, das bei 60
+    endet, erreicht sie niemand - übernommen bliebe die Seite für
+    immer leer.
     """
 
-    monkeypatch.setattr(Paths, "config", staticmethod(lambda: tmp_path))
+    for value in (0, -5, "", "neunzig", None, 90, 200):
 
-    for value in (0, -5, "", "neunzig", None):
+        store = make_store(characters_min_level=value)
 
-        store = CharacterStore(_Manager(characters_min_level=value))
-
-        assert store.min_level() == MIN_LEVEL
+        assert store.min_level() == default_min_level()
 
 
-def test_the_summary_ignores_the_twinks(store):
+def test_the_summary_ignores_the_twinks(make_store):
     """
     Kachel und Seite lesen dieselbe Zusammenfassung und dürfen sich
     nicht darin unterscheiden, wen sie meinen.
     """
+
+    store = make_store(characters_min_level=60)
 
     store.apply(FULL)
     store.apply("Twinki|Everlook|MAGE|34|||0|0|0||0|0|900")
@@ -473,3 +548,197 @@ def test_the_summary_ignores_the_twinks(store):
     assert summary["characters"] == 1
     assert summary["hidden"] == 1
     assert summary["open"] == 2
+
+
+
+# --------------------------------------------------
+# Spielversion
+# --------------------------------------------------
+
+
+def test_every_report_carries_the_game_version(store):
+    """
+    Der Vermerk entsteht beim Aufnehmen und nicht beim Anzeigen: die
+    Meldung kommt aus der SavedVariables-Datei der eingerichteten
+    Installation, und welche das ist, weiss nur die App.
+    """
+
+    store.apply(FULL)
+
+    assert store.get("Njiah")[CLIENT_KEY] == DEFAULT_CLIENT_ID
+
+
+def test_the_characters_of_the_old_companion_are_not_shown(old_list):
+    """
+    Der Fall, um den es geht: die Charakterliste liegt in demselben
+    Ordner, den die alte Companion für Mists of Pandaria benutzt. Wer
+    herüberkommt, bringt seine 90er mit - und sah bis 5.0.2 genau sie,
+    während von Forever nichts ankam.
+    """
+
+    old_list(
+        {"name": "Njiah", "realm": "Everlook", "level": 90, "updated": 100},
+        {"name": "Twinki", "realm": "Everlook", "level": 34, "updated": 90},
+    )
+
+    store = CharacterStore(_Manager(wow_client="mop_classic"))
+
+    assert store.characters() == []
+
+    assert sorted(sheet["name"] for sheet in store.foreign()) == [
+        "Njiah",
+        "Twinki",
+    ]
+
+    #
+    # Nicht gelöscht: es ist die Vorgeschichte des Nutzers, und wer
+    # zur alten Companion zurückgeht, findet sie dort wieder.
+    #
+
+    assert len(store.all_characters()) == 2
+
+    assert store.foreign_label() == "Mists of Pandaria Classic"
+
+
+def test_a_character_above_the_cap_is_never_from_this_game(old_list):
+    """
+    Die zweite Spur, und die deutlichere: in einem Spiel, das bei 60
+    endet, gibt es keine 90. Sie trägt auch dann, wenn die
+    Konfiguration längst auf Forever steht - etwa weil der Nutzer die
+    Spielversion einmal in den Einstellungen angefasst hat.
+    """
+
+    old_list(
+        {"name": "Njiah", "realm": "Everlook", "level": 90, "updated": 100},
+    )
+
+    store = CharacterStore(_Manager(wow_client=DEFAULT_CLIENT_ID))
+
+    assert store.characters() == []
+
+    assert [sheet["name"] for sheet in store.foreign()] == ["Njiah"]
+
+    #
+    # Die Kennung sagt hier nichts mehr - die Oberfläche sagt dann
+    # "eine frühere Spielversion", statt einen Namen zu erfinden.
+    #
+
+    assert store.foreign_label() == ""
+
+
+def test_a_levelling_character_stays_when_nothing_speaks_against_him(old_list):
+    """
+    Die vorsichtige Antwort: ohne Spur, die auf das alte Spiel zeigt,
+    gehört die Liste dieser Spielversion. Im Zweifel ein Charakter zu
+    viel - ein verschwundener Charakter ist der teurere Fehler.
+    """
+
+    old_list(
+        {"name": "Frischling", "realm": "Everlook", "level": 22, "updated": 1},
+    )
+
+    store = CharacterStore(_Manager(wow_client=DEFAULT_CLIENT_ID))
+
+    assert [sheet["name"] for sheet in store.characters()] == ["Frischling"]
+
+    assert store.foreign() == []
+
+
+def test_the_origin_is_written_down_and_not_asked_again(old_list, tmp_path):
+    """
+    Die Spur verschwindet, sobald der Nutzer die Spielversion einmal
+    anfasst - die Zuordnung darf deshalb nicht bei jeder Anzeige neu
+    gestellt werden, sonst stünden die MoP-Charaktere später wieder da.
+    """
+
+    old_list(
+        {"name": "Twinki", "realm": "Everlook", "level": 34, "updated": 90},
+    )
+
+    CharacterStore(_Manager(wow_client="mop_classic"))
+
+    stored = json.loads(
+        (tmp_path / "characters.json").read_text(encoding="utf-8")
+    )
+
+    assert stored["Twinki-Everlook"][CLIENT_KEY] == "mop_classic"
+
+    #
+    # Zweiter Start, diesmal mit berichtigter Konfiguration: der
+    # Vermerk steht in der Datei und entscheidet weiterhin.
+    #
+
+    again = CharacterStore(_Manager(wow_client=DEFAULT_CLIENT_ID))
+
+    assert again.characters() == []
+
+    assert [sheet["name"] for sheet in again.foreign()] == ["Twinki"]
+
+
+def test_the_summary_counts_only_this_game(old_list):
+    """
+    Kachel und Seite lesen dieselbe Zusammenfassung - und die fremden
+    Charaktere werden darin gezählt, nicht verschwiegen: eine Seite,
+    die ohne Begründung leer ist, sieht aus wie ein Fehler.
+    """
+
+    old_list(
+        {"name": "Njiah", "realm": "Everlook", "level": 90, "updated": 100},
+    )
+
+    store = CharacterStore(_Manager(wow_client="mop_classic"))
+
+    store.apply("Frischling|Everlook|MAGE|14|||0|0|0||0|0|900")
+
+    summary = store.preparation_summary()
+
+    assert summary["characters"] == 1
+    assert summary["foreign"] == 1
+
+
+def test_an_unknown_origin_is_kept_apart(old_list):
+    """
+    `UNKNOWN_CLIENT` ist keine Spielversion und darf keine werden -
+    sonst gehörten die Charaktere aus dem alten Spiel plötzlich zu
+    einer Version namens "?".
+    """
+
+    old_list(
+        {"name": "Njiah", "realm": "Everlook", "level": 90, "updated": 100},
+    )
+
+    store = CharacterStore(_Manager(wow_client=DEFAULT_CLIENT_ID))
+
+    assert store.get("Njiah")[CLIENT_KEY] == UNKNOWN_CLIENT
+
+    assert store.client_id() == DEFAULT_CLIENT_ID
+
+
+def test_the_same_name_in_two_games_is_two_entries(old_list):
+    """
+    Name und Realm dürfen sich zwischen zwei Spielen wiederholen. Wer
+    in Forever wieder "Njiah" auf "Everlook" spielt, verlöre seinen
+    MoP-Eintrag sonst genau in dem Augenblick, in dem die Liste ihn
+    zum ersten Mal richtig einordnet.
+    """
+
+    old_list(
+        {"name": "Njiah", "realm": "Everlook", "level": 90, "updated": 100},
+    )
+
+    store = CharacterStore(_Manager(wow_client="mop_classic"))
+
+    store.apply(FULL)
+
+    assert [sheet["name"] for sheet in store.characters()] == ["Njiah"]
+
+    assert store.characters()[0]["level"] == 60
+
+    assert [sheet["level"] for sheet in store.foreign()] == [90]
+
+    #
+    # Und der blanke Name findet den Charakter dieses Spiels, nicht
+    # den gleichnamigen aus dem alten.
+    #
+
+    assert store.get("Njiah")["level"] == 60

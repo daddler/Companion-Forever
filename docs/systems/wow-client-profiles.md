@@ -31,6 +31,7 @@ entire purpose of this file.
 | `name` / `short_name` | Headings and dialogs / status lines |
 | `folder_names` | Installation folder under the Battle.net root. **Empty means "not known yet"**; `_forever_` today is a guess |
 | `max_level` | Level cap, or `None` while unknown |
+| `character_min_level` | From which level a character appears in "Meine Charaktere"/"Vorbereitung" by default. **`None` means "the level cap"** — the original rule. Forever sets `1`: a game that just shipped has nobody at cap for weeks |
 | `released` | Offered during setup? |
 | `hint` | One line shown under the picker |
 | `markers` | What identifies an installation (default: `Interface/`, `Interface/AddOns/`, `WTF/`) |
@@ -40,6 +41,17 @@ game version (`_retail_`, `_classic_`, `_classic_era_`, PTR/beta
 variants). It is irrelevant for a client whose own folder name is known,
 and it is the difference between "some installation" and "the right one"
 for a client whose name is not.
+
+`RETIRED_CLIENTS` maps the ids this app *used* to serve (`mop_classic`)
+to their names. They are not selectable and `client()` still falls back
+to Forever for them — the mapping exists so the two places that meet
+such an id can **name** it instead of shrugging: a migrating
+`config.json`, and a character in `characters.json` that the old
+Companion stored. "3 Charaktere aus Mists of Pandaria Classic" is an
+answer; "aus einer anderen Spielversion" is an excuse. `client_label()`
+answers for both tables and returns `""` when an id says nothing at all
+— the UI then says "eine frühere Spielversion" rather than inventing a
+name.
 
 ## One unknown about Forever, and one that is settled
 
@@ -70,6 +82,16 @@ answers `1`, so while a cap is unknown no character disappears from
 "Meine Charaktere" because of an invented number. Same line as
 `stars == 0` and `at == -1` — a gap in the data never becomes a
 finding.
+
+**The cap is not the same question as "who shows up in the list".**
+Until 5.0.2 it was: the character pages listed everyone at
+`max_level` and nobody else. For a version that has been live for years
+that is the right default; for one that ships on 4 November 2026 it
+means an empty page for everyone who is levelling — which, in those
+weeks, is everyone. `character_min_level=1` therefore sits in the table right
+next to the cap, and `characters_min_level` in `config.json` still
+raises it per install. Once Forever's raiding
+settles in, that entry is the one line to change.
 
 ## Resolving a folder
 
@@ -124,7 +146,7 @@ the accessor and not in each caller.
 | `addon/finder.py` | What to search for |
 | `core/config.py` | Active id, per-version paths, level-cap migration |
 | `core/companion_manager.py` | `detect_wow()`; a version change invalidates the sync markers exactly like a path change |
-| `core/character_store.py` | Default minimum level |
+| `core/character_store.py` | Default minimum level, and which game version a stored character belongs to |
 | `gui/pages/settings_sections/wow_client.py` | The installation folder |
 | `gui/dialogs/setup_wizard.py` | Step 1 — asks for the version **only** when more than one is released, so today it never asks |
 | `gui/pages/connections.py`, `.../about.py` | Labels |

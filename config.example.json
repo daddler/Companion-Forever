@@ -1,10 +1,8 @@
 {
-    "wow_client": "mop_classic",
+    "wow_client": "forever",
     "wow_paths": {
-        "mop_classic": "",
         "forever": ""
     },
-    "classic_path": "",
     "check_updates": true,
     "auto_sync": false,
     "sync_interval": 5,

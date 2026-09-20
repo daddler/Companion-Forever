@@ -1987,6 +1987,27 @@ class PreparationCard(Card):
 
                 return
 
+            #
+            # Dasselbe eine Ebene höher: gemeldet hat sich etwas, es
+            # gehört nur zu einem anderen Spiel (die Charaktere der
+            # alten Companion, siehe `core/character_store.py`). Auch
+            # hier ist am Addon nichts zu prüfen.
+            #
+
+            foreign = summary.get("foreign", 0)
+
+            if foreign and not summary.get("characters"):
+
+                self.note.setText(
+                    f"{foreign} gemeldete Charakter"
+                    f"{'e' if foreign != 1 else ''} "
+                    f"{'stammen' if foreign != 1 else 'stammt'} aus "
+                    f"einer früheren Spielversion - melde dich einmal "
+                    f"in diesem Spiel an, danach steht der Stand hier."
+                )
+
+                return
+
             self.note.setText(
                 "Verzauberungen, Sockel und BiS-Plätze meldet das "
                 "Addon beim Anmelden im Spiel."

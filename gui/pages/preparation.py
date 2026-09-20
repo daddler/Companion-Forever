@@ -30,13 +30,22 @@ einer anderen Stelle:
 * Ist für eine Spezialisierung gar keine BiS-Liste gepflegt, sagt die
   Zeile das, statt "0 offen" zu zeigen.
 
-Wie "Meine Charaktere" führt die Seite seit 2.3.1 **nur Charaktere auf
-hoher Stufe** - beide lesen dieselbe `CharacterStore.characters()`,
-und die Kachel auf der Übersicht dieselbe
-`preparation_summary()`. Eine fehlende Verzauberung auf einem Twink der
-Stufe 34 ist keine offene Stelle, sondern der Normalfall; sie hier
-mitzuzählen hiesse, die Vorbereitung für einen Raidabend an einem
-Charakter zu messen, der nicht mitkommt.
+Wie "Meine Charaktere" führt die Seite seit 2.3.1 **nur Charaktere ab
+der eingestellten Mindeststufe** und seit 5.0.3 **nur die dieser
+Spielversion** - beide lesen dieselbe `CharacterStore.characters()`,
+und die Kachel auf der Übersicht dieselbe `preparation_summary()`. Eine
+fehlende Verzauberung auf einem Twink der Stufe 34 ist keine offene
+Stelle, sondern der Normalfall; sie hier mitzuzählen hiesse, die
+Vorbereitung für einen Raidabend an einem Charakter zu messen, der
+nicht mitkommt. Dasselbe, nur deutlicher, gilt für einen Charakter aus
+Mists of Pandaria: seine Ausrüstung gehört zu einem Spiel, in das
+dieser Raidabend nicht führt. Beide Fälle haben deshalb einen eigenen
+Leerzustand - "noch keine Daten" wäre in beiden falsch.
+
+Für Forever steht die Mindeststufe bei 1 (`core/wow_clients.py`): ein
+frisch erschienenes Spiel hat wochenlang niemanden auf Höchststufe, und
+der Twinkfall tritt damit erst wieder ein, wenn jemand
+`characters_min_level` setzt.
 """
 
 from __future__ import annotations
@@ -479,6 +488,8 @@ class PreparationPage(Page):
 
         minimum = store.min_level() if store is not None else 0
 
+        foreign = len(store.foreign()) if store is not None else 0
+
         signature = (
             tuple(
                 (
@@ -490,13 +501,14 @@ class PreparationPage(Page):
             ),
             hidden,
             minimum,
+            foreign,
         )
 
         if signature != self._signature:
 
             self._signature = signature
 
-            self._fill(sheets, hidden, minimum)
+            self._fill(sheets, hidden, minimum, foreign)
 
         self._apply_title(sheets, store)
 
@@ -533,7 +545,13 @@ class PreparationPage(Page):
             f"in deiner Ausrüstung."
         )
 
-    def _fill(self, sheets: list[dict], hidden: int = 0, minimum: int = 0):
+    def _fill(
+        self,
+        sheets: list[dict],
+        hidden: int = 0,
+        minimum: int = 0,
+        foreign: int = 0,
+    ):
 
         while self.grid.count():
 
@@ -567,6 +585,30 @@ class PreparationPage(Page):
                         f"geprüft, mit denen du in den Raid gehst - "
                         f"deshalb ab Stufe {minimum}. Melde dich einmal "
                         f"mit einem an, danach steht sein Stand hier."
+                    ),
+                    action="",
+                )
+
+            elif foreign:
+
+                #
+                # Dieselbe Unterscheidung noch einmal, eine Ebene
+                # höher: gemeldet wurde etwas, es gehört nur zu einem
+                # anderen Spiel. Siehe `core/character_store.py`.
+                #
+
+                self.empty.update_texts(
+                    eyebrow="AUS EINER ANDEREN SPIELVERSION",
+                    title=(
+                        f"{foreign} Charakter"
+                        f"{'e' if foreign != 1 else ''} aus einer "
+                        f"früheren Spielversion."
+                    ),
+                    explanation=(
+                        "Ihre Ausrüstung gehört zu einem anderen Spiel "
+                        "und wird hier nicht geprüft. Melde dich einmal "
+                        "mit einem Charakter dieser Spielversion an, "
+                        "danach steht sein Stand hier."
                     ),
                     action="",
                 )
