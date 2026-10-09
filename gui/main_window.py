@@ -30,6 +30,9 @@ from core.resources import Resources
 
 from gui.controllers.update_runner import UpdateRunner
 from gui.dialogs.discord_link_prompt import show_discord_link_prompt_if_needed
+from gui.dialogs.forever_switch_notice import (
+    show_forever_switch_notice_if_needed,
+)
 from gui.dialogs.whats_new_dialog import show_whats_new_if_needed
 
 from gui.layout.breakpoints import LayoutState, resolve as resolve_layout
@@ -1271,7 +1274,12 @@ class MainWindow(QMainWindow):
         brauchen (gebündeltes CHANGELOG.md bzw. discord_account.json)
         und nicht auf `full_refresh()` warten müssen. Die beiden
         `exec()`-Aufrufe laufen nacheinander, nie gleichzeitig.
+
+        Davor, einmalig: der Umstiegshinweis für alle, die von der
+        alten Companion kommen (core/forever_switch.py).
         """
+
+        show_forever_switch_notice_if_needed(self.manager, self)
 
         show_whats_new_if_needed(self.manager, self)
 

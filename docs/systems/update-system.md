@@ -156,6 +156,29 @@ Drei Folgen:
   dass niemand nachsehen konnte (`unknown` ist nicht `0`). Der Knopf
   bleibt bedienbar: ein toter Knopf nennt keinen nächsten Schritt.
 
+## Der Umstieg von der alten Companion
+
+Die alte Companion (`daddler/WeintCompanion`) kennt nur ihr eigenes
+Repository. Den Weg herüber baut deshalb **sie**: ihr Workflow
+`.github/workflows/forever-bridge.yml` spiegelt ein Release dieses
+Repositorys (Setup, AppImage, je mit `.sha256`) als *ihr* neuestes
+Release. Jede alte Fassung sieht darin ein gewöhnliches Update und
+installiert es mit ihrem gewohnten Updater — keine Brückenfassung
+dazwischen, ein Klick. Das geht nur, weil beide Apps dieselbe
+Windows-AppId, denselben Programmordner, dieselben Asset-Namen und
+dieselbe Konfigurationsdatei haben; wer eines davon hier ändert,
+reisst die Brücke ab.
+
+Danach fragt diese App nur noch `daddler/Companion-Forever`
+(`core/companion_updater.py`).
+
+Den WoW-Ordner übernimmt sie absichtlich nicht
+(`Config._migrate_wow_paths()`). Deshalb bekommt jeder Umsteiger beim
+ersten Start einmal `gui/dialogs/forever_switch_notice.py`: Beta-Ordner
+unter *Einstellungen → WoW-Client* prüfen. Wer Umsteiger ist, entscheidet
+`core/forever_switch.py` am Schlüssel `classic_path`, den nur die alte
+App je geschrieben hat.
+
 ## Every release ships its changelog — this is not optional
 
 Same rule as the addon (see `../../../Codex-Forever/docs/development/releases.md`),

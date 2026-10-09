@@ -12,6 +12,14 @@ Forever gibt es davon noch nichts — keinen Raid, den man auswerten
 könnte, und weder Verzauberungen noch Sockel. Diese Fassung räumt
 deshalb um, statt weiter leere Karten zu zeigen.
 
+**Umstieg von der alten Companion.** Wer bisher die Companion für
+Mists of Pandaria hatte, bekommt diese Fassung als ganz normales
+Update: Einstellungen und Discord-Verknüpfung bleiben erhalten. Nur den
+Spielordner übernimmt sie nicht — beim ersten Start erinnert dich ein
+Hinweis daran, unter *Einstellungen → WoW-Client* zu prüfen, ob der
+Ordner deiner Forever-Beta ausgewählt ist, bevor du WeintCodex
+installierst.
+
 **Neu: Bestand.** WeintCodex merkt sich für jeden Charakter Taschen,
 angelegte Ausrüstung, Bank und Gold. Die neue Seite *Bestand* liest das
 aus dem Spielstand des Addons und macht es durchsuchbar, ohne dass das
