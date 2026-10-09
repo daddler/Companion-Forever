@@ -42,12 +42,7 @@ from gui.widgets.nav_column import NavColumn
 from gui.widgets.toast import ToastHost
 from gui.widgets.title_bar import TitleBar
 
-from gui.navigation import (
-    RAID_VIEW_LEARN as _RAID_VIEW_LEARN,
-    PageId,
-    RaidLink,
-    build_page_specs,
-)
+from gui.navigation import PageId, build_page_specs
 
 
 class MainWindow(QMainWindow):
@@ -527,21 +522,6 @@ class MainWindow(QMainWindow):
         if hasattr(page, "pageRequested"):
 
             page.pageRequested.connect(self.change_page)
-
-        if hasattr(page, "playerRequested"):
-
-            page.playerRequested.connect(self.open_academy_for)
-
-        #
-        # Tiefenverweise auf einen Pull. Sie tragen mehr als eine
-        # Seitennummer (welcher Pull, welche Perspektive, welcher
-        # Charakter, welche Sekunde) und deshalb einen `RaidLink` statt
-        # eines `int` - siehe gui/navigation.py.
-        #
-
-        if hasattr(page, "openRaidCenter"):
-
-            page.openRaidCenter.connect(self.open_raid_center)
 
         if hasattr(page, "openSettingsSection"):
 
@@ -1313,51 +1293,6 @@ class MainWindow(QMainWindow):
         if hasattr(settings, "show_section"):
 
             settings.show_section(key)
-
-    def open_academy_for(self, player_name: str):
-        """
-        Einen Spieler in der Lernansicht öffnen.
-
-        Seit 4.0 ist das kein Seitenwechsel mehr, sondern ein
-        Perspektivwechsel innerhalb des Raid Centers: derselbe Pull,
-        anderer Blick, und der Charakter wechselt mit. Der Weg bleibt
-        als eigene Methode bestehen, weil das Signal `playerRequested`
-        duck-getypt an jeder Seite hängen kann.
-        """
-
-        self.open_raid_center(
-            RaidLink(
-                view=_RAID_VIEW_LEARN,
-                player=player_name,
-            )
-        )
-
-    def open_raid_center(self, link=None):
-        """
-        Das Raid Center öffnen und dort einen Tiefenverweis auflösen.
-
-        Die Reihenfolge ist entscheidend und dieselbe wie früher bei
-        `open_academy_for()`: erst die Seite bauen und den Verweis
-        auflösen, dann wechseln. `change_page()` löst `on_enter()` und
-        `refresh()` aus, die aus dem aktuellen Snapshot neu zeichnen -
-        andersherum stünde für einen Moment der falsche Pull oder der
-        falsche Charakter da.
-
-        `link` darf `None` sein: dann ist es der gewöhnliche
-        Seitenwechsel, und das Raid Center behält die Perspektive, in
-        der es zuletzt stand.
-        """
-
-        page = self._ensure_page(PageId.RAID_CENTER)
-
-        if page is None:
-            return
-
-        if link is not None and hasattr(page, "open"):
-
-            page.open(link)
-
-        self.change_page(PageId.RAID_CENTER)
 
     # --------------------------------------------------
     # System-Tray

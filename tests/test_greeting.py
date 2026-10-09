@@ -183,7 +183,7 @@ def test_a_missing_wow_comes_before_everything_else():
 
 def test_without_a_date_the_old_sentence_stands():
 
-    assert headline(None) == "Alles bereit für den nächsten Raid."
+    assert headline(None) == "Alles bereit für Azeroth."
 
 
 def test_an_update_is_named_by_component():

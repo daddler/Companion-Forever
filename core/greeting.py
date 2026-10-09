@@ -4,7 +4,7 @@ Die Begrüßung auf der Übersicht - Tageszeit, Name, nächster Raid.
 **Warum es diese Datei gibt.** Der Kopf der Übersicht trug bis 2.0.7
 zwei feste Zeichenketten: die Rubrik "HEUTE" und darunter einen von
 drei Sätzen, die allesamt den Zustand der *Installation* meldeten
-("Alles bereit für den nächsten Raid.", "Für das Addon liegt eine neue
+("Alles bereit für Azeroth.", "Für das Addon liegt eine neue
 Version bereit.", "World of Warcraft wurde noch nicht gefunden.").
 Das ist genau der Fehler, den die Übersicht 2.0 beim alten Dashboard
 behoben hat, nur eine Etage höher: die Stelle, die man bei jedem Start
@@ -88,7 +88,7 @@ DAY_WORDS = {
 # Ab wann ein Termin zu weit weg ist, um im Kopf der Übersicht
 # erwähnt zu werden. Eine Woche vorher ist "noch sieben Tage" keine
 # Auskunft mehr, sondern ein Hinweis darauf, dass gerade kein Raid
-# ansteht - und den gibt der Satz "Alles bereit für den nächsten Raid."
+# ansteht - und den gibt der Satz "Alles bereit für Azeroth."
 # freundlicher.
 #
 
@@ -326,5 +326,5 @@ def headline(
 
     return (
         update_sentence(addon_update, app_update)
-        or "Alles bereit für den nächsten Raid."
+        or "Alles bereit für Azeroth."
     )

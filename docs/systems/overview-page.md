@@ -1,5 +1,34 @@
 # The Overview page: greeting, raid schedule, roster, last pull
 
+## Since 5.1 (Forever): WeintCodex, characters, gold
+
+Raid schedule, roster strip and last pull are gone from the Overview —
+Forever has no raid yet (see `raid-center.md`, *Ruht seit 5.1*; the
+cards live on in `gui/pages/raid/overview_cards.py`). What replaced them:
+
+- **`CodexCard`** (main row, left): installed WeintCodex version, chip
+  (AKTUELL / UPDATE / NICHT GEPRÜFT / NICHT INSTALLIERT / KEIN SPIEL),
+  the notes of the **installed** version (same `update_note()` rule as
+  the update card — hidden while an update waits, because the update
+  card next to it shows the same excerpt) and one elided line for each
+  of the four versions **before** it (`addon_history()`; empty if the
+  installed version is not in the changelog). Buttons: *WoW starten*,
+  *Alle Änderungen*, and a context button (folder / install).
+- **`CharactersTile`**: the four most recently reported characters with
+  level and item level, from `CharacterStore`.
+- **`GoldTile`**: gold over all characters and item count, from the
+  shared `InventoryLoader` (`gui/controllers/inventory_loader.py`, read
+  in `on_enter()` in a thread, never in `refresh()`). Unknown gold is
+  counted and named, never summed as 0. Detail: `inventory.md`.
+- Task list: "Ausrüstung zerbrochen" (issue status `wrong` from the
+  addon's `character_sheet`) replaces "offene Stellen in der
+  Vorbereitung" (enchants/gems — not in Forever).
+- The header no longer carries a countdown; `headline()` is called
+  without a raid day and falls back to "Alles bereit für Azeroth.".
+
+Everything below up to *The greeting header* describes 2.0–5.0.
+
+
 ## The next raid on the Overview
 
 The countdown chip used to read "KEIN TERMIN BEKANNT" permanently — the

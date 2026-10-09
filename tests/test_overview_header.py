@@ -204,40 +204,11 @@ def test_an_unknown_name_is_not_invented(page):
     assert "," not in page.header.eyebrow.text()
 
 
-def test_the_title_names_the_next_raid(page):
-
-    from datetime import datetime, timedelta
-
-    from core.raid_schedule import RaidDay, RaidSchedule
-
-    #
-    # Morgen um dieselbe Uhrzeit - der Fall, wegen dem die Begrüßung
-    # überhaupt gebaut wurde: "in 1 T 3 STD" im Chip sagt nicht, dass
-    # morgen Raid ist.
-    #
-
-    starts_at = (
-        datetime.now().astimezone() + timedelta(days=1)
-    ).replace(microsecond=0)
-
-    day = RaidDay(key="wed", label="Mittwoch", starts_at=starts_at)
-
-    page.manager.raid_schedule_sync = _ScheduleSync(
-        RaidSchedule(known=True, title="Schlacht um Orgrimmar", days=(day,))
-    )
+def test_without_an_update_the_calm_sentence_stands(page):
 
     page.refresh()
 
-    assert page.header.title.text().startswith("Morgen um ")
-
-    assert page.header.title.text().endswith("Uhr ist Raid.")
-
-
-def test_without_a_date_the_old_sentence_stands(page):
-
-    page.refresh()
-
-    assert page.header.title.text() == "Alles bereit für den nächsten Raid."
+    assert page.header.title.text() == "Alles bereit für Azeroth."
 
 
 # --------------------------------------------------

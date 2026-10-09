@@ -36,6 +36,20 @@ from core.academy_history import day_from_iso
 from core.character_store import CharacterStore
 
 
+#
+# Das Raid Center ruht seit 5.1 (Forever): auf Forever gibt es noch
+# keinen Raid, der Termin, letzten Pull oder eine Auswertung trüge.
+# Solange das so ist, fragt der Sync-Takt weder den Raidtermin noch
+# WarcraftLogs ab und stellt dem Addon keine WeintTV-/Academy-Daten zu
+# (WeintCodex Forever hat beides nicht). Die Dienste werden trotzdem
+# gebaut - der ruhende Code und seine Tests bleiben lauffähig, und
+# zurück kommt alles mit diesem einen Schalter plus dem Eintrag in
+# `gui/navigation.py`. Siehe docs/systems/raid-center.md.
+#
+
+RAID_FEATURES = False
+
+
 class _AutoSyncStarter(QObject):
     """
     Stößt start_auto_sync() garantiert im Hauptthread an, egal von
@@ -486,7 +500,7 @@ class CompanionManager(QObject):
 
         try:
 
-            if self.raid_schedule_sync.process():
+            if RAID_FEATURES and self.raid_schedule_sync.process():
                 dirty = True
 
         except Exception as exc:
@@ -522,7 +536,8 @@ class CompanionManager(QObject):
 
         try:
 
-            self.last_pull_sync.process()
+            if RAID_FEATURES:
+                self.last_pull_sync.process()
 
         except Exception as exc:
 
@@ -537,7 +552,7 @@ class CompanionManager(QObject):
 
         try:
 
-            if self.config.data.get(
+            if RAID_FEATURES and self.config.data.get(
                 "addon_analysis_sync_enabled",
                 True,
             ):

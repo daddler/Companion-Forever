@@ -40,6 +40,17 @@ Namen WeintTV und WeintAcademy bleiben als Module bestehen (sie
 stehen in den Einstellungen, im Addon und auf dem Discord), nur sind
 sie keine Orte mehr, an die man gehen muss.
 
+Neu in 5.1 (Forever): **das Raid Center ruht.** Auf Forever gibt es
+noch keinen Raid, der eine Auswertung trüge, und bis eine Gilde einen
+zusammenbekommt, vergehen Monate. Der Bereich steht deshalb nicht mehr
+in der Spalte und nichts von ihm läuft im Hintergrund - der Code bleibt
+aber vollständig im Repository und unter Test
+(`gui/pages/raid_center.py`, `tests/test_raid_center.py`). Zurück
+kommt er mit einem Eintrag in `PageId` und einem `PageSpec`, wie jeder
+Bereich; siehe `docs/systems/raid-center.md`, Abschnitt *Ruht seit
+5.1*. "Vorbereitung" ist dagegen entfernt: sie zählte fehlende
+Verzauberungen und leere Sockel, und beides gibt es auf Forever nicht.
+
 `RaidView` und `RaidLink` weiter unten gehören mit dazu: ein
 Tiefenverweis auf einen Pull ist ein Navigationsziel wie eine Seite,
 und er gehört deshalb in dieselbe Datei wie `PageId` - nicht als
@@ -64,31 +75,22 @@ class PageId(IntEnum):
     """
 
     #
-    # RAID
-    #
-    # Zwei Einträge, nicht vier: WeintTV, Academy und Archiv sind
-    # Perspektiven des Raid Centers und keine eigenen Orte mehr.
+    # SPIEL
     #
 
     OVERVIEW = 0
-    RAID_CENTER = 1
-
-    #
-    # CHARAKTER
-    #
-
-    CHARACTERS = 2
-    PREPARATION = 3
-    CHARACTER_LINKS = 4
+    CHARACTERS = 1
+    INVENTORY = 2
+    CHARACTER_LINKS = 3
 
     #
     # SYSTEM
     #
 
-    ADDON = 5
-    CONNECTIONS = 6
-    SETTINGS = 7
-    LOGS = 8
+    ADDON = 4
+    CONNECTIONS = 5
+    SETTINGS = 6
+    LOGS = 7
 
 
 #
@@ -96,9 +98,7 @@ class PageId(IntEnum):
 # dem ersten Eintrag ihrer Gruppe.
 #
 
-GROUP_RAID = "RAID"
-
-GROUP_CHARACTER = "CHARAKTER"
+GROUP_GAME = "SPIEL"
 
 GROUP_SYSTEM = "SYSTEM"
 
@@ -107,6 +107,9 @@ GROUP_SYSTEM = "SYSTEM"
 # ==========================================================
 # Die vier Perspektiven des Raid Centers
 # ==========================================================
+#
+# Ruhen seit 5.1 mit dem Raid Center (siehe Modulkommentar) und
+# bleiben stehen, weil der ruhende Code sie benutzt.
 #
 # Sie sind **keine** PageIds: ein Perspektivwechsel ist kein
 # Seitenwechsel. Der Unterschied ist der ganze Punkt des Umbaus - der
@@ -288,10 +291,9 @@ def build_page_specs() -> tuple[PageSpec, ...]:
     from gui.pages.character_links import CharacterLinksPage
     from gui.pages.characters import CharactersPage
     from gui.pages.connections import ConnectionsPage
+    from gui.pages.inventory import InventoryPage
     from gui.pages.logs import LogsPage
     from gui.pages.overview import OverviewPage
-    from gui.pages.preparation import PreparationPage
-    from gui.pages.raid_center import RaidCenterPage
     from gui.pages.settings import SettingsPage
 
     return (
@@ -299,86 +301,54 @@ def build_page_specs() -> tuple[PageSpec, ...]:
         PageSpec(
             page_id=PageId.OVERVIEW,
             label="Übersicht",
-            group=GROUP_RAID,
+            group=GROUP_GAME,
             icon="dashboard",
             page_factory=OverviewPage,
             #
-            # Mit Scrollbereich. Bei der Entwurfsgröße passt die
-            # Übersicht ohne Scrollbalken - bei 960 x 640 aber nicht,
-            # und dort ist Scrollen die richtige Antwort: die vier
-            # Blöcke haben eine Mindesthöhe, unter die sie nicht
-            # gestaucht werden dürfen, ohne unlesbar zu werden.
-            #
-            # Die Scrollfreiheit ist ausdrücklich nur für WeintTV
-            # gefordert (§8), wo sie den Zweck der Ansicht ausmacht.
+            # Mit Scrollbereich: bei 960 x 640 passen die Karten nicht
+            # ohne, und Stauchen machte sie unlesbar.
             #
             scroll=True,
             attribute="overview",
         ),
 
-        #
-        # Das Raid Center - ein Bereich, vier Perspektiven.
-        #
-        # `scroll=False` ist hier nicht Feinheit, sondern die Bedingung
-        # des ganzen Umbaus: der Kopfblock mit Boss, Pull und Ausgang
-        # muss stehen bleiben, wenn man zwischen Live, Analyse, Lernen
-        # und Quelle wechselt. In einem Scrollbereich der ganzen Seite
-        # würde er beim ersten Rollen verschwinden - und dann wäre er
-        # wieder vier verschiedene Kopfzeilen. Gescrollt wird deshalb
-        # **innerhalb** jeder Ansicht (siehe gui/pages/raid_center.py),
-        # was zugleich die Bedingung aus §8 erfüllt, dass die Live-
-        # Ranglisten 25 Zeilen ohne Scrollen der Seite tragen.
-        #
-        # `force_collapsed_nav`, weil die dichteste der vier Ansichten
-        # die Breite braucht - das war schon für WeintTV und das Archiv
-        # so und gilt für ihren gemeinsamen Nachfolger unverändert.
-        #
-
-        PageSpec(
-            page_id=PageId.RAID_CENTER,
-            label="Raid Center",
-            group=GROUP_RAID,
-            icon="weinttv",
-            page_factory=RaidCenterPage,
-            scroll=False,
-            attribute="raid_center",
-            force_collapsed_nav=True,
-        ),
-
         PageSpec(
             page_id=PageId.CHARACTERS,
             label="Meine Charaktere",
-            group=GROUP_CHARACTER,
+            group=GROUP_GAME,
             icon="charaktere",
             page_factory=CharactersPage,
             attribute="characters",
         ),
 
+        #
+        # Neu in 5.1: der Bestand aller Charaktere aus dem Spielstand
+        # des Addons. Ohne Scrollbereich der Seite - die Trefferliste
+        # scrollt selbst, und das Suchfeld soll dabei stehen bleiben.
+        #
+
         PageSpec(
-            page_id=PageId.PREPARATION,
-            label="Vorbereitung",
-            group=GROUP_CHARACTER,
-            icon="vorbereitung",
-            page_factory=PreparationPage,
-            attribute="preparation",
+            page_id=PageId.INVENTORY,
+            label="Bestand",
+            group=GROUP_GAME,
+            icon="archiv",
+            page_factory=InventoryPage,
+            scroll=False,
+            attribute="inventory",
         ),
 
         #
-        # Die Charakterzuordnung ist Werkzeug der Raidleitung, steht
+        # Die Charakterzuordnung ist Werkzeug der Gildenleitung, steht
         # aber bei allen in der Spalte: ohne die Rolle antwortet der
         # Bot mit 403, und dann erklaert die Seite, wofuer sie da
         # waere. Dieselbe Regel wie im Addon (core/access.lua:
-        # "lock, don't hide") - ein Bereich, der je nach Rolle
-        # verschwindet, laesst sich weder erklaeren noch danach
-        # fragen. Sie haengt an CHARAKTER und nicht an RAID, weil sie
-        # von Charakteren handelt und weil die Gruppe RAID die
-        # Auswertungsbereiche zusammenhaelt.
+        # "lock, don't hide").
         #
 
         PageSpec(
             page_id=PageId.CHARACTER_LINKS,
             label="Charakterzuordnung",
-            group=GROUP_CHARACTER,
+            group=GROUP_GAME,
             icon="charaktere",
             page_factory=CharacterLinksPage,
             scroll=False,

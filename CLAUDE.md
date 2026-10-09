@@ -62,6 +62,12 @@ WeintCodex Bot (Discord bot backend)  ←─────────────
   `QCloseEvent` into a `hideEvent` handler) — segfaults with no Python
   traceback. Shared teardown goes in a plain, event-free, idempotent
   method. Detail: `docs/architecture/qt-pitfalls.md`.
+- **The Raid Center rests since 5.1 (Forever) — resting, not deleted.**
+  No nav entry, `RAID_FEATURES = False` in `core/companion_manager.py`
+  stops raid schedule, last pull and WeintTV/Academy delivery, but the
+  code and its tests stay. Don't delete it, and don't re-enable it with
+  Mists of Pandaria data. Detail: `docs/systems/raid-center.md`,
+  *Ruht seit 5.1*. The rule below applies once it is back.
 - **A raid/pull is the central object; Live, Analyse, Lernen and Quelle
   are four perspectives on it, never four places.** The context header
   lives outside the view stack so it survives a perspective change, and
@@ -93,6 +99,9 @@ WeintCodex Bot (Discord bot backend)  ←─────────────
   `demo_rules` / `demo_encounters` fixtures in `tests/conftest.py`.
 - **A single 401 must never unlink a Discord account.** Detail:
   `docs/companion-auth.md`.
+- **The Bestand page only reads `WeintCodex.lua`** (`core/lua_reader.py`,
+  never evaluates anything). Bank never opened and gold never reported
+  are *unknown*, never 0. Detail: `docs/systems/inventory.md`.
 - **`upsert_variable()` (writing into the addon's SavedVariables) is the
   one place this app can lose user data** — always re-check size/mtime
   immediately before `os.replace()`. Detail:
@@ -138,14 +147,15 @@ Linux/Windows/AppImage build commands.
 | Theme/accent, signals, animations, lambda leaks | `docs/architecture/theming.md` |
 | Page registry, `PageId`, `RaidView`/`RaidLink`, page lifecycle | `docs/architecture/navigation.md` |
 | Qt segfaults, startup ordering, platform paths | `docs/architecture/qt-pitfalls.md` |
-| Raid Center (Informationsarchitektur, vier Ansichten, RaidContext, Tiefenverweise) | `docs/systems/raid-center.md` |
+| Raid Center (ruht seit 5.1; Informationsarchitektur, vier Ansichten, RaidContext, Tiefenverweise) | `docs/systems/raid-center.md` |
+| Bestand aller Charaktere, Gold, Lua-Leser für SavedVariables | `docs/systems/inventory.md` |
 | WeintTV/Academy (live), ratings, lesson catalog, "wer bin ich", Datenquelle/Quellenzeile/Wegweiser | `docs/systems/weinttv-academy.md` |
 | Archiv-Modus, Wiedergabe/Replay | `docs/systems/archive-and-replay.md` |
 | Addon-/Companion-Updates, Storage-Warnung, Changelog-Anzeige | `docs/systems/update-system.md` |
-| Meine Charaktere, Vorbereitung, Charakterzuordnung-Seite | `docs/systems/character-pages.md` |
+| Meine Charaktere, Vorbereitung (entfernt in 5.1), Charakterzuordnung-Seite | `docs/systems/character-pages.md` |
 | Onboarding-Tour, "Was ist neu"-Popup | `docs/systems/whats-new-and-onboarding.md` |
 | Spielversion, Client-Erkennung, Installationspfade | `docs/systems/wow-client-profiles.md` |
-| Übersicht: Aufgabenkarte, Brücken-Kachel | `docs/systems/overview-page.md` |
+| Übersicht: Codex-Karte, Charaktere, Gold, Aufgabenkarte, Brücken-Kachel | `docs/systems/overview-page.md` |
 | Spieldaten (leer): Bosse, Fähigkeiten, Lektionen | `docs/systems/forever-data.md` |
 | Pfade, atomare Writes, Backups, Config/Auth-Speicherung | `docs/development/paths-and-storage.md` |
 | Tests, Build, AppImage/Windows-Installer | `docs/development/testing-and-build.md` |

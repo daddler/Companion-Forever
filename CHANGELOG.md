@@ -2,6 +2,51 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 5.1.0
+
+**Die App ist jetzt eine Forever-App und keine Raid-App mehr.** Bis
+5.0 drehte sich fast alles um den nächsten Raid: Termin und Aufstellung
+auf der Übersicht, der letzte Pull, das Raid Center mit Live, Analyse,
+Lernen und Archiv, die Vorbereitung mit Verzauberungen und Sockeln. Auf
+Forever gibt es davon noch nichts — keinen Raid, den man auswerten
+könnte, und weder Verzauberungen noch Sockel. Diese Fassung räumt
+deshalb um, statt weiter leere Karten zu zeigen.
+
+**Neu: Bestand.** WeintCodex merkt sich für jeden Charakter Taschen,
+angelegte Ausrüstung, Bank und Gold. Die neue Seite *Bestand* liest das
+aus dem Spielstand des Addons und macht es durchsuchbar, ohne dass das
+Spiel läuft: „Leinenstoff“ eintippen, und du siehst, wer wie viel davon
+hat und wo es liegt. Daneben das Gold aller Charaktere zusammen. Es ist
+der Stand des letzten Ausloggens; eine Bank, die nie offen war, und ein
+Charakter ohne Goldstand heißen „unbekannt“ und nie „0“. Die Datei wird
+nur gelesen, nie geschrieben.
+
+**Neue Übersicht.** Statt Raidtermin und Aufstellung steht oben
+WeintCodex selbst: welche Fassung du hast, ob sie aktuell ist, was in
+ihr steckt und was die Fassungen davor gebracht haben — das Addon
+erscheint auf Forever mehrmals die Woche. Darunter deine zuletzt
+gespielten Charaktere mit Stufe und Gegenstandsstufe, Gold und Bestand
+über alle Charaktere und wie bisher die Brücken. Ein zerbrochener
+Gegenstand steht jetzt in der Aufgabenliste; offene Verzauberungen und
+Sockel nicht mehr.
+
+**Raid Center und Vorbereitung ruhen.** Beide stehen nicht mehr in der
+Navigation, und im Hintergrund fragt die App weder den Raidtermin noch
+WarcraftLogs ab und stellt dem Addon keine WeintTV-/Academy-Daten mehr
+zu. Gelöscht ist nichts: der Code liegt weiter im Repository und bleibt
+unter Test, damit er zurückkommen kann, sobald es auf Forever Raids
+gibt.
+
+**Meine Charaktere** zeigt auf jeder Karte, was WeintCodex Forever
+tatsächlich prüft — leere Plätze und zerbrochene Gegenstände — statt
+eines Prozentwerts über Verzauberungen und Sockel, der dauerhaft auf
+„keine Prüfung“ stand.
+
+**Die Einführung ist neu geschrieben** und erscheint deshalb nach dem
+Update einmal für alle.
+
+Das Installieren und Aktualisieren von WeintCodex ist unverändert.
+
 ## 5.0.4
 
 **Derselbe Fehler noch einmal, eine Ebene weiter: beim Bot.** Die

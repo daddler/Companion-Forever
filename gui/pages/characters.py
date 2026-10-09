@@ -71,7 +71,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.character_sheet_sync import readiness
 from gui.pages._page import Page
 from gui.theme import tokens
 from gui.theme.fonts import font
@@ -292,20 +291,38 @@ class CharacterCard(Card):
 
         foot.setSpacing(tokens.SPACE[1])
 
-        ratio = readiness(sheet)
+        #
+        # Seit 5.1 (Forever) ohne Prozentangabe: die hing an
+        # Verzauberungen und Sockeln, und beides gibt es auf Forever
+        # nicht - das Addon meldet keine Zähler mehr, und der Chip
+        # stand auf jeder Karte dauerhaft auf "keine Prüfung". Was
+        # WeintCodex Forever prüft, sind leere Plätze und zerbrochene
+        # Gegenstände (`issues`), und genau das steht jetzt hier.
+        #
 
-        if ratio is None:
+        issues = sheet.get("issues") or []
 
-            foot.addWidget(Chip("KEINE PRÜFUNG", "neutral"))
-
-        else:
+        if issues:
 
             foot.addWidget(
                 Chip(
-                    f"{ratio * 100:.0f} % AUSGERÜSTET",
-                    "ok" if ratio >= 0.999 else "warn",
+                    "1 HINWEIS" if len(issues) == 1
+                    else f"{len(issues)} HINWEISE",
+                    "warn",
                 )
             )
+
+            self.setToolTip("\n".join(
+                str(issue.get("text", "")) for issue in issues
+            ))
+
+        elif sheet.get("slots"):
+
+            foot.addWidget(Chip("ALLES ANGELEGT", "ok"))
+
+        else:
+
+            foot.addWidget(Chip("KEINE PRÜFUNG", "neutral"))
 
         foot.addStretch(1)
 
@@ -366,8 +383,8 @@ class CharactersPage(Page):
             title="Das Addon hat noch keinen Charakter gemeldet.",
             explanation=(
                 "WeintCodex übergibt beim Anmelden im Spiel, welcher "
-                "Charakter gespielt wird, samt Gegenstandsstufe, "
-                "Verzauberungen und Sockeln. Melde dich einmal im "
+                "Charakter gespielt wird, samt Stufe, Gegenstandsstufe "
+                "und Ausrüstung. Melde dich einmal im "
                 "Spiel an - danach steht der Charakter hier, auch wenn "
                 "du ihn längere Zeit nicht spielst."
             ),
@@ -649,8 +666,8 @@ class CharactersPage(Page):
                     title="Das Addon hat noch keinen Charakter gemeldet.",
                     explanation=(
                         "WeintCodex übergibt beim Anmelden im Spiel, "
-                        "welcher Charakter gespielt wird, samt "
-                        "Gegenstandsstufe, Verzauberungen und Sockeln. "
+                        "welcher Charakter gespielt wird, samt Stufe, "
+                        "Gegenstandsstufe und Ausrüstung. "
                         "Melde dich einmal im Spiel an - danach steht der "
                         "Charakter hier, auch wenn du ihn längere Zeit "
                         "nicht spielst."

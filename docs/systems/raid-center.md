@@ -1,5 +1,35 @@
 # The Raid Center: one pull, four perspectives
 
+## Ruht seit 5.1 (Forever)
+
+Forever has no raid yet that could be analysed, and getting a guild
+together for one will take months. Since 5.1 the Raid Center is
+therefore **resting, not deleted**:
+
+- It is not in `PageId`/`build_page_specs()` (`gui/navigation.py`), so
+  it has no nav entry. `RaidView`/`RaidLink` stay, the resting code uses
+  them.
+- `RAID_FEATURES = False` in `core/companion_manager.py` stops the three
+  raid steps of the sync loop: `raid_schedule_sync`, `last_pull_sync`
+  and `addon_analysis_sync` (WeintTV/Academy delivery — WeintCodex
+  Forever has neither). The services are still *constructed*, so the
+  resting code and its tests keep running.
+- The Overview's raid cards (`RosterCard`, `LastPullCard`) moved to
+  `gui/pages/raid/overview_cards.py`, unchanged.
+- `tests/test_raid_center.py`, `test_roster_card.py`,
+  `test_last_pull_card.py` keep running. That is the point: code nobody
+  executes rots silently, code under test does not.
+
+**Bringing it back** = flip `RAID_FEATURES`, re-add the `PageId` and
+`PageSpec`, wire `openRaidCenter`/`playerRequested` in
+`MainWindow._ensure_page()` again (removed in 5.1), and put the cards
+back on the Overview. Before that, check every game-data table against
+Forever (`docs/systems/forever-data.md`) — the analyzer must not judge
+Forever fights with Mists of Pandaria data.
+
+Everything below describes the Raid Center as it was in 4.0–5.0.
+
+
 ## What this replaced, and why it was not a cosmetic problem
 
 Through 3.6.0 the RAID group had four nav entries: *Übersicht*, *WeintTV*,

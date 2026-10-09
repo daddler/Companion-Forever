@@ -113,7 +113,7 @@ def _card(payload, now="2026-08-11T18:30:00+02:00"):
 
     from core.raid_schedule import parse_schedule
 
-    from gui.pages.overview import RosterCard
+    from gui.pages.raid.overview_cards import RosterCard
 
     schedule = parse_schedule(payload)
 

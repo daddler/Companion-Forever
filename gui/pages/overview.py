@@ -8,10 +8,13 @@ Danach ist dort alles dauerhaft grün, und der Bereich, den der Nutzer
 bei jedem Start als erstes sieht, sagt ihm nichts, was er nicht schon
 weiß.
 
-Die Übersicht zeigt stattdessen, **was heute ansteht**: der nächste
-Raid mit Countdown und Aufstellung, der letzte Pull mit dem
-schwächsten Bereich und einer konkreten Lektion, der Stand der
-Vorbereitung.
+Die Übersicht zeigt stattdessen, **was heute ansteht**. Bis 5.0 waren
+das der nächste Raid mit Countdown und Aufstellung, der letzte Pull und
+der Stand der Vorbereitung - alles Mists of Pandaria. Seit 5.1
+(Forever), wo es noch keinen Raid gibt und keine Verzauberungen und
+Sockel: WeintCodex selbst (Fassung, Update, was in ihr steckt), was zu
+tun ist, deine Charaktere mit Stufe, und Gold und Bestand über alle
+Charaktere aus dem Spielstand des Addons.
 
 Der Installationszustand verschwindet dabei nicht, er verliert nur
 seinen Rang: er sitzt als **eine einzige Zeile** am Fuß und klappt
@@ -20,9 +23,8 @@ in Ordnung, bleibt sie geschlossen und trägt nicht einmal einen Knopf -
 das ist der ganze Unterschied zwischen "Zustand melden" und "zur
 Handlung auffordern".
 
-Zwei der vier Blöcke haben im Programm noch keine Datenquelle und
-zeigen deshalb ihren Leerzustand statt erfundener Zahlen; die Gründe
-stehen jeweils an Ort und Stelle.
+Was keine Daten hat, zeigt seinen Leerzustand statt erfundener
+Zahlen; die Gründe stehen jeweils an Ort und Stelle.
 """
 
 from __future__ import annotations
@@ -31,8 +33,6 @@ import threading
 import time
 
 from PySide6.QtCore import (
-    QEasingCurve,
-    QPropertyAnimation,
     QRectF,
     Qt,
     QTimer,
@@ -56,60 +56,37 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.backend_config import TARGET_URL, app_url, roster_target
+from core.backend_config import app_url
 from core.browser import open_url
-from core.changelog_reader import format_changelog_body
-from core.changelog_source import ADDON, COMPANION, LABELS, update_note
+from core.changelog_reader import format_changelog_body, strip_markdown
+from core.changelog_source import (
+    ADDON,
+    COMPANION,
+    LABELS,
+    entries_for,
+    find_entry,
+    update_note,
+)
 from core.greeting import greeting, headline
-from analyzer.academy.models import CATEGORY_LABELS
-from analyzer.academy.progression import weakest_of
-
-from core.academy_history import today
-from core.last_pull import (
-    LastPull,
-    from_history,
-    record_key,
-    result_text,
-    when_text,
-)
+from core.inventory import money_text
 from core.platform import is_linux
-from core.raid_schedule import (
-    ROLE_LABELS,
-    ROLE_ORDER,
-    composition_text,
-    count_text,
-    countdown_text,
-    day_text,
-    open_slots,
-    others_text,
-    own_signup_label,
-    own_signup_text,
-    own_signup_variant,
-    signup_text,
-)
 from gui.dialogs.changelog_dialog import show_changelog
 from gui.motion.pulse_clock import KIND_WARN, OPACITY_LOW, pulse_clock
-from gui.navigation import (
-    RAID_VIEW_ANALYSIS,
-    RAID_VIEW_LEARN,
-    RaidLink,
-)
+from gui.controllers.inventory_loader import inventory_loader
 from gui.pages._page import Page
 from gui.theme import tokens
 from gui.theme.fonts import font
 from gui.theme.icons import tinted_pixmap
-from gui.theme.motion import curve, duration, is_reduced
+from gui.theme.motion import is_reduced
 from gui.theme.restyle import restyle
 from gui.theme.theme_manager import theme
+from gui.theme.wow_colors import class_color
 from gui.widgets.card import Card
 from gui.widgets.chip import Chip
+from gui.widgets.class_avatar import ClassAvatar
 from gui.widgets.eyebrow import eyebrow_label
 from gui.widgets.hero_banner import HeroButton
-from gui.widgets.sparkline import Sparkline
-from gui.widgets.status_dot import StatusDot
-from gui.widgets.progress_ring import ProgressRing
 from gui.widgets.bridge_tile import BridgeTile
-from gui.widgets.roster_strip import RosterStrip, SlotGroup
 from gui.widgets.task_card import (
     URGENCY_BLOCKING,
     URGENCY_DUE,
@@ -117,7 +94,6 @@ from gui.widgets.task_card import (
     Task,
     TaskCard,
 )
-from gui.widgets.academy.star_rating import Rating
 from gui.widgets.wrapped_label import enable_wrap
 
 
@@ -291,559 +267,6 @@ def _divider() -> QFrame:
     line.setStyleSheet(f"background:{tokens.SURFACE['raised']};border:none;")
 
     return line
-
-
-def _slot_groups(schedule, day) -> list[SlotGroup]:
-    """
-    Die Reihen des Aufstellungsstreifens.
-
-    Drei Fälle, und sie unterscheiden sich in dem, was der Bot
-    geliefert hat - nicht in dem, was die Karte gerne hätte:
-
-    - **Rollen gemeldet**: eine Reihe je Rolle, gefüllt mit den
-      Klassen der Zusagen, dahinter die fehlenden Plätze dieser Rolle
-      (nur wenn eine Sollstärke gemeldet ist). Was danach noch offen
-      ist, steht als eigene Reihe "FREI" - die Sollstärke sagt, wie
-      viele Heiler gebraucht werden, nicht, wie der letzte Platz zu
-      besetzen ist.
-    - **Nur Zahlen**: ein einziger Streifen "ZUGESAGT". Drei Reihen
-      aus einer Gesamtzahl zu schätzen wäre in der Anzeige von einer
-      gemeldeten Aufstellung nicht zu unterscheiden.
-    - **Keine Raidgröße und keine Zusage**: gar kein Streifen. Ein
-      leerer Rahmen ohne einen einzigen Platz ist kein Bild, sondern
-      ein Ladefehler.
-    """
-
-    if day is None:
-        return []
-
-    size = int(getattr(schedule, "raid_size", 0) or 0)
-
-    total_open, missing, free = open_slots(schedule, day)
-
-    if day.has_roles():
-
-        groups = []
-
-        for role in ROLE_ORDER:
-
-            filled = [
-                slot.class_name
-                for slot in day.roster
-                if slot.role == role
-            ]
-
-            gap = missing.get(role, 0)
-
-            if not filled and not gap:
-                continue
-
-            groups.append(
-                SlotGroup(
-                    label=ROLE_LABELS[role],
-                    filled=filled,
-                    open_slots=gap,
-                )
-            )
-
-        if free:
-
-            groups.append(SlotGroup(label="FREI", open_slots=free))
-
-        return groups
-
-    if not day.active and not size:
-        return []
-
-    #
-    # Ohne Rollen: ein Streifen. Die gefüllten Plätze tragen keine
-    # Klasse und erscheinen deshalb in Akzentfarbe.
-    #
-
-    return [
-        SlotGroup(
-            label="ZUGESAGT",
-            filled=[""] * day.active,
-            open_slots=total_open,
-        )
-    ]
-
-
-class DayBlock(QWidget):
-    """
-    Ein Termin des Raids: Zeile, Zahl, Streifen, Satz.
-
-    **Warum es diesen Block gibt.** Der Standardraid laeuft Mittwoch
-    *und* Donnerstag, und die beiden Anmeldungen sind zwei verschiedene
-    Listen - wer am Mittwoch zusagt, muss am Donnerstag nicht koennen.
-    Die Karte nannte aber nur den naechsten Termin: am Dienstag also
-    den Mittwoch, waehrend der Donnerstag daneben leer sein konnte,
-    ohne dass es in der App zu sehen war. Der Bot schickt beide Tage in
-    derselben Antwort, sie standen nur nie auf dem Bildschirm.
-
-    Die Zahl sitzt in der Zeile ueber *ihrem* Streifen und nicht mehr
-    im Kopf der Karte: mit zwei Tagen gehoert "21 / 25" zu einem von
-    beiden, und im Kopf waere nicht zu sehen, zu welchem.
-
-    Aus demselben Grund steht auch die **eigene Anmeldung** hier und
-    nicht im Kopf: der Chip neben dem Datum sagt, ob man selbst fuer
-    diesen Tag zugesagt, abgesagt oder noch gar nicht geantwortet hat.
-    "21 von 25 zugesagt" beantwortet diese Frage nicht - die Antwort
-    des Bots nennt bewusst keine Namen, es ist aus ihr also gar nicht
-    zu erkennen, wer von den 21 man selbst ist. Sie kommt deshalb als
-    eigenes Feld je Tag (`days[].me`, siehe `core/raid_schedule.py`).
-    """
-
-    def __init__(self, parent=None):
-
-        super().__init__(parent)
-
-        root = QVBoxLayout(self)
-
-        root.setContentsMargins(0, 0, 0, 0)
-
-        root.setSpacing(4)
-
-        head = QHBoxLayout()
-
-        head.setContentsMargins(0, 0, 0, 0)
-
-        head.setSpacing(tokens.SPACE[1])
-
-        self.when = QLabel("")
-
-        self.when.setFont(font("body"))
-
-        restyle(
-            self.when,
-            f"color:{tokens.TEXT['primary']};background:transparent;",
-        )
-
-        head.addWidget(self.when)
-
-        #
-        # Der eigene Anmeldezustand, direkt neben dem Datum: er
-        # gehört zu **diesem** Tag und nicht zum Raid. Mittwoch und
-        # Donnerstag sind zwei Anmeldungen, und ein Hinweis im Kopf
-        # der Karte müsste offenlassen, welchen der beiden er meint -
-        # dieselbe Überlegung, die die Zahl der Zusagen aus dem Kopf
-        # in die Tageszeile geholt hat.
-        #
-        # Unsichtbar, solange der Bot nichts dazu meldet: kein Chip
-        # heisst "dazu ist nichts bekannt", und das ist etwas anderes
-        # als "nicht angemeldet".
-        #
-
-        self.own = Chip("", "neutral")
-
-        self.own.setVisible(False)
-
-        head.addWidget(self.own)
-
-        head.addStretch(1)
-
-        self.count = QLabel("")
-
-        self.count.setFont(font("small"))
-
-        restyle(
-            self.count,
-            f"color:{tokens.TEXT['secondary']};background:transparent;",
-        )
-
-        head.addWidget(self.count)
-
-        root.addLayout(head)
-
-        self.strip = RosterStrip()
-
-        self.strip.setVisible(False)
-
-        root.addSpacing(tokens.SPACE[0])
-
-        root.addWidget(self.strip)
-
-        self.note = QLabel("")
-
-        self.note.setFont(font("small"))
-
-        enable_wrap(self.note)
-
-        restyle(
-            self.note,
-            f"color:{tokens.TEXT['secondary']};background:transparent;",
-        )
-
-        root.addWidget(self.note)
-
-    # --------------------------------------------------
-
-    def apply(self, schedule, day):
-
-        self.when.setText(day_text(day))
-
-        label = own_signup_label(day)
-
-        self.own.setText(label)
-
-        self.own.setVariant(own_signup_variant(day))
-
-        #
-        # Der ganze Satz hängt am Chip: "NICHT ANGEMELDET" ist die
-        # kurze Fassung, "Deine Anmeldung für diesen Tag fehlt noch."
-        # die, in der die Frage gestellt wird.
-        #
-
-        self.own.setToolTip(own_signup_text(day))
-
-        self.own.setVisible(bool(label))
-
-        self.count.setText(count_text(day, schedule.raid_size))
-
-        groups = _slot_groups(schedule, day)
-
-        self.strip.setGroups(groups)
-
-        self.strip.setVisible(bool(groups))
-
-        text = _day_note(schedule, day, bool(groups))
-
-        self.note.setText(text)
-
-        self.note.setVisible(bool(text))
-
-
-def _day_note(schedule, day, has_strip: bool) -> str:
-    """
-    Der Satz unter einem Streifen.
-
-    Mit Streifen sagt er, **was** fehlt (die Zahl steht schon in der
-    Zeile darueber); ohne Streifen bleibt es bei der alten Zeile mit
-    der Zahl, sonst stuende unter dem Termin gar nichts. "Vielleicht"
-    und "Ersatzbank" haengen in beiden Faellen hinten dran - sie
-    gehoeren neben die Zusagen, nicht hinein.
-
-    Dass die Anmeldung geschlossen ist, steht hier **nicht**: das gilt
-    fuer den Raid und nicht fuer einen seiner Tage, und zweimal
-    untereinander gelesen sieht es aus wie zwei verschiedene Auskuenfte.
-    Es steht im Kopf der Karte.
-    """
-
-    parts = []
-
-    if has_strip:
-
-        parts.append(composition_text(schedule, day))
-
-        if day.tentative:
-            parts.append(f"{day.tentative} vielleicht")
-
-        if day.bench:
-            parts.append(f"{day.bench} Ersatzbank")
-
-    else:
-
-        parts.append(signup_text(day, schedule.raid_size))
-
-    return " · ".join(part for part in parts if part)
-
-
-class RosterCard(Card):
-    """
-    Der nächste Raid: Termin, Titel, **Aufstellung**.
-
-    **Was sich hier geändert hat.** Bis 2.0.1 stand an dieser Stelle
-    "Zusagen und Rollen sind der App nicht bekannt", und das stimmte:
-    der Roster erreicht die Companion als zwei undurchsichtige
-    WCIMPORT-Zeichenketten (`core/discord_roster_sync.py`), die
-    ungeparst ans Addon weitergehen - und die bekommt ohnehin nur, wer
-    die Raidlead-Rolle trägt.
-
-    Der Bot beantwortet die Frage jetzt eigens
-    (`/companion/raid-schedule`, für jeden verknüpften Nutzer). Seit
-    2.0.7 steht hier die Aufstellung so, wie sie im Entwurf der
-    Übersicht stand: je Rolle eine Reihe Plätze, gefüllte in
-    Klassenfarbe, offene als Lücke, darunter ein Satz, was noch fehlt.
-    "10 von 25" ist die Zahl; die Frage vor einem Raid ist aber, *wer*
-    fehlt - vier offene Plätze sind harmlos, wenn es Schaden ist, und
-    ein Abend ohne Raid, wenn es der zweite Tank ist.
-
-    Was weiterhin **nicht** hier steht, ist die Namensliste: der
-    Endpunkt liefert Rolle und Klasse, niemals einen Namen. Beides
-    steht als Symbol im Anmelde-Beitrag, den jeder im Kanal lesen
-    kann; die Namen bleiben hinter der Raidlead-Rolle. Wer sie sehen
-    will, geht über den Knopf ins Discord.
-
-    Seit 2.3.4 zeigt sie **jeden noch bevorstehenden Termin**, nicht
-    nur den naechsten: der Standardraid laeuft Mittwoch und
-    Donnerstag, und das sind zwei Anmeldungen - wer am Mittwoch zusagt,
-    muss am Donnerstag nicht koennen. Der Bot schickte beide Tage von
-    Anfang an in derselben Antwort; hier stand nur einer davon, und ob
-    der zweite ueberhaupt Leute hatte, war in der App nicht zu sehen.
-    Jeder Tag ist ein `DayBlock` mit eigener Zahl, eigenem Streifen und
-    eigenem Satz.
-
-    Ohne Antwort bleibt die alte Haltung unverändert: die Karte sagt,
-    dass nichts bekannt ist, statt "0 von 25" zu behaupten. Eine Null
-    wäre keine Untertreibung, sondern eine falsche Messung - niemand
-    hat gezählt. Und meldet der Bot den Termin, aber keine Rollen
-    (ältere Fassung), steht dort ein einziger Streifen "zugesagt"
-    statt drei geschätzter.
-    """
-
-    def __init__(self, parent=None):
-
-        super().__init__(parent=parent)
-
-        self.setMinimumHeight(170)
-
-        header = QHBoxLayout()
-
-        header.setContentsMargins(0, 0, 0, 0)
-
-        header.setSpacing(tokens.SPACE[1])
-
-        header.addWidget(eyebrow_label("AUFSTELLUNG"))
-
-        header.addStretch(1)
-
-        #
-        # Rechts im Kopf steht, was fuer den **Raid** gilt und nicht
-        # fuer einen seiner Tage: dass die Anmeldung geschlossen ist.
-        # Die Zahl der Zusagen sass hier, solange die Karte einen
-        # einzigen Termin zeigte; mit Mittwoch und Donnerstag
-        # untereinander gehoert sie in die Zeile ihres Tages, sonst
-        # ist nicht zu sehen, welchen von beiden sie meint.
-        #
-
-        self.status = QLabel("")
-
-        self.status.setFont(font("small"))
-
-        restyle(
-            self.status,
-            f"color:{tokens.TEXT['secondary']};background:transparent;",
-        )
-
-        self.status.setVisible(False)
-
-        header.addWidget(self.status)
-
-        self.addLayout(header)
-
-        self.addWidget(_divider())
-
-        body = QHBoxLayout()
-
-        body.setContentsMargins(0, 0, 0, 0)
-
-        body.setSpacing(tokens.SPACE[4])
-
-        text = QVBoxLayout()
-
-        text.setContentsMargins(0, 0, 0, 0)
-
-        text.setSpacing(4)
-
-        self.title = QLabel("")
-
-        self.title.setFont(font("section"))
-
-        enable_wrap(self.title)
-
-        restyle(
-            self.title,
-            f"color:{tokens.WHITE};background:transparent;",
-        )
-
-        self.title.setVisible(False)
-
-        text.addWidget(self.title)
-
-        #
-        # Je Termin ein Block. Sie werden einmal gebaut und danach nur
-        # noch beschriftet - dieselbe Regel wie bei den Zeilen unter
-        # `gui/widgets/tv/`: ein Neubau bei jedem `refresh()` waere
-        # Arbeit fuer ein Bild, das sich meist gar nicht aendert.
-        #
-
-        self.days = QVBoxLayout()
-
-        self.days.setContentsMargins(0, 0, 0, 0)
-
-        self.days.setSpacing(tokens.SPACE[3])
-
-        self._blocks: list[DayBlock] = []
-
-        text.addSpacing(tokens.SPACE[1])
-
-        text.addLayout(self.days)
-
-        self.explanation = QLabel(
-            "Sobald im Discord ein Termin steht, erscheint er hier - "
-            "mit Datum, Uhrzeit und der Aufstellung."
-        )
-
-        self.explanation.setFont(font("small"))
-
-        enable_wrap(self.explanation)
-
-        restyle(
-            self.explanation,
-            f"color:{tokens.TEXT['secondary']};background:transparent;",
-        )
-
-        text.addWidget(self.explanation)
-
-        #
-        # Die weiteren gleichzeitig laufenden Raids. Eigene Zeile und
-        # nicht angehängt an die Erklärung darüber: die spricht über
-        # DIESEN Termin (was fehlt, wie viele zugesagt haben), und ein
-        # zweiter Raid gehört nicht in denselben Satz. Unsichtbar,
-        # solange nur einer läuft - das ist der Normalfall.
-        #
-
-        self.parallel = QLabel("")
-
-        self.parallel.setFont(font("small"))
-
-        enable_wrap(self.parallel)
-
-        restyle(
-            self.parallel,
-            f"color:{tokens.TEXT['muted']};background:transparent;",
-        )
-
-        self.parallel.setVisible(False)
-
-        text.addWidget(self.parallel)
-
-        text.addStretch(1)
-
-        body.addLayout(text, 1)
-
-        buttons = QVBoxLayout()
-
-        buttons.setContentsMargins(0, 0, 0, 0)
-
-        buttons.setSpacing(tokens.SPACE[1])
-
-        self.launch = QPushButton("WoW starten")
-
-        self.launch.setCursor(Qt.PointingHandCursor)
-
-        buttons.addWidget(self.launch)
-
-        self.discord = QPushButton("Aufstellung im Discord")
-
-        self.discord.setObjectName("secondary")
-
-        self.discord.setCursor(Qt.PointingHandCursor)
-
-        buttons.addWidget(self.discord)
-
-        buttons.addStretch(1)
-
-        body.addLayout(buttons)
-
-        self.addLayout(body, 1)
-
-    # --------------------------------------------------
-
-    def apply(self, schedule, days):
-        """
-        `schedule` ist ein `RaidSchedule`, `days` seine noch
-        bevorstehenden Termine (`upcoming_days()`), der naechste zuerst.
-
-        Beim Standardraid sind das **zwei**: Mittwoch und Donnerstag
-        stehen untereinander, jeder mit seiner eigenen Zahl, seinem
-        eigenen Streifen und seinem eigenen Satz. Sie sind zwei
-        Anmeldungen und keine zwei Ansichten derselben - eine
-        gemeinsame Zahl haette den Donnerstag hinter dem Mittwoch
-        verschwinden lassen, und genau darum geht es hier.
-
-        Beides kann leer sein - dann steht wieder da, dass nichts
-        bekannt ist. Der Zustand "es gibt einen Raid, aber alle
-        Termine liegen hinter uns" ist davon nicht zu trennen und
-        bekommt deshalb dieselbe Auskunft.
-        """
-
-        days = list(days or [])
-
-        if not getattr(schedule, "known", False) or not days:
-
-            self.title.setVisible(False)
-
-            self._show_days(0)
-
-            self.explanation.setText(
-                "Sobald im Discord ein Termin steht, erscheint er "
-                "hier - mit Datum, Uhrzeit und der Aufstellung."
-            )
-
-            self.explanation.setVisible(True)
-
-            self.status.setVisible(False)
-
-            self.parallel.setVisible(False)
-
-            return
-
-        self.title.setText(schedule.title)
-
-        self.title.setVisible(True)
-
-        for block, day in zip(self._blocks_for(len(days)), days):
-            block.apply(schedule, day)
-
-        self._show_days(len(days))
-
-        #
-        # Die Erklaerung darunter ist jetzt allein der Platzhalter fuer
-        # "nichts bekannt" - was zu einem Termin zu sagen ist, sagt
-        # sein eigener Block.
-        #
-
-        self.explanation.setVisible(False)
-
-        geschlossen = schedule.signup_status == "locked"
-
-        self.status.setText("Anmeldung geschlossen" if geschlossen else "")
-
-        self.status.setVisible(geschlossen)
-
-        weitere = others_text(schedule)
-
-        self.parallel.setText(weitere)
-
-        self.parallel.setVisible(bool(weitere))
-
-    # --------------------------------------------------
-
-    def _blocks_for(self, count: int) -> list[DayBlock]:
-        """
-        So viele Bloecke, wie Termine anstehen - fehlende werden
-        angelegt, ueberzaehlige bleiben stehen und werden versteckt.
-
-        Weggeworfen wird keiner: ein Raid hat heute zwei Termine, und
-        morgen wieder, und ein Widget je Durchgang neu zu bauen kostet
-        Layout fuer ein Bild, das gleich bleibt.
-        """
-
-        while len(self._blocks) < count:
-
-            block = DayBlock()
-
-            self._blocks.append(block)
-
-            self.days.addWidget(block)
-
-        return self._blocks
-
-    def _show_days(self, count: int):
-
-        for index, block in enumerate(self._blocks):
-            block.setVisible(index < count)
 
 
 class UpdateRow(QFrame):
@@ -1475,52 +898,104 @@ class UpdateCard(Card):
         )
 
 
-class LastPullCard(Card):
+#
+# Wie viele frühere Fassungen die Codex-Karte nennt. Vier passen neben
+# die rechte Spalte, ohne dass die Karte höher wird als sie.
+#
+
+HISTORY_ROWS = 4
+
+HISTORY_CHARS = 240
+
+
+def _first_line(body: str) -> str:
     """
-    Dein letzter Pull: Ergebnis, schwächster Bereich, eine Lektion.
-
-    **Woher er kommt, und warum das eine Korrektur war.** Bis 2.0.6
-    las diese Karte allein `RaidDataService.history()`. Die füllt sich
-    aber ausschließlich mit Pulls, die *in dieser Sitzung* endeten,
-    während WeintTV oder die Academy offen waren - nach jedem Neustart
-    ist sie leer. Am Tag nach einem Raidabend stand hier deshalb "Noch
-    kein Pull", und das war keine vorsichtige Auskunft, sondern eine
-    falsche: der Kampf hat stattgefunden, die App hat nur an der
-    falschen Stelle nachgesehen.
-
-    Seit 2.0.7 ist die Sitzung nur noch die erste von zwei Quellen.
-    Findet sich dort nichts, tritt der letzte Pull aus dem
-    WarcraftLogs-Archiv an ihre Stelle (`core/last_pull_sync.py`),
-    abgeholt im gewöhnlichen Sync-Takt und zwischengespeichert. Die
-    Reihenfolge ist Absicht: ein Pull, der gerade eben endete, ist der
-    letzte, auch wenn WarcraftLogs ihn noch nicht kennt.
-
-    Was ein Pull aus dem Archiv **nicht** mitbringt, ist die
-    Bewertung: dafür müsste der ganze Kampf geladen werden, und das
-    kostet den Bot Minuten. Die Sternreihe bleibt dann leer und die
-    Lektionskarte sagt, wo die Auswertung zu haben ist - statt einen
-    schwächsten Bereich zu nennen, den niemand gemessen hat.
+    Die erste Aussage eines Changelog-Eintrags, ohne Überschrift und
+    Aufzählungszeichen, gekürzt auf eine Zeile.
     """
 
-    #
-    # Ein Tiefenverweis auf genau diesen Pull. Er trägt die
-    # Perspektive mit, weil die beiden Knöpfe zwei verschiedene Fragen
-    # stellen: "zeig ihn mir" und "was lerne ich daraus".
-    #
+    for line in (body or "").splitlines():
 
-    raidCenterRequested = Signal(object)
+        line = line.strip()
+
+        if not line or line.startswith("#"):
+            continue
+
+        line = strip_markdown(line.lstrip("-*• ").strip())
+
+        if len(line) > HISTORY_CHARS:
+            line = line[:HISTORY_CHARS].rstrip() + " …"
+
+        return line
+
+    return ""
+
+
+class _ElidedLabel(QLabel):
+    """
+    Eine Zeile, die sich kürzt statt die Karte zu verbreitern.
+
+    Die Zusammenfassung einer Fassung ist oft ein halber Absatz; als
+    umbrechendes Label drückte sie die Karte in die Höhe, als
+    gewöhnliches in die Breite. Gekürzt wird beim Zeichnen gegen die
+    tatsächliche Breite, der volle Satz steht im Tooltip.
+    """
 
     def __init__(self, parent=None):
 
-        super().__init__(parent=parent)
+        super().__init__(parent)
 
-        #
-        # Der Pull, den die Karte gerade beschreibt. Die Knöpfe lesen
-        # ihn beim Klick und nicht beim Bauen: eine Lambda, die den
-        # Pull einfängt, wäre beim nächsten `apply()` veraltet.
-        #
+        self._full = ""
 
-        self._pull: LastPull | None = None
+        policy = self.sizePolicy()
+
+        policy.setHorizontalPolicy(policy.Policy.Ignored)
+
+        self.setSizePolicy(policy)
+
+    def setFullText(self, text: str):
+
+        self._full = text
+
+        self.setToolTip(text)
+
+        self._elide()
+
+    def resizeEvent(self, event):
+
+        super().resizeEvent(event)
+
+        self._elide()
+
+    def _elide(self):
+
+        self.setText(
+            self.fontMetrics().elidedText(self._full, Qt.ElideRight, max(0, self.width()))
+        )
+
+
+class CodexCard(Card):
+    """
+    WeintCodex selbst - die Hauptkarte der Übersicht seit 5.1.
+
+    An dieser Stelle stand bis 5.0 die Aufstellung des nächsten Raids
+    (Termin, Countdown, Zusagen). Auf Forever gibt es noch keinen Raid,
+    und eine Karte, die dauerhaft "kein Termin bekannt" sagt, ist die
+    Startseite von 1.7 noch einmal: ein Platz, an dem immer dasselbe
+    steht.
+
+    Was stattdessen jeden Tag stimmt: **welche Fassung von WeintCodex
+    du spielst, ob sie aktuell ist und was in ihr steckt.** Das Addon
+    erscheint auf Forever im Wochentakt, und die Notizen sind der eine
+    Ort, an dem man erfährt, was sich im Spiel geändert hat - ohne
+    erst einzuloggen. Der Knopf zum Spiel bleibt, wo er war.
+    """
+
+    def __init__(self, parent=None):
+
+        super().__init__(accent=True, parent=parent)
+
+        self.setMinimumHeight(170)
 
         header = QHBoxLayout()
 
@@ -1528,417 +1003,368 @@ class LastPullCard(Card):
 
         header.setSpacing(tokens.SPACE[1])
 
-        header.addWidget(eyebrow_label("DEIN LETZTER PULL"))
+        header.addWidget(eyebrow_label("WEINTCODEX · FOREVER"))
 
         header.addStretch(1)
 
-        self.timestamp = eyebrow_label("", tokens.TEXT["faint"])
+        self.chip = Chip("UNBEKANNT", "neutral")
 
-        header.addWidget(self.timestamp)
+        header.addWidget(self.chip)
 
         self.addLayout(header)
 
-        top = QHBoxLayout()
-
-        top.setContentsMargins(0, 0, 0, 0)
-
-        top.setSpacing(tokens.SPACE[3])
-
-        column = QVBoxLayout()
-
-        column.setContentsMargins(0, 0, 0, 0)
-
-        column.setSpacing(2)
-
-        self.boss = QLabel("Noch kein Pull")
-
-        self.boss.setFont(font("section"))
-
-        restyle(
-            self.boss,
-            f"color:{tokens.WHITE};background:transparent;",
-        )
-
-        column.addWidget(self.boss)
-
-        self.result = QLabel(
-            "Sobald ein Kampf endet, steht sein Ergebnis hier."
-        )
-
-        self.result.setFont(font("small"))
-
-        enable_wrap(self.result)
-
-        restyle(
-            self.result,
-            f"color:{tokens.TEXT['secondary']};background:transparent;",
-        )
-
-        column.addWidget(self.result)
-
-        top.addLayout(column, 1)
-
-        self.sparkline = Sparkline()
-
-        top.addWidget(self.sparkline, alignment=Qt.AlignTop)
-
-        self.addLayout(top)
-
         self.addWidget(_divider())
 
-        weakest = QHBoxLayout()
+        body = QHBoxLayout()
 
-        weakest.setContentsMargins(0, 0, 0, 0)
+        body.setContentsMargins(0, 0, 0, 0)
 
-        weakest.setSpacing(tokens.SPACE[1])
+        body.setSpacing(tokens.SPACE[4])
 
-        weakest.addWidget(
-            eyebrow_label("DEIN FOKUS", tokens.STATE_TEXT["error"])
-        )
+        text = QVBoxLayout()
 
-        self.area = QLabel("—")
+        text.setContentsMargins(0, 0, 0, 0)
 
-        self.area.setFont(font("body"))
+        text.setSpacing(4)
 
-        restyle(
-            self.area,
-            f"color:{tokens.TEXT['primary']};background:transparent;",
-        )
+        self.title = QLabel("")
 
-        weakest.addWidget(self.area)
+        self.title.setFont(font("section"))
 
-        weakest.addStretch(1)
+        enable_wrap(self.title)
 
-        self.rating = Rating(0)
+        restyle(self.title, f"color:{tokens.WHITE};background:transparent;")
 
-        weakest.addWidget(self.rating)
+        text.addWidget(self.title)
 
-        self.addLayout(weakest)
+        self.head = QLabel("")
 
-        #
-        # Die Lektionskarte: der eine konkrete nächste Schritt. Sie
-        # sitzt auf `surface.card` statt auf dem Kartenverlauf, damit
-        # sie sich als eigene Ebene absetzt.
-        #
+        self.head.setFont(font("small"))
 
-        self.lesson = QFrame()
+        enable_wrap(self.head)
 
-        self.lesson.setObjectName("lessonBox")
+        restyle(self.head, f"color:{tokens.TEXT['muted']};background:transparent;")
 
-        self.lesson.setAttribute(Qt.WA_StyledBackground, True)
+        text.addSpacing(tokens.SPACE[1])
 
-        restyle(
-            self.lesson,
-            f"""
-            QFrame#lessonBox{{
-                background:{tokens.SURFACE["card"]};
-                border:none;
-                border-radius:{tokens.RADIUS["md"]}px;
-            }}
-            """,
-        )
+        text.addWidget(self.head)
 
-        lesson_layout = QVBoxLayout(self.lesson)
+        self.notes = QLabel("")
 
-        lesson_layout.setContentsMargins(14, 12, 14, 12)
+        self.notes.setFont(font("small"))
 
-        lesson_layout.setSpacing(6)
+        enable_wrap(self.notes)
 
-        self.lesson_eyebrow = eyebrow_label(
-            "EINE LEKTION",
-            theme().accent_light(),
-        )
+        restyle(self.notes, f"color:{tokens.TEXT['secondary']};background:transparent;")
 
-        lesson_layout.addWidget(self.lesson_eyebrow)
-
-        self.lesson_title = QLabel("Die Academy schlägt sie vor.")
-
-        self.lesson_title.setFont(font("card"))
-
-        restyle(
-            self.lesson_title,
-            f"color:{tokens.WHITE};background:transparent;",
-        )
-
-        lesson_layout.addWidget(self.lesson_title)
-
-        self.lesson_reason = QLabel(
-            "Nach dem ersten ausgewerteten Pull steht hier, woran zu "
-            "arbeiten sich am meisten lohnt - mit den Messwerten, aus "
-            "denen sich das ergibt."
-        )
-
-        self.lesson_reason.setFont(font("small"))
-
-        enable_wrap(self.lesson_reason)
-
-        restyle(
-            self.lesson_reason,
-            f"color:{tokens.TEXT['secondary']};background:transparent;",
-        )
-
-        lesson_layout.addWidget(self.lesson_reason)
-
-        actions = QHBoxLayout()
-
-        actions.setContentsMargins(0, 0, 0, 0)
-
-        actions.setSpacing(tokens.SPACE[1])
+        text.addWidget(self.notes)
 
         #
-        # **Der Hauptweg von hier aus.** Bis 3.6.0 stand hier ein
-        # einzelner Knopf "Lektion öffnen", der in die Academy führte -
-        # und dort begann die Arbeit von vorn: Charakter wählen, Pull
-        # wiederfinden. Jetzt trägt der Verweis den Pull mit, und der
-        # erste Knopf ist der, den man zuerst will: **diesen Pull
-        # ansehen**.
+        # Die Fassungen davor. WeintCodex erscheint auf Forever
+        # mehrmals die Woche; wer ein paar Tage nicht hingesehen hat,
+        # will wissen, was seitdem kam - eine Zeile je Fassung, die
+        # vollständigen Notizen hinter "Alle Änderungen".
         #
 
-        self.open_pull = QPushButton("Pull ansehen")
+        text.addSpacing(tokens.SPACE[2])
 
-        self.open_pull.setObjectName("secondaryAccent")
+        self.history_head = eyebrow_label("DAVOR")
 
-        self.open_pull.setCursor(Qt.PointingHandCursor)
+        text.addWidget(self.history_head)
 
-        self.open_pull.clicked.connect(self._request_analysis)
+        self._history = []
 
-        actions.addWidget(self.open_pull)
+        for _ in range(HISTORY_ROWS):
 
-        self.open_lesson = QPushButton("Daraus lernen")
+            row = QWidget()
 
-        self.open_lesson.setObjectName("secondary")
+            line = QHBoxLayout(row)
 
-        self.open_lesson.setCursor(Qt.PointingHandCursor)
+            line.setContentsMargins(0, 0, 0, 0)
 
-        self.open_lesson.clicked.connect(self._request_learn)
+            line.setSpacing(tokens.SPACE[2])
 
-        actions.addWidget(self.open_lesson)
+            version = QLabel("")
 
-        actions.addStretch(1)
+            version.setFont(font("mono"))
 
-        lesson_layout.addLayout(actions)
+            version.setFixedWidth(84)
 
-        self.addWidget(self.lesson)
+            restyle(version, f"color:{tokens.TEXT['primary']};background:transparent;")
 
-        self.addStretch(1)
+            line.addWidget(version)
 
-    # --------------------------------------------------
+            summary = _ElidedLabel()
 
-    def _request_analysis(self):
+            summary.setFont(font("small"))
 
-        self._request(RAID_VIEW_ANALYSIS)
+            restyle(summary, f"color:{tokens.TEXT['secondary']};background:transparent;")
 
-    def _request_learn(self):
+            line.addWidget(summary, 1)
 
-        self._request(RAID_VIEW_LEARN)
+            text.addWidget(row)
 
-    def _request(self, view: str):
+            self._history.append((row, version, summary))
+
+        text.addStretch(1)
+
+        body.addLayout(text, 1)
+
+        buttons = QVBoxLayout()
+
+        buttons.setContentsMargins(0, 0, 0, 0)
+
+        buttons.setSpacing(tokens.SPACE[1])
+
+        self.launch = QPushButton("WoW starten")
+
+        self.launch.setCursor(Qt.PointingHandCursor)
+
+        buttons.addWidget(self.launch)
+
+        self.changelog = QPushButton("Alle Änderungen")
+
+        self.changelog.setObjectName("secondary")
+
+        self.changelog.setCursor(Qt.PointingHandCursor)
+
+        buttons.addWidget(self.changelog)
+
+        self.action = QPushButton("Installieren")
+
+        self.action.setObjectName("secondary")
+
+        self.action.setCursor(Qt.PointingHandCursor)
+
+        self.action.setVisible(False)
+
+        buttons.addWidget(self.action)
+
+        buttons.addStretch(1)
+
+        body.addLayout(buttons)
+
+        self.addLayout(body, 1)
+
+    def apply(self, state, note, entries=()):
         """
-        Den Tiefenverweis auf **diesen** Pull ausgeben.
-
-        Bericht und Kampfnummer nur, wenn der Pull sie trägt: ein Pull
-        dieser Sitzung hat keine (er lief live mit), und eine halbe
-        Kennung würde die bestehende Archivauswahl verwerfen, ohne
-        etwas laden zu können.
+        `note` ist `update_note(ADDON, state)` - die Notizen der
+        **installierten** Fassung, oder `None`. `entries` sind die
+        Fassungen **vor** ihr, die neueste zuerst.
         """
 
-        pull = self._pull
+        self._apply_history(entries if state.addon_found else ())
 
-        self.raidCenterRequested.emit(
-            RaidLink(
-                view=view,
-                report_code=(
-                    pull.report_code
-                    if pull is not None and pull.report_code and pull.fight_id
-                    else ""
-                ),
-                fight_id=(
-                    int(pull.fight_id)
-                    if pull is not None and pull.report_code and pull.fight_id
-                    else None
-                ),
-            )
-        )
+        self.head.setVisible(True)
 
-    # --------------------------------------------------
+        self.notes.setVisible(True)
 
-    def apply(self, pull, focus=None):
-        """
-        `pull` ist ein `LastPull` - aus der Sitzung oder aus dem
-        Archiv, die Karte behandelt beide gleich.
+        if not state.wow_found:
 
-        `focus` ist die aufgezeichnete Bewertung **genau dieses** Pulls
-        (`(Bereich, Sterne)`) oder `None`. Sie kommt von aussen und
-        wird hier nicht berechnet: die Übersicht darf keinen Kampf
-        auswerten, dafür müsste sie ihn beim Bot holen, und das kostet
-        Minuten. Woher sie kommt, steht in
-        `OverviewPage._pull_focus()`.
+            self.title.setText("World of Warcraft: Forever wurde noch nicht gefunden.")
 
-        Der Leerzustand ist der Fall "es gibt wirklich keinen": kein
-        Pull in dieser Sitzung, kein Bericht beim Bot, kein
-        Zwischenspeicher. Er sagt weiterhin, woran es liegt.
-        """
+            self.chip.setText("KEIN SPIEL")
 
-        self._pull = pull if pull is not None and pull.known else None
+            self.chip.setVariant("neutral")
 
-        self.open_pull.setEnabled(self._pull is not None)
+            self.head.setText("")
 
-        self.open_lesson.setEnabled(self._pull is not None)
-
-        if pull is None or not pull.known:
-
-            self.timestamp.setText("")
-
-            self.boss.setText("Noch kein Pull")
-
-            self.result.setText(
-                "Sobald ein Kampf endet, steht sein Ergebnis hier."
+            self.notes.setText(
+                "Lege den Spielordner unter Einstellungen → WoW-Client "
+                "fest. Danach installiert die App WeintCodex dorthin."
             )
 
-            self.sparkline.setValues([])
+            self.changelog.setVisible(False)
 
-            self._apply_focus(None)
+            self.action.setText("Spielordner festlegen")
 
-            self.lesson_title.setText("Noch nichts auszuwerten.")
-
-            self.lesson_reason.setText(
-                "Nach dem ersten ausgewerteten Pull steht hier, woran "
-                "zu arbeiten sich am meisten lohnt - mit den "
-                "Messwerten, aus denen sich das ergibt."
-            )
+            self.action.setVisible(True)
 
             return
 
-        self.timestamp.setText(when_text(pull))
+        if not state.addon_found:
 
-        self.boss.setText(pull.boss or "Kampf")
+            self.title.setText("WeintCodex ist noch nicht installiert.")
 
-        self.result.setText(result_text(pull))
+            self.chip.setText("NICHT INSTALLIERT")
 
-        #
-        # Die Kurve zeigt den geschafften Bossanteil der letzten
-        # Versuche an demselben Boss - die eine Linie, die "wird es
-        # besser?" beantwortet.
-        #
+            self.chip.setVariant("warn")
 
-        self.sparkline.setValues(list(pull.trend))
+            self.head.setText("")
 
-        self._apply_focus(focus)
-
-    def _apply_focus(self, focus):
-        """
-        Der Fokus - oder ehrlich, dass es noch keinen gibt.
-
-        **Es wird nichts geschätzt.** Liegt für diesen Pull keine
-        aufgezeichnete Bewertung vor, bleibt die Sternreihe leer und der
-        Satz sagt, was zu tun ist, um eine zu bekommen. Ein
-        "schwächster Bereich" ohne Auswertung wäre geraten, und die
-        leere Sternreihe daneben sähe ohne diesen Satz wie ein Urteil
-        aus.
-        """
-
-        if not focus:
-
-            self.area.setText("—")
-
-            self.rating.setStars(0)
-
-            self.lesson_title.setText("Dieser Pull ist noch nicht bewertet.")
-
-            self.lesson_reason.setText(
-                "„Pull ansehen“ lädt ihn ins Raid Center; unter "
-                "*Lernen* stehen dann Bewertung, Baustellen und die "
-                "Lektion dazu. Die vollständige Auswertung eines Pulls "
-                "holt der Bot erst auf Anforderung."
+            self.notes.setText(
+                "Ein Klick lädt die aktuelle Fassung von GitHub und legt "
+                "sie in den AddOns-Ordner - deine Einstellungen im Spiel "
+                "bleiben dabei unberührt."
             )
+
+            self.changelog.setVisible(True)
+
+            self.action.setText("Jetzt installieren")
+
+            self.action.setVisible(True)
 
             return
 
-        label, stars = focus
+        version = state.addon_version or "?"
 
-        self.area.setText(label)
+        if state.update_available:
 
-        self.rating.setStars(int(stars))
+            self.title.setText(
+                f"Fassung {version} installiert - {state.github_version} ist da."
+            )
 
-        self.lesson_title.setText(f"{label} ist dein schwächster Bereich.")
+            self.chip.setText("UPDATE")
 
-        self.lesson_reason.setText(
-            "„Daraus lernen“ öffnet diesen Pull unter *Lernen* - mit "
-            "der Begründung, der passenden Lektion und dem Moment im "
-            "Kampf, an dem es passiert ist."
-        )
+            self.chip.setVariant("warn")
+
+        else:
+
+            self.title.setText(f"Fassung {version} installiert.")
+
+            known = bool(state.github_version)
+
+            self.chip.setText("AKTUELL" if known else "NICHT GEPRÜFT")
+
+            self.chip.setVariant("ok" if known else "neutral")
+
+        #
+        # Wartet ein Update, steht derselbe Auszug schon in der
+        # Update-Karte daneben - zweimal derselbe Text nebeneinander
+        # liest sich wie ein Fehler. Dann bleibt hier nur der Verlauf.
+        #
+
+        pending = bool(state.update_available)
+
+        self.head.setVisible(not pending)
+
+        self.notes.setVisible(not pending)
+
+        self.head.setText(_note_head(note, version))
+
+        self.notes.setText(_excerpt(note, version))
+
+        self.changelog.setVisible(True)
+
+        self.action.setVisible(False)
+
+    def _apply_history(self, entries):
+
+        entries = list(entries)[:HISTORY_ROWS]
+
+        self.history_head.setVisible(bool(entries))
+
+        for index, (row, version, summary) in enumerate(self._history):
+
+            if index >= len(entries):
+
+                row.setVisible(False)
+
+                continue
+
+            entry = entries[index]
+
+            row.setVisible(True)
+
+            version.setText(entry.version)
+
+            summary.setFullText(_first_line(entry.body) or "ohne Notizen")
 
 
-class PreparationCard(Card):
+def addon_history(state) -> list:
     """
-    Der Stand der Vorbereitung über alle Charaktere.
+    Die Fassungen vor der installierten, die neueste zuerst.
 
-    Seit 2.0.1 gibt es die Daten wirklich: WeintCodex 1.3.3.1 meldet
-    Verzauberungen, Sockel und offene BiS-Plätze (`"character_sheet"`,
-    siehe `core/character_store.py`). Bis dahin stand der Ring auf 0
-    und trug ausdrücklich "keine Daten" - genau diese Beschriftung
-    bleibt für den Fall, dass noch nichts geliefert wurde. Ein Ring
-    ohne sie läse sich als "nichts vorbereitet", also als Befund über
-    den Spieler statt über die Datenlage.
+    Leer, wenn die installierte im Changelog nicht vorkommt - eine
+    Liste "davor" ohne den Punkt, vor dem sie steht, wäre eine Liste
+    von irgendwas.
     """
+
+    entries = entries_for(ADDON, state)
+
+    installed = find_entry(entries, getattr(state, "addon_version", "") or "")
+
+    if installed is None:
+        return []
+
+    index = entries.index(installed)
+
+    return entries[index + 1:index + 1 + HISTORY_ROWS]
+
+
+class CharactersTile(Card):
+    """
+    Deine Charaktere auf einen Blick - Stufe und Gegenstandsstufe.
+
+    Forever beginnt mit Leveln: die Frage beim Öffnen ist nicht mehr
+    "bin ich für den Raid vorbereitet", sondern "wo steht wer". Die
+    zuletzt gespielten zuerst; die volle Liste steht unter "Meine
+    Charaktere". Daten aus `CharacterStore` - gelesen, nicht abgerufen.
+    """
+
+    ROWS = 4
 
     def __init__(self, parent=None):
 
         super().__init__(parent=parent)
 
-        self.setFixedWidth(300)
+        self.addWidget(eyebrow_label("DEINE CHARAKTERE"))
 
-        self.addWidget(eyebrow_label("VORBEREITUNG"))
+        self.rows = QVBoxLayout()
 
-        ring_row = QHBoxLayout()
+        self.rows.setContentsMargins(0, 0, 0, 0)
 
-        ring_row.setContentsMargins(0, 0, 0, 0)
+        self.rows.setSpacing(8)
 
-        ring_row.addStretch(1)
+        self._rows = []
 
-        self.ring = ProgressRing(96)
+        for _ in range(self.ROWS):
 
-        ring_row.addWidget(self.ring)
+            row = QWidget()
 
-        ring_row.addStretch(1)
+            line = QHBoxLayout(row)
 
-        self.addLayout(ring_row)
+            line.setContentsMargins(0, 0, 0, 0)
 
-        self.chip_row = QHBoxLayout()
+            line.setSpacing(tokens.SPACE[1])
 
-        self.chip_row.setContentsMargins(0, 0, 0, 0)
+            avatar = ClassAvatar("", 26)
 
-        self.chip_row.addStretch(1)
+            line.addWidget(avatar)
 
-        self.chip = Chip("KEINE DATEN", "neutral")
+            name = QLabel("")
 
-        self.chip_row.addWidget(self.chip)
+            name.setFont(font("ui"))
 
-        self.chip_row.addStretch(1)
+            line.addWidget(name, 1)
 
-        self.addLayout(self.chip_row)
+            value = QLabel("")
 
-        self.addWidget(_divider())
+            value.setFont(font("mono"))
 
-        self.note = QLabel(
-            "Verzauberungen, Sockel und BiS-Plätze meldet das Addon "
-            "beim Anmelden im Spiel."
-        )
+            restyle(value, f"color:{tokens.TEXT['secondary']};background:transparent;")
+
+            line.addWidget(value)
+
+            self.rows.addWidget(row)
+
+            self._rows.append((row, avatar, name, value))
+
+        self.addLayout(self.rows)
+
+        self.note = QLabel("")
 
         self.note.setFont(font("small"))
 
         enable_wrap(self.note)
 
-        restyle(
-            self.note,
-            f"color:{tokens.TEXT['secondary']};background:transparent;",
-        )
+        restyle(self.note, f"color:{tokens.TEXT['secondary']};background:transparent;")
 
         self.addWidget(self.note)
 
         self.addStretch(1)
 
-        self.button = QPushButton("Alle Charaktere prüfen")
+        self.button = QPushButton("Alle Charaktere")
 
         self.button.setObjectName("secondary")
 
@@ -1946,113 +1372,135 @@ class PreparationCard(Card):
 
         self.addWidget(self.button)
 
-    # --------------------------------------------------
+    def apply(self, characters: list):
 
-    def apply(self, summary: dict):
-        """
-        `summary` ist `CharacterStore.preparation_summary()`.
-
-        `ratio is None` heißt "kein Charakter hat eine Prüfung
-        gemeldet" - dann bleibt der Ring auf 0 und der Chip sagt
-        warum. Eine Null ohne diesen Chip wäre eine Messung, die es
-        nicht gab.
-        """
-
-        ratio = summary.get("ratio")
-
-        if ratio is None:
-
-            self.ring.setValue(0.0)
-
-            self.chip.setText("KEINE DATEN")
-
-            self.chip.setVariant("neutral")
-
-            #
-            # Gemeldet, aber nur Twinks: dann fehlt keine Meldung,
-            # sondern eine Höchststufe. Der allgemeine Satz schickte
-            # hier jemanden das Addon prüfen, an dem nichts ist.
-            #
-
-            hidden = summary.get("hidden", 0)
-
-            if hidden and not summary.get("characters"):
-
-                self.note.setText(
-                    f"Bisher {'hat' if hidden == 1 else 'haben'} sich "
-                    f"nur {hidden} Charakter{'e' if hidden != 1 else ''} "
-                    f"unter Höchststufe gemeldet - geprüft werden die, "
-                    f"mit denen du in den Raid gehst."
-                )
-
-                return
-
-            #
-            # Dasselbe eine Ebene höher: gemeldet hat sich etwas, es
-            # gehört nur zu einem anderen Spiel (die Charaktere der
-            # alten Companion, siehe `core/character_store.py`). Auch
-            # hier ist am Addon nichts zu prüfen.
-            #
-
-            foreign = summary.get("foreign", 0)
-
-            if foreign and not summary.get("characters"):
-
-                self.note.setText(
-                    f"{foreign} gemeldete Charakter"
-                    f"{'e' if foreign != 1 else ''} "
-                    f"{'stammen' if foreign != 1 else 'stammt'} aus "
-                    f"einer früheren Spielversion - melde dich einmal "
-                    f"in diesem Spiel an, danach steht der Stand hier."
-                )
-
-                return
-
-            self.note.setText(
-                "Verzauberungen, Sockel und BiS-Plätze meldet das "
-                "Addon beim Anmelden im Spiel."
-            )
-
-            return
-
-        self.ring.setValue(ratio)
-
-        self.chip.setText(f"{ratio * 100:.0f} % AUSGERÜSTET")
-
-        self.chip.setVariant("ok" if ratio >= 0.999 else "warn")
-
-        open_count = summary.get("open", 0)
-
-        rated = summary.get("rated", 0)
-
-        if open_count == 0:
-
-            self.note.setText(
-                f"Alles verzaubert und gesockelt "
-                f"({rated} Charakter{'e' if rated != 1 else ''} geprüft)."
-            )
-
-            return
-
-        self.note.setText(
-            f"{open_count} fehlende Verzauberung"
-            f"{'en' if open_count != 1 else ''} oder leere Sockel über "
-            f"{rated} geprüfte{'n' if rated == 1 else ''} "
-            f"Charakter{'e' if rated != 1 else ''}."
+        characters = sorted(
+            characters,
+            key=lambda sheet: -(sheet.get("updated") or 0),
         )
 
+        for index, (row, avatar, name, value) in enumerate(self._rows):
+
+            if index >= len(characters):
+
+                row.setVisible(False)
+
+                continue
+
+            sheet = characters[index]
+
+            row.setVisible(True)
+
+            avatar.setClass(sheet.get("class", ""))
+
+            name.setText(sheet.get("name", "?"))
+
+            restyle(
+                name,
+                f"color:{class_color(sheet.get('class', ''))};background:transparent;",
+            )
+
+            level = sheet.get("level") or 0
+
+            item_level = sheet.get("item_level_equipped") or 0.0
+
+            parts = [f"Stufe {level}" if level else "Stufe ?"]
+
+            if item_level > 0:
+                parts.append(f"GS {item_level:.0f}")
+
+            value.setText(" · ".join(parts))
+
+        if not characters:
+
+            self.note.setText(
+                "Noch kein Charakter gemeldet. WeintCodex meldet ihn beim "
+                "Anmelden im Spiel."
+            )
+
+        elif len(characters) > self.ROWS:
+
+            self.note.setText(f"und {len(characters) - self.ROWS} weitere")
+
+        else:
+
+            self.note.setText("")
+
+
+class GoldTile(Card):
+    """
+    Gold und Bestand über alle Charaktere - aus dem Spielstand.
+
+    Die Zahl kommt aus `core/inventory.py`; Charaktere ohne Goldstand
+    zählen nicht mit und werden genannt, nicht verschwiegen.
+    """
+
+    def __init__(self, parent=None):
+
+        super().__init__(parent=parent)
+
+        self.addWidget(eyebrow_label("GOLD & BESTAND"))
+
+        self.value = QLabel("–")
+
+        self.value.setFont(font("displayCard"))
+
+        restyle(self.value, f"color:{tokens.WHITE};background:transparent;")
+
+        self.addWidget(self.value)
+
+        self.note = QLabel("")
+
+        self.note.setFont(font("small"))
+
+        enable_wrap(self.note)
+
+        restyle(self.note, f"color:{tokens.TEXT['secondary']};background:transparent;")
+
+        self.addWidget(self.note)
+
+        self.addStretch(1)
+
+        self.button = QPushButton("Bestand durchsuchen")
+
+        self.button.setObjectName("secondary")
+
+        self.button.setCursor(Qt.PointingHandCursor)
+
+        self.addWidget(self.button)
+
+    def apply(self, inventory):
+
+        if not inventory.known or not inventory.characters:
+
+            self.value.setText("unbekannt")
+
+            self.note.setText(
+                "WeintCodex merkt sich Taschen, Bank und Gold jedes "
+                "Charakters - sichtbar hier, sobald du dich einmal im "
+                "Spiel an- und abgemeldet hast."
+            )
+
+            return
+
+        total, unknown = inventory.gold()
+
+        counted = len(inventory.characters) - unknown
+
+        self.value.setText(money_text(total) if counted else "unbekannt")
+
+        parts = [
+            f"{len(inventory.item_ids())} verschiedene Gegenstände",
+            "ein Charakter" if len(inventory.characters) == 1
+            else f"{len(inventory.characters)} Charaktere",
+        ]
+
+        if unknown:
+            parts.append(f"{unknown} ohne Goldstand")
+
+        self.note.setText(" · ".join(parts) + ". Stand des letzten Ausloggens.")
 
 class OverviewPage(Page):
-
-    playerRequested = Signal(str)
-
-    #
-    # Ein Tiefenverweis auf einen Pull. Duck-getypt vom MainWindow
-    # verbunden, wie `pageRequested` - siehe
-    # `MainWindow.open_raid_center()`.
-    #
-
-    openRaidCenter = Signal(object)
 
     #
     # Das Ende der Update-Prüfung kommt aus einem Hintergrund-Thread
@@ -2071,8 +1519,6 @@ class OverviewPage(Page):
             "Willkommen zurück.",
             parent,
         )
-
-        self.service = manager.raid_data
 
         #
         # "Erneut prüfen" - derselbe Knopf wie unter "Addon &
@@ -2098,26 +1544,9 @@ class OverviewPage(Page):
         self.checkFinished.connect(self._on_check_finished)
 
         #
-        # Countdown rechts im Kopf. Ohne Raidtermin trägt er "kein
-        # Termin bekannt" statt einer laufenden Uhr auf null.
-        #
-
-        self.countdown = Chip("KEIN TERMIN BEKANNT", "neutral")
-
-        self.header.addAction(self.countdown)
-
-        #
-        # Der Countdown zählt in Minuten, also wird er einmal pro
-        # Minute nachgezogen. Nicht im Sekundentakt: die Beschriftung
-        # ist grobkörnig (siehe `countdown_text()`), und ein Zeichnen
-        # pro Sekunde für eine Angabe, die sich alle sechzig ändert,
-        # ist reine Arbeit ohne Bild.
-        #
-        # Derselbe Takt trägt die Begrüßung: "Morgen ist Raid" wird um
-        # Mitternacht zu "Heute", und "Guten Tag" um 18 Uhr zu "Guten
-        # Abend". Beides ohne Zutun - eine Anwendung, die den ganzen
-        # Abend offen steht, soll nicht mit dem Nachmittag im Kopf
-        # dastehen.
+        # Der Minutentakt trägt die Begrüßung: "Guten Tag" wird um
+        # 18 Uhr zu "Guten Abend", und die Zeitangaben am Fuss der
+        # Aufgabenkarte ("vor 5 min") ziehen nach.
         #
         # Der Zeitgeber läuft nur, solange die Seite sichtbar ist -
         # `on_enter`/`on_leave` schalten ihn, wie WeintTV und die
@@ -2148,12 +1577,12 @@ class OverviewPage(Page):
 
         #
         # ==================================================
-        # Hauptzeile: der Raidabend und was zu tun ist
+        # Hauptzeile: WeintCodex und was zu tun ist
         # ==================================================
         #
         # Die beiden zusammen beantworten die Frage, mit der jemand
-        # diese Seite öffnet: *wann ist Raid, und muss ich vorher noch
-        # was machen*. Alles darunter ist Rückblick.
+        # diese Seite öffnet: *ist mein Addon in Ordnung, und muss ich
+        # vorher noch was machen*. Alles darunter ist Auskunft.
         #
         # Als Raster statt als Reihe: unter 980 px stellt der
         # Haltepunkt die Karten untereinander, und ein QGridLayout
@@ -2169,13 +1598,20 @@ class OverviewPage(Page):
 
         self.row.setVerticalSpacing(20)
 
-        self.roster = RosterCard()
+        #
+        # Seit 5.1 (Forever) steht hier WeintCodex selbst und nicht mehr
+        # die Aufstellung des nächsten Raids - siehe `CodexCard`.
+        #
 
-        self.roster.launch.clicked.connect(self._launch_wow)
+        self.codex = CodexCard()
 
-        self.roster.discord.clicked.connect(self._open_discord_roster)
+        self.codex.launch.clicked.connect(self._launch_wow)
 
-        self.row.addWidget(self.roster, 0, 0)
+        self.codex.changelog.clicked.connect(self._open_addon_changelog)
+
+        self.codex.action.clicked.connect(self._codex_action)
+
+        self.row.addWidget(self.codex, 0, 0)
 
         #
         # Die rechte Spalte hat zwei Bewohner, und das ist Absicht:
@@ -2206,7 +1642,9 @@ class OverviewPage(Page):
 
         self.row.addLayout(self.side, 0, 1)
 
-        self.row.setColumnStretch(0, 1)
+        self.row.setColumnStretch(0, 3)
+
+        self.row.setColumnStretch(1, 2)
 
         self.row.setColumnMinimumWidth(1, 386)
 
@@ -2228,17 +1666,21 @@ class OverviewPage(Page):
 
         self.tiles.setVerticalSpacing(20)
 
-        self.last_pull = LastPullCard()
+        self.characters = CharactersTile()
 
-        self.last_pull.raidCenterRequested.connect(self.openRaidCenter)
+        self.characters.button.clicked.connect(self._open_characters)
 
-        self.tiles.addWidget(self.last_pull, 0, 0)
+        self.tiles.addWidget(self.characters, 0, 0)
 
-        self.preparation = PreparationCard()
+        self.gold = GoldTile()
 
-        self.preparation.button.clicked.connect(self._open_preparation)
+        self.gold.button.clicked.connect(self._open_inventory)
 
-        self.tiles.addWidget(self.preparation, 0, 1)
+        self.tiles.addWidget(self.gold, 0, 1)
+
+        self.loader = inventory_loader(manager)
+
+        self.loader.changed.connect(self._on_inventory)
 
         self.bridges = BridgeTile()
 
@@ -2290,63 +1732,6 @@ class OverviewPage(Page):
         #
 
         self.manager.start_wow()
-
-    def _open_discord_roster(self):
-        """
-        Die Aufstellung dort öffnen, wo sie tatsächlich steht.
-
-        Diese Karte kann den Roster nicht anzeigen - er erreicht die
-        Companion als zwei undurchsichtige Zeichenketten und wird
-        ungeparst an das Addon weitergereicht (siehe RosterCard).
-        Der Knopf führt deshalb an die Quelle statt einen Inhalt zu
-        versprechen, den es hier nicht gibt.
-
-        Welches der möglichen Ziele es ist, entscheidet
-        `core.backend_config.roster_target()` - dort ohne Qt und
-        deshalb ohne Fenster prüfbar. Hier bleibt nur das Ausführen.
-
-        Den Fundort der Anmeldung nennt der Bot mit dem Termin
-        (`/companion/raid-schedule`); damit landet der Knopf im
-        Anmelde-Beitrag statt auf dem Standardkanal des Servers.
-        """
-
-        schedule = self._schedule()
-
-        kind, value = roster_target(
-            self.manager.config.data.get("discord_community_id", ""),
-            self._discord_linked(),
-            getattr(schedule, "signup", None),
-        )
-
-        if kind == TARGET_URL:
-
-            self._open_url(value)
-
-            return
-
-        self.openSettingsSection.emit(value)
-
-    def _discord_linked(self) -> bool:
-
-        store = getattr(self.manager, "discord_account", None)
-
-        if store is None:
-            return False
-
-        try:
-            account = store.load()
-
-        except Exception:
-
-            #
-            # Eine unlesbare discord_account.json ist kein Grund, den
-            # Knopf wirkungslos zu lassen - "nicht verknüpft" führt in
-            # die Einstellung, wo das Problem behoben wird.
-            #
-
-            return False
-
-        return bool(account and account.get("companion_token"))
 
     def _open_url(self, url: str):
         """
@@ -2500,52 +1885,17 @@ class OverviewPage(Page):
 
     # --------------------------------------------------
 
-    def _schedule(self):
-        """
-        Der zuletzt bekannte Raidtermin.
-
-        Über `getattr`, weil `refresh()` auch aus Tests und aus dem
-        Aufbau der Seite heraus läuft, wo der Manager ein einfacher
-        Platzhalter sein kann.
-        """
-
-        sync = getattr(self.manager, "raid_schedule_sync", None)
-
-        if sync is None:
-            return None
-
-        return sync.schedule
-
-    def _refresh_countdown(self):
-        """
-        Nur den Chip - läuft einmal pro Minute.
-        """
-
-        schedule = self._schedule()
-
-        day = schedule.next_day() if schedule is not None else None
-
-        text = countdown_text(day)
-
-        self.countdown.setText(text)
-
-        self.countdown.setVariant(
-            "neutral"
-            if day is None
-            else "ok" if day.is_running() else "accent"
-        )
-
     def _tick(self):
         """
-        Der Minutentakt: Countdown und Begrüßung.
+        Der Minutentakt: Begrüßung und Fusszeile.
 
-        Beides hängt allein an der Uhr und liest keine neuen Daten -
-        was hier passiert, ist Zeichnen und nichts sonst.
+        Hängt allein an der Uhr und liest keine neuen Daten - was hier
+        passiert, ist Zeichnen und nichts sonst.
         """
 
-        self._refresh_countdown()
-
         self._refresh_greeting()
+
+        self.tasks.apply(self._build_tasks(), self._checked_text())
 
     def _user_name(self) -> str:
         """
@@ -2619,17 +1969,12 @@ class OverviewPage(Page):
         Fenster zu bauen.
         """
 
-        schedule = self._schedule()
-
-        day = schedule.next_day() if schedule is not None else None
-
         state = self.manager.state
 
         self.header.setEyebrow(greeting(self._user_name()))
 
         self.header.setTitle(
             headline(
-                day,
                 addon_update=state.update_available,
                 app_update=state.companion_update_available,
                 wow_found=state.wow_found,
@@ -2707,17 +2052,47 @@ class OverviewPage(Page):
 
         self._clock.start()
 
+        #
+        # Den Spielstand lesen - im Hintergrund und nur, wenn er sich
+        # geändert hat (siehe `gui/controllers/inventory_loader.py`).
+        # Hier und nicht in `refresh()`: das darf nur zeichnen.
+        #
+
+        self.loader.request()
+
+    def _on_inventory(self, inventory):
+
+        self.gold.apply(inventory)
+
     def on_leave(self):
 
         self._clock.stop()
 
     # --------------------------------------------------
 
-    def _open_preparation(self):
+    def _open_inventory(self):
 
         from gui.navigation import PageId
 
-        self.pageRequested.emit(PageId.PREPARATION)
+        self.pageRequested.emit(PageId.INVENTORY)
+
+    def _open_addon_changelog(self):
+
+        self._open_changelog(ADDON)
+
+    def _codex_action(self):
+        """
+        Der dritte Knopf der Codex-Karte: ohne Spielordner in die
+        Einstellung, ohne Addon zur Installation.
+        """
+
+        if not self.manager.state.wow_found:
+
+            self.openSettingsSection.emit("wow_client")
+
+            return
+
+        self._open_addon_page()
 
     def _open_addon_page(self):
         """
@@ -2739,11 +2114,10 @@ class OverviewPage(Page):
 
     def on_layout_changed(self, state):
         """
-        Unter 980 px stehen die beiden Karten untereinander.
+        Unter 980 px stehen Codex-Karte und Aufgaben untereinander.
 
         Duck-getypt vom MainWindow aufgerufen, genau wie on_enter und
-        on_leave - eine Seite, die nichts umzubauen hat, braucht die
-        Methode gar nicht.
+        on_leave.
         """
 
         if state.single_column == self._single_column:
@@ -2751,126 +2125,44 @@ class OverviewPage(Page):
 
         self._single_column = state.single_column
 
-        self.row.removeWidget(self.preparation)
+        self.row.removeItem(self.side)
 
         if state.single_column:
 
-            #
-            # Untereinander: die Vorbereitungskarte gibt ihre feste
-            # Breite auf, sonst stuende sie schmal und linksbuendig
-            # unter einer Karte vollen Ausmasses.
-            #
+            self.row.setColumnMinimumWidth(1, 0)
 
-            self.preparation.setMinimumWidth(0)
-
-            self.preparation.setMaximumWidth(16777215)
-
-            self.row.addWidget(self.preparation, 1, 0)
+            self.row.addLayout(self.side, 1, 0)
 
         else:
 
-            self.preparation.setFixedWidth(300)
+            self.row.setColumnMinimumWidth(1, 386)
 
-            self.row.addWidget(self.preparation, 0, 1)
-
-    def _last_pull(self) -> LastPull:
-        """
-        Der letzte Pull - erst die Sitzung, dann das Archiv.
-
-        Die Reihenfolge ist die Aussage: was gerade eben endete, ist
-        der letzte Kampf, auch wenn WarcraftLogs ihn noch nicht kennt.
-        Das Archiv ist der Rückfall für alles davor - und der Grund,
-        warum hier nicht mehr "Noch kein Pull" steht, nur weil die App
-        seit dem Raid einmal neu gestartet wurde.
-
-        Über `getattr`, wie `_schedule()`: `refresh()` läuft auch aus
-        Tests und aus dem Aufbau der Seite heraus, wo der Manager ein
-        einfacher Platzhalter sein kann.
-        """
-
-        live = from_history(self.service.history())
-
-        if live.known:
-            return live
-
-        sync = getattr(self.manager, "last_pull_sync", None)
-
-        pull = getattr(sync, "pull", None)
-
-        return pull if pull is not None else LastPull()
-
-    def _pull_focus(self, pull):
-        """
-        Die aufgezeichnete Bewertung **genau dieses** Pulls.
-
-        Zwei Bedingungen, und beide sind der Grund, warum diese Methode
-        existiert statt eines `curve()[-1]`:
-
-        - **Die Kennung muss passen.** Der zuletzt *ausgewertete* Pull
-          und der zuletzt *gespielte* sind an einem Raidabend
-          regelmässig zwei verschiedene Kämpfe. Eine Bewertung unter
-          dem falschen Kampf wäre eine falsche Aussage, nicht eine
-          ungenaue.
-        - **Null Sterne sind kein Fokus.** `weakest_of()` überspringt
-          sie - `stars == 0` heisst "keine Daten" und nie "schlecht".
-
-        `None`, sobald eine der beiden nicht erfüllt ist. Die Karte sagt
-        dann, wie man zu einer Bewertung kommt.
-        """
-
-        academy = getattr(self.manager, "academy", None)
-
-        if academy is None or pull is None or not pull.known:
-            return None
-
-        record = academy.record_for(record_key(pull, today()))
-
-        weakest = weakest_of(record)
-
-        if weakest is None:
-            return None
-
-        category, stars = weakest
-
-        return (CATEGORY_LABELS.get(category, category), stars)
+            self.row.addLayout(self.side, 0, 1)
 
     def refresh(self):
 
-        pull = self._last_pull()
+        state = self.manager.state
 
-        self.last_pull.apply(pull, self._pull_focus(pull))
-
-        #
-        # Der Raidtermin liegt bereits im `RaidScheduleSync` - gelesen
-        # wird hier nur, abgerufen wird im Sync-Takt. `refresh()` darf
-        # nicht ins Netz gehen (siehe `tests/test_update_visibility.py`).
-        #
-
-        schedule = self._schedule()
+        self.codex.apply(state, update_note(ADDON, state), addon_history(state))
 
         #
-        # Alle noch bevorstehenden Termine, nicht nur der naechste:
-        # Mittwoch und Donnerstag sind zwei Anmeldungen, und wer am
-        # Dienstag hinsieht, will beide sehen. Der Countdown im Kopf
-        # bleibt beim naechsten - er hat genau einen Platz.
-        #
-
-        days = schedule.upcoming_days() if schedule is not None else ()
-
-        self.roster.apply(schedule, days)
-
-        self._refresh_countdown()
-
-        #
-        # Der Vorbereitungsstand kommt aus der Charakterliste, nicht
-        # aus einem Netzwerkabruf - `refresh()` darf nur zeichnen
-        # (siehe `tests/test_update_visibility.py`).
+        # Charaktere aus der Charakterliste, Gold aus dem zuletzt
+        # gelesenen Bestand - beides lokal, `refresh()` darf nicht ins
+        # Netz und nicht an Dateien (siehe
+        # `tests/test_update_visibility.py`).
         #
 
         store = getattr(self.manager, "characters", None)
 
         if store is not None:
-            self.preparation.apply(store.preparation_summary())
+
+            try:
+                self.characters.apply(store.characters())
+
+            except Exception:
+                self.characters.apply([])
+
+        self.gold.apply(self.loader.inventory)
 
         self._refresh_updates()
 
@@ -2984,8 +2276,8 @@ class OverviewPage(Page):
                 key="discord",
                 title="Discord ist nicht verknüpft",
                 detail=(
-                    "Termin, Aufstellung und die Auswertung eurer "
-                    "Raids kommen über den Bot."
+                    "Twinkliste, Charakterzuordnung und Gilden-"
+                    "Kalender kommen über den Bot."
                 ),
                 action="Verbinden",
                 on_action=lambda: self.openSettingsSection.emit("discord"),
@@ -3051,25 +2343,43 @@ class OverviewPage(Page):
 
             return tasks
 
-        open_count = summary.get("open", 0)
+        #
+        # Seit 5.1 (Forever) keine "offene Vorbereitung" mehr - die
+        # zählte Verzauberungen und Sockel, die es dort nicht gibt.
+        # Was WeintCodex Forever meldet, sind leere Plätze und
+        # zerbrochene Gegenstände; ein zerbrochener Gegenstand ist
+        # etwas, das man vor dem nächsten Abend tatsächlich tut.
+        #
 
-        if open_count:
+        try:
+            characters = store.characters()
+
+        except Exception:
+            characters = []
+
+        broken = [
+            sheet.get("name", "?")
+            for sheet in characters
+            if any(
+                issue.get("status") == "wrong"
+                for issue in (sheet.get("issues") or [])
+            )
+        ]
+
+        if broken:
 
             tasks.append(Task(
-                key="preparation",
+                key="repair",
                 title=(
-                    "Eine offene Stelle in der Vorbereitung"
-                    if open_count == 1
-                    else f"{open_count} offene Stellen in der Vorbereitung"
+                    "Ausrüstung zerbrochen"
+                    if len(broken) == 1
+                    else f"Ausrüstung zerbrochen bei {len(broken)} Charakteren"
                 ),
-                detail=(
-                    "Fehlende Verzauberungen und leere Sockel über "
-                    "alle Charaktere."
-                ),
-                action="Vorbereitung öffnen",
-                on_action=self._open_preparation,
+                detail=", ".join(broken[:4]) + " - beim nächsten Händler reparieren.",
+                action="Charaktere öffnen",
+                on_action=self._open_characters,
                 urgency=URGENCY_DUE,
-                icon="vorbereitung",
+                icon="charaktere",
             ))
 
         return tasks

@@ -564,9 +564,27 @@ def test_ein_durchgang_ohne_aenderung_meldet_nichts():
     assert fake._sync_busy is False
 
 
-def test_ein_neuer_anmeldestand_zieht_die_anzeige_nach():
+def test_ein_neuer_anmeldestand_zieht_die_anzeige_nach(monkeypatch):
+
+    #
+    # Nur, solange die Raid-Teile laufen - seit 5.1 (Forever) ruhen
+    # sie (`RAID_FEATURES`), und der Termin wird gar nicht abgefragt.
+    #
+
+    import core.companion_manager as module
+
+    monkeypatch.setattr(module, "RAID_FEATURES", True)
 
     assert _worker(True, False).state_changed.emitted == 1
+
+
+def test_ruhende_raid_teile_fragen_den_termin_nicht_ab():
+
+    import core.companion_manager as module
+
+    assert module.RAID_FEATURES is False
+
+    assert _worker(True, False).state_changed.emitted == 0
 
 
 def test_ein_gefundenes_update_zieht_die_anzeige_nach():

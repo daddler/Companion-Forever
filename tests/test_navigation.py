@@ -43,9 +43,8 @@ def test_expected_navigation_order():
 
     assert [page_id.name for page_id in PageId] == [
         "OVERVIEW",
-        "RAID_CENTER",
         "CHARACTERS",
-        "PREPARATION",
+        "INVENTORY",
         "CHARACTER_LINKS",
         "ADDON",
         "CONNECTIONS",
@@ -54,23 +53,37 @@ def test_expected_navigation_order():
     ]
 
 
-def test_the_raid_group_has_exactly_two_entries():
+def test_the_raid_center_rests_and_is_not_in_the_column():
     """
-    Die Zahl selbst ist die Aussage: "wo muss ich jetzt hin" entstand
-    daraus, dass vier Einträge dieselbe Frage beantworteten.
+    Seit 5.1 (Forever) ruht das Raid Center: es gibt noch keinen Raid,
+    den es auswerten könnte. Der Code bleibt im Repository und unter
+    Test (`tests/test_raid_center.py`) - in der Spalte steht er nicht,
+    und "Vorbereitung" (Verzauberungen und Sockel) auch nicht.
 
     `build_page_specs()` baut die echten Seitenklassen auf - anders
-    als der Rest dieser Datei also nicht Qt-frei, siehe
-    `pytest.importorskip()` unten.
+    als der Rest dieser Datei also nicht Qt-frei.
     """
 
     pytest.importorskip("PySide6")
 
-    from gui.navigation import GROUP_RAID, build_page_specs
+    from gui.navigation import GROUP_GAME, build_page_specs
 
-    raid = [spec.label for spec in build_page_specs() if spec.group == GROUP_RAID]
+    specs = build_page_specs()
 
-    assert raid == ["Übersicht", "Raid Center"]
+    labels = [spec.label for spec in specs]
+
+    assert "Raid Center" not in labels
+
+    assert "Vorbereitung" not in labels
+
+    game = [spec.label for spec in specs if spec.group == GROUP_GAME]
+
+    assert game == [
+        "Übersicht",
+        "Meine Charaktere",
+        "Bestand",
+        "Charakterzuordnung",
+    ]
 
 
 def test_the_four_perspectives_are_keys_and_not_numbers():

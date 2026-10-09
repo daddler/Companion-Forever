@@ -62,7 +62,7 @@ def qt_app():
 @pytest.fixture
 def card(qt_app):
 
-    from gui.pages.overview import LastPullCard
+    from gui.pages.raid.overview_cards import LastPullCard
 
     built = LastPullCard()
 

@@ -73,8 +73,11 @@ from gui.widgets.hero_banner import HeroButton
 # Rundgang, der drei Bereiche erklärt, die es nicht mehr gibt, schickt
 # jeden an Orte, die er nicht findet.
 #
+# **5 seit 5.1 (Forever).** Derselbe Fall noch einmal: Raid Center und
+# Vorbereitung sind aus der Spalte, der Bestand ist dazugekommen.
+#
 
-TOUR_EDITION = 4
+TOUR_EDITION = 5
 
 # Das Addon-Repository dieser Fassung (siehe
 # gui/pages/settings_sections/about.py).
@@ -118,14 +121,16 @@ TOUR_PAGES: tuple[TourPage, ...] = (
 
     TourPage(
         "companion", "Erste Schritte",
-        "Willkommen bei WeintCompanion 3",
-        "WeintCompanion ist die App zum Addon WeintCodex. Sie hält das "
-        "Addon aktuell, sichert deine Spielstände, wertet eure Raids aus "
-        "und bringt das Ergebnis zurück ins Spiel.\n\n"
+        "Willkommen bei WeintCompanion — Forever Edition",
+        "WeintCompanion ist die App zum Addon WeintCodex für World of "
+        "Warcraft: Forever. Sie hält das Addon aktuell, sichert deine "
+        "Spielstände, zeigt dir deine Charaktere und ihren Bestand auch "
+        "dann, wenn das Spiel nicht läuft, und verbindet das Addon mit "
+        "dem WeintCodex-Bot auf Discord.\n\n"
         "Zusammen sind es drei Teile: das Addon im Spiel, diese App auf "
-        "deinem Rechner und der WeintCodex-Bot auf Discord. Was der Bot "
-        "weiß, kommt über diese App ins Spiel — und was du im Spiel "
-        "einträgst, kommt auf demselben Weg zurück.\n\n"
+        "deinem Rechner und der Bot auf Discord. Was der Bot weiß, kommt "
+        "über diese App ins Spiel — und was du im Spiel einträgst, kommt "
+        "auf demselben Weg zurück.\n\n"
         "Dieser Rundgang geht einmal durch alles. Er dauert ein paar "
         "Minuten, und du kannst ihn jederzeit abbrechen: unter "
         "Einstellungen → Allgemein steht er als „Einführung erneut "
@@ -135,19 +140,12 @@ TOUR_PAGES: tuple[TourPage, ...] = (
     TourPage(
         "dashboard", "Erste Schritte",
         "So ist das Fenster aufgebaut",
-        "Links steht die Navigationsspalte, in drei Gruppen: RAID "
-        "(Übersicht, Raid Center), CHARAKTER (Meine "
-        "Charaktere, Vorbereitung, Charakterzuordnung) "
-        "und SYSTEM (Addon & Updates, Verbindungen, Einstellungen, "
+        "Links steht die Navigationsspalte, in zwei Gruppen: SPIEL "
+        "(Übersicht, Meine Charaktere, Bestand, Charakterzuordnung) und "
+        "SYSTEM (Addon & Updates, Verbindungen, Einstellungen, "
         "Protokoll).\n\n"
-        "RAID hat bewusst nur zwei Einträge. Alles, was mit einem Pull zu "
-        "tun hat — zusehen, auswerten, daraus lernen, einen älteren "
-        "wiederfinden — liegt im **Raid Center** als vier Ansichten "
-        "desselben Kampfes. Du musst also nicht wissen, welchen Bereich "
-        "du wann brauchst.\n\n"
         "Auf einem schmalen Fenster klappt die Spalte auf Symbole "
-        "zusammen; die Beschriftung wird dann zum Tooltip. Das Raid "
-        "Center klappt sie immer ein — es braucht die Breite.\n\n"
+        "zusammen; die Beschriftung wird dann zum Tooltip.\n\n"
         "Das Aussehen bestimmst du selbst: unter Einstellungen → "
         "Erscheinungsbild wählst du die Akzentfarbe, die Dichte "
         "(komfortabel oder kompakt) und ob Bewegungen reduziert werden "
@@ -158,25 +156,36 @@ TOUR_PAGES: tuple[TourPage, ...] = (
     TourPage(
         "discord", "Erste Schritte",
         "Discord verbinden",
-        "Vieles läuft auch ohne, aber das Meiste wird damit erst "
-        "nützlich. Verknüpft wird unter Einstellungen → Discord: ein "
-        "Klick, der Browser öffnet sich, du bestätigst — fertig. Dein "
-        "Discord-Passwort sieht diese App dabei nie.\n\n"
-        "Danach kommen der Raidtermin und die Anmeldung auf die "
-        "Übersicht, die Auswertung eurer Raids wird abrufbar, und der "
+        "Vieles läuft auch ohne. Verknüpft wird unter Einstellungen → "
+        "Discord: ein Klick, der Browser öffnet sich, du bestätigst — "
+        "fertig. Dein Discord-Passwort sieht diese App dabei nie.\n\n"
+        "Danach meldet die App deine Twinkliste an den Bot, und der "
         "Gildenkalender findet den Weg ins Addon.\n\n"
         "Was du sehen darfst, hängt an deiner Discord-Rolle. Fehlt eine "
         "Freigabe, wird der Bereich nicht versteckt, sondern erklärt sich "
-        "— sonst wüsstest du nicht, wonach du fragen sollst. Vergeben "
-        "wird sie in Discord von der Raidleitung, nicht hier.\n\n"
+        "— sonst wüsstest du nicht, wonach du fragen sollst.\n\n"
         "Du musst nicht: ohne Discord bleibt alles nutzbar, was deinen "
         "eigenen Rechner betrifft — Addon installieren, aktualisieren, "
-        "sichern. Leer bleiben nur die "
-        "Bereiche, die von aussen kommen. Verbinden und Trennen geht "
-        "jederzeit unter *Einstellungen → Discord*, und beides löscht "
-        "nichts von dem, was schon hier liegt.\n\n"
-        "Bleibt die Verbindung stumm, siehst du das unter Verbindungen: "
-        "dort steht, was zuletzt versucht wurde und woran es hing.",
+        "sichern, Charaktere und Bestand ansehen. Verbinden und Trennen "
+        "geht jederzeit unter *Einstellungen → Discord*, und beides "
+        "löscht nichts von dem, was schon hier liegt.",
+    ),
+
+    TourPage(
+        "folder", "Erste Schritte",
+        "Dein Spielordner",
+        "Damit die App WeintCodex an die richtige Stelle legt, muss sie "
+        "wissen, wo World of Warcraft: Forever liegt. Sie sucht selbst — "
+        "am Ordnernamen und, wenn der anders heißt, an den Dateien, die "
+        "nur eine Installation hat.\n\n"
+        "Kommst du aus Mists of Pandaria, steht in deinen alten "
+        "Einstellungen noch der MoP-Ordner. Den übernimmt diese App "
+        "bewusst **nicht**: das Addon für Forever in den Ordner eines "
+        "anderen Spiels zu legen, wäre der eine Fehler, den man erst im "
+        "Spiel bemerkt.\n\n"
+        "Stimmt etwas nicht, legst du den Ordner unter Einstellungen → "
+        "WoW-Client fest. Dort steht unter Linux auch der Befehl, mit "
+        "dem „WoW starten“ das Spiel öffnet.",
     ),
 
     # ------------------------------------------------------
@@ -187,16 +196,25 @@ TOUR_PAGES: tuple[TourPage, ...] = (
         "software", "Addon & Updates",
         "Das Addon installieren und aktualisieren",
         "Unter Addon & Updates liegt die Hauptaufgabe dieser App. Sie "
-        "sucht deine WoW-Installation selbst; findet sie keine, stellst "
-        "du den Pfad unter Einstellungen → Allgemein ein.\n\n"
+        "sucht deine Installation von World of Warcraft: Forever selbst; "
+        "findet sie keine, stellst du den Ordner unter Einstellungen → "
+        "WoW-Client ein.\n\n"
         "Es gibt zwei Kanäle, die unabhängig voneinander sind: das "
         "Addon im Spiel und diese App. Beide melden sich, wenn eine neue "
         "Fassung bereitsteht — auf der Übersicht, in der "
-        "Navigationsspalte und als Einblendung.\n\n"
+        "Navigationsspalte und als Einblendung. WeintCodex erscheint auf "
+        "Forever oft mehrmals die Woche; ein Klick genügt.\n\n"
+        "Nach einem Update im Spiel einmal /reload eingeben oder neu "
+        "einloggen — erst dann lädt das Spiel die neue Fassung.",
+    ),
+
+    TourPage(
+        "backup", "Addon & Updates",
+        "Sicherungen",
         "Vor jeder Aktualisierung wird gesichert, und zwar beides: der "
         "Addon-Ordner und deine Spielstände. Nur eines davon ist "
-        "unwiederbringlich — Bossnotizen, Twinkliste und Fortschritt "
-        "stehen nirgends sonst.\n\n"
+        "unwiederbringlich — Notizen, Twinkliste, Bestand und deine "
+        "Einstellungen im Spiel stehen nirgends sonst.\n\n"
         "Zurückgeholt wird ein Backup unter Einstellungen → Backups. Die "
         "Spielstände kommen dabei nur auf ausdrückliches Verlangen "
         "zurück: sie waren beim Update nie weg, und sie stillschweigend "
@@ -209,11 +227,11 @@ TOUR_PAGES: tuple[TourPage, ...] = (
     TourPage(
         "changelog", "Addon & Updates",
         "Was in deiner Fassung steckt",
-        "Über dem Update-Knopf steht immer der Text zu der Fassung, die "
-        "du gerade **hast** — nicht zu der, die bereitsteht. Das ist "
-        "Absicht: was ein Update mitbringt, liest du hinter „Alle "
-        "Änderungen ansehen“, und beides an derselben Stelle wäre nicht "
-        "auseinanderzuhalten.\n\n"
+        "Auf der Übersicht und über dem Update-Knopf steht immer der Text "
+        "zu der Fassung, die du gerade **hast** — nicht zu der, die "
+        "bereitsteht. Das ist Absicht: was ein Update mitbringt, liest du "
+        "hinter „Alle Änderungen“, und beides an derselben Stelle wäre "
+        "nicht auseinanderzuhalten.\n\n"
         "Die vollständige Historie beider Teile — App und Addon — findest "
         "du in derselben Ansicht. Der Addon-Changelog reist im "
         "Addon-Paket mit, deshalb steht er auch ohne Netzverbindung "
@@ -224,206 +242,108 @@ TOUR_PAGES: tuple[TourPage, ...] = (
     ),
 
     # ------------------------------------------------------
-    # Raid & Analyse
+    # Dein Spiel
     # ------------------------------------------------------
 
     TourPage(
-        "dashboard", "Raid & Analyse",
+        "dashboard", "Dein Spiel",
         "Die Übersicht",
         "Die Startseite beantwortet vier Fragen auf einen Blick.\n\n"
-        "**Wann ist der nächste Raid** — mit Countdown, und für jeden "
-        "anstehenden Raidtag getrennt. Mittwoch und Donnerstag sind zwei "
-        "Anmeldungen; wer für den einen zugesagt hat, ist beim anderen "
-        "nicht automatisch dabei.\n\n"
-        "**Wer geht mit** — die Aufstellung als Reihe von Plätzen, je "
-        "Rolle, besetzte in Klassenfarbe. Darunter steht, wie viele Plätze "
-        "offen sind und welcher Art. Und ein Merkzeichen sagt dir, ob "
-        "**du** dich für diesen Tag schon eingetragen hast.\n\n"
-        "**Was war der letzte Pull** — mit Verlauf über dieselbe Boss- "
-        "Begegnung. Er überlebt einen Neustart der App, kommt also auch "
-        "am Morgen nach dem Raid noch.\n\n"
-        "**Steht alles bereit** — Addon gefunden, Updates, Verbindung. "
-        "„Erneut prüfen“ fragt sofort nach, statt auf den nächsten "
-        "Durchlauf zu warten.",
+        "**Ist mein Addon in Ordnung** — welche Fassung von WeintCodex du "
+        "hast, ob sie aktuell ist und was in ihr steckt. Daneben der "
+        "Knopf, der das Spiel startet.\n\n"
+        "**Muss ich etwas tun** — die Aufgabenliste: ein wartendes "
+        "Update, ein fehlendes Addon, ein zerbrochener Gegenstand. Steht "
+        "nichts darin, ist nichts zu tun. „Erneut prüfen“ fragt sofort "
+        "nach, statt auf den nächsten Durchlauf zu warten.\n\n"
+        "**Wo stehen meine Charaktere** — die zuletzt gespielten mit "
+        "Stufe und Gegenstandsstufe.\n\n"
+        "**Wie viel Gold habe ich** — über alle Charaktere zusammen, aus "
+        "dem Bestand. Wer noch keinen Goldstand hat, wird gezählt statt "
+        "verschwiegen.",
     ),
 
     TourPage(
-        "weinttv", "Raid & Analyse",
-        "Das Raid Center — ein Pull, vier Ansichten",
-        "Alles, was mit einem Raidkampf zu tun hat, liegt hier. Oben "
-        "steht **welcher Pull** das ist: Zone, Boss, Pullnummer, "
-        "Ausgang, Bossanteil, Dauer, Wochentag und Uhrzeit. Dieser Block "
-        "bleibt stehen, während du darunter die Ansicht wechselst — du "
-        "verlierst deinen Kampf also nie beim Umschalten.\n\n"
-        "**Live** zeigt, was gerade passiert: Bossleben, Pulluhr, "
-        "Schaden und Heilung je Spieler, Tanks, Tode, Kampf-Rezz, "
-        "Heldentum, Phasen.\n\n"
-        "**Analyse** wertet denselben Pull aus: erhaltener Schaden und "
-        "wie viel davon vermeidbar war — mit der Gegenmaßnahme dazu —, "
-        "Wirkungsdauern deiner Effekte, Aktivzeit, Cooldown-Nutzung samt "
-        "Zeitstrahl, Verbrauchsgüter, Unterbrechungen, Mechanikfehler.\n\n"
-        "**Lernen** sagt, was du daraus mitnimmst. **Quelle** holt einen "
-        "vergangenen Kampf zurück.\n\n"
-        "Alle vier lesen **einen** Datenstand — ein vollständiges Bild "
-        "eines Augenblicks. Keine Ansicht rechnet selbst etwas aus. Genau "
-        "das verhindert, dass zwei von ihnen verschiedene Antworten auf "
-        "dieselbe Frage geben.\n\n"
-        "Bleibt eine Karte leer, sagt sie dazu, warum: kein Raid, kein "
-        "laufender Pull, oder diese Datenquelle liefert die Zahlen "
-        "schlicht nicht. Das sind drei völlig verschiedene Auskünfte, und "
-        "nur bei der letzten ist nichts zu machen.\n\n"
-        "Hinter *Analyse* und *Live* rechnet das Modul **WeintTV** — der "
-        "Name steht in den Einstellungen und im Addon, ist aber kein Ort "
-        "mehr, an den man gehen muss.",
-    ),
-
-    TourPage(
-        "academy", "Raid & Analyse",
-        "Lernen — was du als Nächstes verbessern solltest",
-        "Die Ansicht *Lernen* beginnt mit der Frage, mit der du "
-        "hinsiehst: **deine größten Baustellen**. Zwei bis drei "
-        "Bereiche, jeder mit Sternen, der Begründung dazu, der passenden "
-        "Lektion — und den zwei Wegen, die man von dort will: *Moment* "
-        "springt an die Sekunde im Kampf, an der es passiert ist, "
-        "*Lektion starten* zur Übung.\n\n"
-        "Darunter steht der Beleg: alle sechs Bereiche mit Sternen — "
-        "Rotation, Bewegung, Cooldowns, Mechaniken, Überleben, Leistung "
-        "—, die Zahlen dahinter, der ganze Trainingsplan, deine Lernkurve "
-        "und der Lektionskatalog.\n\n"
-        "Bewertet wird immer **gegen deine eigene Rolle**. Einen Tank am "
-        "Schadensranking zu messen wäre auf Dauer ein Stern, und beim "
-        "erlittenen Schaden erst recht: der meiste davon ist bei ihm die "
-        "Aufgabe und kein Fehler.\n\n"
-        "Eine Regel solltest du kennen: **null Sterne heißt „keine "
-        "Daten“**, nicht „schlecht“. Ohne Vergleichsgruppe — etwa als "
-        "einziger Heiler im Zehner — bleibt ein Bereich unbewertet, statt "
-        "dir eine Bestnote zu geben, die nichts misst. Dasselbe gilt für "
-        "die sechs Zahlen darunter: ein Strich heißt dort „nicht "
-        "geliefert“ und nie „null“.\n\n"
-        "Welcher Charakter bewertet wird, steht oben im Kopfblock — dort "
-        "wählst du ihn, oder lässt *Dem Spiel folgen* eingeschaltet. Ein "
-        "Klick auf eine Zeile in der Analyse setzt ihn ebenfalls und "
-        "wechselt hierher.\n\n"
-        "Die Lernkurve zeichnet deine aufgezeichneten Pulls über die Zeit "
-        "und bestimmt mit, welcher Bereich oben steht. Aufgezeichnet "
-        "wird nur, was fertig ist: mittendrin bewegt sich jede Bewertung "
-        "im Sekundentakt.\n\n"
-        "Was du im Spiel abhakst, kommt hier an — und umgekehrt. Drei "
-        "Tage in Folge mit einer gewerteten Übung an der Trainingspuppe "
-        "haken die Rotationslektion ab. Gerechnet wird das im Modul "
-        "**WeintAcademy**.",
-    ),
-
-    TourPage(
-        "archiv", "Raid & Analyse",
-        "Quelle und Wiedergabe",
-        "Statt des laufenden Kampfes lässt sich auch ein längst "
-        "abgeschlossener ansehen. Die Ansicht *Quelle* zeigt dafür das "
-        "**Archiv**: links die Raidabende, rechts die Pulls des "
-        "gewählten Abends, nach Boss gebündelt — mit Suchfeld, einem "
-        "Filter für Kills und der Uhrzeit an jedem Pull. Gab es keinen "
-        "Kill, ist der beste Versuch markiert.\n\n"
-        "Drei Fragen gehen schneller: **Letzter Raid**, **Letzter Kill** "
-        "und **Bester Versuch** sind je ein Klick. Ganz unten stehen "
-        "außerdem die Pulls, die mitgelaufen sind, seit die App offen "
-        "ist.\n\n"
-        "Sobald ein Pull geladen ist, wechselt das Raid Center von selbst "
-        "auf die Analyse — die Zahlen erscheinen also dort, wo du "
-        "hinsiehst. Zurück zum laufenden Raid führt ein Knopf oben im "
-        "Kopfblock.\n\n"
-        "Und mit *Wiedergabe* läuft der Pull Sekunde für Sekunde ab. Weil "
-        "jede Bewertung nur den gezeigten Augenblick liest, bewertet "
-        "*Lernen* dabei automatisch mit: du siehst, an welcher Stelle es "
-        "gekippt ist.\n\n"
-        "Zwei Dinge dazu: Trashgruppen tauchen nicht auf, sie sind keine "
-        "Pulls. Und einen Pull zu holen dauert — der Bot liest dafür "
-        "Zehntausende Einzelereignisse. Die App wartet geduldig und sagt, "
-        "worauf sie wartet, statt vorzeitig aufzugeben.\n\n"
-        "Benannt wird durchgehend, welcher Pull gerade **geladen** ist — "
-        "nicht, was ausgewählt wurde. Der Unterschied zählt genau dann, "
-        "wenn ein Abruf schiefgeht.",
-    ),
-
-    TourPage(
-        "sync", "Raid & Analyse",
-        "Woher die Zahlen kommen",
-        "Die Datenquelle gilt für alle vier Ansichten zugleich. Der Chip "
-        "oben im Kopfblock nennt sie immer; ein Klick darauf führt in die "
-        "Ansicht *Quelle*, wo du sie wechselst. Dieselbe Einstellung "
-        "steht auch unter Einstellungen → Module.\n\n"
-        "**WarcraftLogs** ist die echte Quelle und die Vorgabe. Gelesen "
-        "wird sie über den Bot und nicht von hier: so liegen die "
-        "Zugangsdaten auf einem Rechner statt auf fünfundzwanzig, und ihr "
-        "teilt euch ein Kontingent. Nötig ist nur, dass irgendwer im Raid "
-        "hochlädt — dein Rechner muss nichts mitschreiben.\n\n"
-        "**Simulation** ist ein vollständiger 25-Mann-Pull, der immer "
-        "gleich abläuft. Er ist da, damit sich alle Ansichten auch "
-        "außerhalb der Raidzeit ansehen lassen — und er zeigt alles, was "
-        "sie können. Weil seine Zahlen niemandem gehören, steht der Chip "
-        "oben dann in Warnfarbe.\n\n"
-        "Simulation und echte Berichte landen nie in derselben Lernkurve. "
-        "Die Karte sagt darunter, welche der beiden sie zeigt.\n\n"
-        "Umschalten kannst du jederzeit. Es geht dabei nichts verloren: "
-        "beide Kurven bleiben liegen, du siehst nur die zur gewählten "
-        "Quelle.",
-    ),
-
-    # ------------------------------------------------------
-    # Deine Charaktere
-    # ------------------------------------------------------
-
-    TourPage(
-        "charaktere", "Deine Charaktere",
+        "charaktere", "Dein Spiel",
         "Meine Charaktere",
-        "Was das Addon über deine Ausrüstung weiß, steht hier: "
-        "Gegenstandsstufe, fehlende Verzauberungen, leere Sockel, offene "
-        "Plätze aus der Best-in-Slot-Liste — je Charakter, mit "
+        "Was das Addon über deine Charaktere weiß, steht hier: Stufe, "
+        "Gegenstandsstufe und Spezialisierung, je Charakter mit "
         "Klassenwappen.\n\n"
-        "Geurteilt wird dabei im Spiel und nicht hier. Welche "
-        "Verzauberung optimal ist und welcher Stein falsch sitzt, "
-        "entscheidet das Addon, wo Spec-Profil, Grenzen und der echte "
-        "Gegenstands-Tooltip existieren. Diese Seite zeichnet es nur. "
-        "Zwei Bewertungen derselben Sache laufen irgendwann auseinander, "
-        "und dann widersprechen sich Spiel und Schreibtisch.\n\n"
-        "Der Ring zeigt die Bereitschaft. Wurde nichts geprüft, bleibt er "
-        "leer und sagt das — eine Null wäre eine Messung, die niemand "
-        "vorgenommen hat. Offene BiS-Plätze zählen bewusst nicht mit: sie "
-        "hängen am Würfelglück und nicht an deiner Vorbereitung.\n\n"
-        "Aufgeführt werden Charaktere ab Stufe 60. Wie viele ausgeblendet "
-        "sind, steht darunter — sonst wäre ein verschwundener Twink von "
-        "einem Fehler nicht zu unterscheiden.",
+        "WeintCodex meldet einen Charakter beim Anmelden im Spiel und "
+        "bei jedem Ausrüstungswechsel. Wer nie eingeloggt war, steht "
+        "deshalb nicht hier — die Liste ist die Summe deiner Anmeldungen, "
+        "keine Kontoübersicht.\n\n"
+        "Unten auf jeder Karte steht, was das Addon geprüft hat: ein "
+        "leerer Platz oder ein zerbrochener Gegenstand. Verzauberungen, "
+        "Sockel und Bestenlisten gibt es auf Forever nicht, und deshalb "
+        "zählt diese App sie auch nicht.",
     ),
 
     TourPage(
-        "vorbereitung", "Deine Charaktere",
-        "Vorbereitung",
-        "Dieselben Daten, andere Frage: was fehlt vor dem Raid noch, "
-        "über alle deine Charaktere zusammen.\n\n"
-        "Gezeigt wird, was zu erledigen ist — fehlende Verzauberungen, "
-        "leere Sockel, Steine mit dem Urteil „falsch“ oder „über Cap“. "
-        "Was nur eine Abwägung ist, steht auf der Charakterseite im "
-        "Spiel: eine Liste, auf der Dinge stehen, die man nicht braucht, "
-        "wird nicht benutzt.\n\n"
-        "Aktualisiert wird das, sobald du dich im Spiel anmeldest oder "
-        "die Ausrüstung wechselst.",
+        "archiv", "Dein Spiel",
+        "Bestand — wer hat was",
+        "WeintCodex merkt sich für jeden Charakter, was er hat: Taschen, "
+        "angelegte Ausrüstung, die Bank und sein Gold. Unter **Bestand** "
+        "durchsuchst du das, ohne das Spiel zu starten: „Leinenstoff“ "
+        "eintippen, und du siehst, welcher Charakter wie viel davon hat "
+        "und wo es liegt.\n\n"
+        "Das ist der **Stand des letzten Ausloggens**. Das Spiel schreibt "
+        "seine Spielstände erst beim Ausloggen — was du gerade im Spiel "
+        "tust, erscheint hier danach, nicht währenddessen.\n\n"
+        "Zwei Dinge heißen hier „unbekannt“ und nie „null“: die Bank "
+        "eines Charakters, deren Fach er nie geöffnet hat, und das Gold "
+        "eines Charakters, der seit der Fassung mit Goldstand nicht mehr "
+        "eingeloggt war. Post und Auktionen kennt der Bestand nicht.",
     ),
 
     TourPage(
-        "charaktere", "Deine Charaktere",
+        "charaktere", "Dein Spiel",
         "Charakterzuordnung",
         "Der Kalender-Invite im Spiel lädt echte Charakternamen ein. Den "
         "kennt der Bot aber nur von Spielern, die diese App verknüpft und "
         "ihre Twinkliste gepflegt haben — für alle anderen schickte er "
-        "den Discord-Namen weiter, und den gibt es im Spiel nicht. Die "
-        "Einladung lief still ins Leere und zählte sogar als "
-        "erfolgreich.\n\n"
-        "Auf dieser Seite trägt die Raidleitung die fehlenden Namen von "
-        "Hand nach. Gildenfremde können die App kaum nutzen; für sie war "
-        "das kein Übergangszustand.\n\n"
-        "Ohne die Raidlead-Rolle ist die Seite gesperrt und erklärt, "
+        "den Discord-Namen weiter, und den gibt es im Spiel nicht.\n\n"
+        "Auf dieser Seite trägt die Gildenleitung die fehlenden Namen von "
+        "Hand nach.\n\n"
+        "Ohne die passende Rolle ist die Seite gesperrt und erklärt, "
         "wofür sie da wäre. Sie verschwindet nicht — ein Bereich, der je "
         "nach Rolle gar nicht existiert, lässt sich weder erklären noch "
         "erfragen.",
+    ),
+
+    # ------------------------------------------------------
+    # System
+    # ------------------------------------------------------
+
+    TourPage(
+        "sync", "System",
+        "Verbindungen und Protokoll",
+        "Unter **Verbindungen** steht, mit wem die App spricht: GitHub "
+        "für die Updates, der Bot auf Discord und die Brücke ins Addon. "
+        "Bleibt etwas stumm, steht dort, was zuletzt versucht wurde und "
+        "woran es hing — nicht nur ein roter Punkt.\n\n"
+        "Die Brücke ins Addon ist eine Datei und kein Netz: die App legt "
+        "ab, was das Addon lesen soll, und das Spiel liest es beim "
+        "nächsten Laden. Deshalb kommt manches erst nach einem /reload "
+        "an.\n\n"
+        "Unter **Protokoll** steht, was die App zuletzt getan hat. Wenn "
+        "etwas nicht klappt, ist das die Auskunft, die weiterhilft — und "
+        "genau die, die man einer Meldung beilegt.",
+    ),
+
+    TourPage(
+        "weinttv", "System",
+        "Was es (noch) nicht gibt",
+        "Wer die Companion aus Mists of Pandaria kennt, vermisst hier "
+        "das **Raid Center** mit Live, Analyse, Lernen und Archiv — und "
+        "auf der Übersicht den nächsten Raidtermin.\n\n"
+        "Das ist Absicht. Auf Forever gibt es noch keinen Raid, den man "
+        "auswerten könnte, und bis eine Gilde einen zusammenbekommt, "
+        "vergehen Monate. Eine Seite, die so lange nur „kein Raid“ sagt, "
+        "hilft niemandem.\n\n"
+        "Weg ist es nicht: der Teil ruht und kommt zurück, sobald es auf "
+        "Forever Raids gibt — dann auf Forever zugeschnitten und nicht "
+        "aus Mists of Pandaria übernommen.",
     ),
 
     # ------------------------------------------------------
@@ -434,38 +354,25 @@ TOUR_PAGES: tuple[TourPage, ...] = (
         "settings", "Zum Schluss",
         "Einstellungen — was an und was aus?",
         "Die Einstellungen sind in Abschnitte geteilt: Allgemein, "
-        "Erscheinungsbild, Discord, Module, Backups und Über. "
+        "Erscheinungsbild, WoW-Client, Discord, Module, Backups und Über. "
         "**Nichts davon ist endgültig** — jeder Schalter lässt sich dort "
         "jederzeit wieder umlegen, und keiner löscht dabei etwas.\n\n"
-        "**Discord verbinden** (Discord): verbunden kommen Raidtermin, "
-        "Anmeldung und die Auswertung eurer Raids herein, und der "
-        "Gildenkalender findet den Weg ins Spiel. Getrennt funktioniert "
-        "alles weiter, was deinen eigenen Rechner betrifft — Addon "
-        "installieren, aktualisieren, sichern —, aber die Übersicht bleibt "
-        "leer. Trennen löscht nichts von dem, was schon hier liegt.\n\n"
+        "**Discord verbinden** (Discord): verbunden gehen Twinkliste und "
+        "Gildenkalender hin und her. Getrennt funktioniert alles weiter, "
+        "was deinen eigenen Rechner betrifft. Trennen löscht nichts von "
+        "dem, was schon hier liegt.\n\n"
         "**Automatisch starten** (Allgemein): an ist die App beim Anmelden "
-        "schon da und hat den Raidtermin und ein wartendes Update parat. "
-        "Aus musst du daran denken, sie zu öffnen — sonst ändert sich "
-        "nichts.\n\n"
+        "schon da und hat ein wartendes Update parat. Aus musst du daran "
+        "denken, sie zu öffnen — sonst ändert sich nichts.\n\n"
         "**In den Infobereich minimieren** (Allgemein): an läuft sie "
         "weiter, wenn du das Fenster schließt, und meldet ein Update als "
         "Sprechblase. Aus beendet das Schließen die App.\n\n"
-        "**Datenquelle** (Module): *Simulation* zeigt einen vollständigen "
-        "Beispiel-Pull, damit sich WeintTV und die Academy auch ausserhalb "
-        "der Raidzeit ansehen lassen. *WarcraftLogs* zeigt eure echten "
-        "Kämpfe, braucht aber ein verknüpftes Discord-Konto und jemanden "
-        "im Raid, der hochlädt. Umschalten geht jederzeit; die Lernkurven "
-        "der beiden bleiben getrennt.\n\n"
         "**Diese Einführung** (Allgemein): hier holst du sie zurück, und "
         "hier schaltest du auch das Fenster nach jedem Update ab.\n\n"
         "Einer ist im Ernstfall wichtig: unter Discord lässt sich die "
         "**Adresse des Bots** überschreiben. Der Bot zieht gelegentlich "
         "auf einen anderen Rechner um, und ohne diese Möglichkeit hülfe "
-        "dann nur ein neues Programm. Eine unbrauchbare Adresse wird "
-        "abgelehnt statt übernommen.\n\n"
-        "Unter Protokoll steht, was die App zuletzt getan hat. Wenn etwas "
-        "nicht klappt, ist das die Auskunft, die weiterhilft — und genau "
-        "die, die man einer Meldung beilegt.",
+        "dann nur ein neues Programm.",
     ),
 
     TourPage(
@@ -474,17 +381,16 @@ TOUR_PAGES: tuple[TourPage, ...] = (
         "Das war der Rundgang. Du holst ihn jederzeit unter "
         "Einstellungen → Allgemein zurück.\n\n"
         "**Und jetzt die Bitte:** WeintCodex und WeintCompanion leben "
-        "davon, dass gemeldet wird, was daneben liegt. Besonders bei den "
-        "**Sockelsteinen** im Spiel — dort sind die Empfehlungen noch "
-        "nicht überall verlässlich, und ohne Rückmeldung fällt kein "
-        "einziger dieser Fälle auf.\n\n"
-        "Schreib im Discord der Gilde, was dir aufgefallen ist: welche "
-        "Spezialisierung, was vorgeschlagen wurde, was du erwartet "
-        "hättest. Ein Screenshot dazu, und die Sache ist meistens in "
-        "einer Fassung erledigt.\n\n"
-        "Das gilt genauso für alles andere: fehlende Erklärungen, Knöpfe, "
-        "die niemand findet, Texte, die man zweimal lesen muss. Vielen "
-        "Dank — und viel Erfolg im Raid.",
+        "davon, dass gemeldet wird, was daneben liegt — gerade auf "
+        "Forever, wo vieles zum ersten Mal läuft und niemand vorher "
+        "nachsehen konnte.\n\n"
+        "Schreib im Discord der Gilde, was dir aufgefallen ist: was du "
+        "getan hast, was passiert ist, was du erwartet hättest. Ein "
+        "Screenshot dazu, und die Sache ist meistens in einer Fassung "
+        "erledigt.\n\n"
+        "Das gilt genauso für fehlende Erklärungen, Knöpfe, die niemand "
+        "findet, und Texte, die man zweimal lesen muss. Vielen Dank — und "
+        "viel Spaß in Azeroth.",
         action=("Feedback im Discord", feedback_url()),
     ),
 
