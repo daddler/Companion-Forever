@@ -62,13 +62,13 @@ ASIDE_SUFFIX = ".vor-wiederherstellung"
 #
 # Wie viele Backups liegen bleiben. Seit 5.1.2 räumt die Anwendung
 # selbst auf: bis dahin legte jede Aktualisierung ein Archiv dazu,
-# und bei manchen hatten sich Dutzende angesammelt. Zwei reichen -
-# das jüngste ist der Stand direkt vor dem letzten Update, das zweite
-# der Rückweg, falls schon das jüngste einen kaputten Stand gesichert
-# hat.
+# und bei manchen hatten sich über 40 angesammelt. Drei reichen -
+# das jüngste ist der Stand direkt vor dem letzten Update, die beiden
+# davor der Rückweg, falls schon das jüngste einen kaputten Stand
+# gesichert hat.
 #
 
-MAX_BACKUPS = 2
+MAX_BACKUPS = 3
 
 
 def _safe_members(archive: zipfile.ZipFile, prefix: str) -> list[str]:

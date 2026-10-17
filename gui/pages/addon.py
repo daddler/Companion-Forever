@@ -955,7 +955,7 @@ class AddonPage(Page):
                 reverse=True,
             )
 
-        self.backup_list.set_backups(files[:8])
+        self.backup_list.set_backups(files[:3])
 
         #
         # Meldungen: die drei letzten Protokolleinträge.

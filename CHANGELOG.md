@@ -4,12 +4,13 @@ Alle nennenswerten Änderungen an WeintCompanion.
 
 ## 5.1.2
 
-**Backups räumen sich selbst auf.** Bisher legte jedes Addon-Update ein
-weiteres Backup an, und gelöscht wurde nie etwas — bei manchen hatten
-sich Dutzende angesammelt. Ab jetzt bleiben nur noch die zwei jüngsten
-Backups liegen; kommt ein drittes dazu, wird das älteste automatisch
-gelöscht. Beim ersten Start dieser Fassung verschwinden auch die
-angesammelten alten Backups, bis auf die zwei jüngsten.
+**Backups und Downloads räumen sich selbst auf.** Bisher legte jedes
+Addon-Update ein weiteres Backup und einen weiteren Download an, und
+gelöscht wurde nie etwas — bei manchen hatten sich über 40 Backups
+angesammelt. Ab jetzt bleiben von beidem nur die drei jüngsten liegen;
+kommt ein viertes dazu, wird das älteste automatisch gelöscht. Beim
+ersten Start dieser Fassung verschwinden auch alle angesammelten alten
+Dateien bis auf die drei jüngsten — du musst nichts von Hand löschen.
 
 ## 5.1.1
 

@@ -286,7 +286,7 @@ def test_ein_eintrag_der_aus_dem_ordner_fuehrt_wird_uebergangen(
     assert not (tmp_path / "entkommen.lua").exists()
 
 
-def test_prune_keeps_two_newest(tmp_path):
+def test_prune_keeps_three_newest(tmp_path):
 
     from core.backup import BackupManager, MAX_BACKUPS
 
@@ -300,12 +300,12 @@ def test_prune_keeps_two_newest(tmp_path):
 
     removed = manager.prune()
 
-    assert MAX_BACKUPS == 2
-    assert len(removed) == 3
-    assert sorted(p.name for p in tmp_path.iterdir()) == names[-2:]
+    assert MAX_BACKUPS == 3
+    assert len(removed) == 2
+    assert sorted(p.name for p in tmp_path.iterdir()) == names[-3:]
 
 
-def test_create_backup_drops_oldest_beyond_two(tmp_path):
+def test_create_backup_drops_oldest_beyond_three(tmp_path):
 
     from core.backup import BackupManager
 
@@ -317,10 +317,33 @@ def test_create_backup_drops_oldest_beyond_two(tmp_path):
     manager.backup_dir = tmp_path / "backups"
     manager.backup_dir.mkdir()
 
-    for day in (1, 2):
+    for day in (1, 2, 3):
         (manager.backup_dir / f"WeintCodex_2020-01-0{day}_00-00-00.zip").write_bytes(b"x")
 
     new = manager.create_backup(addon)
 
     left = sorted(p.name for p in manager.backup_dir.iterdir())
-    assert left == ["WeintCodex_2020-01-02_00-00-00.zip", new.name]
+    assert left == [
+        "WeintCodex_2020-01-02_00-00-00.zip",
+        "WeintCodex_2020-01-03_00-00-00.zip",
+        new.name,
+    ]
+
+
+def test_prune_downloads_keeps_three_newest(tmp_path):
+
+    import os
+
+    from core.downloader import prune_downloads
+
+    for index in range(6):
+        file = tmp_path / f"WeintCodex-{index}.zip"
+        file.write_bytes(b"x")
+        os.utime(file, (1000 + index, 1000 + index))
+
+    removed = prune_downloads(tmp_path)
+
+    assert len(removed) == 3
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "WeintCodex-3.zip", "WeintCodex-4.zip", "WeintCodex-5.zip",
+    ]

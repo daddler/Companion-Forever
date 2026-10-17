@@ -6,6 +6,8 @@ from addon.reader import AddonReader
 
 from core.app_state import AppState
 from core.backup import BackupManager
+from core.paths import Paths
+from core.downloader import prune_downloads
 from core.config import Config
 from core.downloader import Downloader
 from core.github_updater import GitHubUpdater
@@ -143,10 +145,12 @@ class CompanionManager(QObject):
         self.backup = BackupManager()
 
         #
-        # Angesammelte Backups aus Fassungen vor 5.1.2 abbauen; ab
-        # jetzt bleiben nur die MAX_BACKUPS jüngsten (core/backup.py).
+        # Angesammelte Backups und Downloads aus Fassungen vor 5.1.2
+        # abbauen; ab jetzt bleiben nur die jeweils drei jüngsten
+        # (core/backup.py, core/downloader.py).
         #
         self.backup.prune()
+        prune_downloads(Paths.downloads())
         self.installer = Installer()
         self.workflow = InstallerWorkflow(self)
         self.companion_updater = CompanionUpdater(self)
