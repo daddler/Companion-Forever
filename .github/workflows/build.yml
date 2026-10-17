@@ -325,6 +325,13 @@ jobs:
           #
           target_commitish: ${{ github.sha }}
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          #
+          # Ausdrücklich, weil GitHub "latest" nur beim Anlegen eines
+          # Releases von selbst setzt - wird eine Vorabversion später
+          # zum regulären Release, bliebe sonst das vorige "latest",
+          # und der Updater (/releases/latest) sähe die neue Fassung nie.
+          #
+          make_latest: ${{ github.event.inputs.prerelease == 'true' && 'false' || 'true' }}
           body_path: release-notes.md
           fail_on_unmatched_files: false
           files: |
