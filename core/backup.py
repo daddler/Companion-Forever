@@ -59,6 +59,17 @@ SAVED_PREFIX = "WTF/"
 
 ASIDE_SUFFIX = ".vor-wiederherstellung"
 
+#
+# Wie viele Backups liegen bleiben. Seit 5.1.2 räumt die Anwendung
+# selbst auf: bis dahin legte jede Aktualisierung ein Archiv dazu,
+# und bei manchen hatten sich Dutzende angesammelt. Zwei reichen -
+# das jüngste ist der Stand direkt vor dem letzten Update, das zweite
+# der Rückweg, falls schon das jüngste einen kaputten Stand gesichert
+# hat.
+#
+
+MAX_BACKUPS = 2
+
 
 def _safe_members(archive: zipfile.ZipFile, prefix: str) -> list[str]:
     """
@@ -167,7 +178,38 @@ class BackupManager:
 
                     continue
 
+        self.prune()
+
         return archive_path
+
+    # --------------------------------------------------
+
+    def prune(self, keep: int = MAX_BACKUPS) -> list[Path]:
+        """
+        Löscht alle Backups bis auf die `keep` jüngsten.
+
+        Läuft nach jedem neuen Backup und einmal beim Start (damit auch
+        die angesammelten Altbestände verschwinden, ohne dass erst ein
+        Addon-Update kommen muss). Eine Datei, die sich nicht löschen
+        lässt, bleibt liegen - ein Aufräumfehler darf weder das Backup
+        noch den Start scheitern lassen.
+
+        Gibt die gelöschten Dateien zurück.
+        """
+
+        removed: list[Path] = []
+
+        for entry in self.backups()[max(keep, 0):]:
+
+            try:
+                entry.unlink()
+
+            except OSError:
+                continue
+
+            removed.append(entry)
+
+        return removed
 
     # --------------------------------------------------
 

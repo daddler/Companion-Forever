@@ -222,8 +222,11 @@ that dialog's own mechanics).
 ## Storage: downloads and backups accumulate, and now say so
 
 `InstallerWorkflow` never deletes the downloaded archive or the backup it
-creates on every addon update — correct (a self-deleting backup isn't
-one), but the counts lived only under *Einstellungen → Backups*, where
+creates on every addon update. **Since 5.1.2 backups are capped**:
+`BackupManager.prune()` keeps the `MAX_BACKUPS` (2) newest, runs after
+every `create_backup()` and once at startup (clears the pre-5.1.2 pile).
+Never prune to 0 — the newest is the last update's safety net. Downloads
+are still never deleted automatically, and their counts live only under *Einstellungen → Backups*, where
 nobody goes without already looking for it. `core/storage_usage.py` is
 the Qt-free half (only `scan()` touches disk), `core/storage_watch.py`
 the watcher, built like `UpdateWatch`. Four rules: **counted per

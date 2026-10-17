@@ -141,6 +141,12 @@ class CompanionManager(QObject):
         )
         self.downloader = Downloader()
         self.backup = BackupManager()
+
+        #
+        # Angesammelte Backups aus Fassungen vor 5.1.2 abbauen; ab
+        # jetzt bleiben nur die MAX_BACKUPS jüngsten (core/backup.py).
+        #
+        self.backup.prune()
         self.installer = Installer()
         self.workflow = InstallerWorkflow(self)
         self.companion_updater = CompanionUpdater(self)

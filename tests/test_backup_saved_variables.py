@@ -284,3 +284,43 @@ def test_ein_eintrag_der_aus_dem_ordner_fuehrt_wird_uebergangen(
     assert len(written) == 1
 
     assert not (tmp_path / "entkommen.lua").exists()
+
+
+def test_prune_keeps_two_newest(tmp_path):
+
+    from core.backup import BackupManager, MAX_BACKUPS
+
+    manager = BackupManager.__new__(BackupManager)
+    manager.backup_dir = tmp_path
+
+    names = [f"WeintCodex_2026-10-0{day}_12-00-00.zip" for day in range(1, 6)]
+
+    for name in names:
+        (tmp_path / name).write_bytes(b"x")
+
+    removed = manager.prune()
+
+    assert MAX_BACKUPS == 2
+    assert len(removed) == 3
+    assert sorted(p.name for p in tmp_path.iterdir()) == names[-2:]
+
+
+def test_create_backup_drops_oldest_beyond_two(tmp_path):
+
+    from core.backup import BackupManager
+
+    addon = tmp_path / "AddOns" / "WeintCodex"
+    addon.mkdir(parents=True)
+    (addon / "WeintCodex.toc").write_text("## Title: x")
+
+    manager = BackupManager.__new__(BackupManager)
+    manager.backup_dir = tmp_path / "backups"
+    manager.backup_dir.mkdir()
+
+    for day in (1, 2):
+        (manager.backup_dir / f"WeintCodex_2020-01-0{day}_00-00-00.zip").write_bytes(b"x")
+
+    new = manager.create_backup(addon)
+
+    left = sorted(p.name for p in manager.backup_dir.iterdir())
+    assert left == ["WeintCodex_2020-01-02_00-00-00.zip", new.name]
