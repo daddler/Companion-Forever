@@ -2,6 +2,23 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 5.2.0
+
+**WeintCompanion gibt es jetzt auch für den Mac.** Zu jedem Release
+gehört ab sofort ein `WeintCompanion-macOS.dmg` neben dem Windows-
+Installer und der AppImage. Öffnen, WeintCompanion in den Ordner
+*Programme* ziehen, fertig. Der Mac kann alles, was Windows und Linux
+können: WeintCodex installieren und aktualisieren, Backups, Bestand,
+Discord-Verknüpfung, Autostart beim Anmelden, Battle.net starten und
+die Companion selbst aktualisieren. Den WoW-Ordner unter *Programme*
+findet sie von allein.
+
+Zwei Einschränkungen, ehrlich gesagt: Der Build läuft auf Macs mit
+Apple-Chip (M1 und neuer) ab macOS 12. Und weil die App nicht bei Apple
+beglaubigt ist, warnt macOS beim allerersten Start — dann einmal mit
+Rechtsklick auf die App → *Öffnen* starten. Updates danach laufen ohne
+diese Warnung.
+
 ## 5.1.2
 
 **Backups und Downloads räumen sich selbst auf.** Bisher legte jedes

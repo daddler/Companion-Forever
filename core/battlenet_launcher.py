@@ -23,6 +23,16 @@ WINDOWS_SEARCH_ROOTS = [
 ]
 
 
+#
+# macOS: Battle.net liegt als App-Bundle in einem der Programme-Ordner.
+#
+
+MACOS_SEARCH_ROOTS = [
+    Path("/Applications"),
+    Path.home() / "Applications",
+]
+
+
 class BattleNetLauncher:
 
     def __init__(self, config):
@@ -66,6 +76,36 @@ class BattleNetLauncher:
         return None
 
     # --------------------------------------------------
+    # macOS: Battle.net.app suchen
+    # --------------------------------------------------
+
+    def find_macos_app(self, wow_path):
+
+        candidates = []
+
+        if wow_path is not None:
+
+            #
+            # Wie unter Windows: ".../World of Warcraft/_forever_" ->
+            # Battle.net.app liegt neben "World of Warcraft".
+            #
+
+            candidates.append(
+                Path(wow_path).parent.parent / "Battle.net.app"
+            )
+
+        for root in MACOS_SEARCH_ROOTS:
+
+            candidates.append(root / "Battle.net.app")
+
+        for candidate in candidates:
+
+            if candidate.exists():
+                return candidate
+
+        return None
+
+    # --------------------------------------------------
     # Start
     # --------------------------------------------------
 
@@ -83,6 +123,11 @@ class BattleNetLauncher:
             self._launch_linux()
             return
 
+        if system == "Darwin":
+
+            self._launch_macos(wow_path)
+            return
+
         raise RuntimeError(
             f"Battle.net-Start wird unter {system} nicht unterstützt."
         )
@@ -98,6 +143,21 @@ class BattleNetLauncher:
             )
 
         os.startfile(exe)
+
+    def _launch_macos(self, wow_path):
+
+        app = self.find_macos_app(wow_path)
+
+        if app is None:
+
+            raise FileNotFoundError(
+                "Battle.net.app wurde nicht gefunden."
+            )
+
+        subprocess.Popen(
+            ["/usr/bin/open", str(app)],
+            start_new_session=True,
+        )
 
     def _launch_linux(self):
 

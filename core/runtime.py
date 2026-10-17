@@ -61,6 +61,32 @@ class Runtime:
     # --------------------------------------------------
 
     @staticmethod
+    def macos_app_bundle() -> Path | None:
+        """
+        Das `.app`-Bundle, aus dem die Anwendung läuft - oder None
+        (Entwicklung, anderes System).
+
+        Im Bundle liegt die eigentliche Programmdatei unter
+        `WeintCompanion.app/Contents/MacOS/WeintCompanion`; ersetzt
+        und neu gestartet wird beim Update aber immer das ganze
+        Bundle, nie die Datei darin.
+        """
+
+        if not Runtime.is_macos() or not getattr(sys, "frozen", False):
+            return None
+
+        executable = Path(sys.executable).resolve()
+
+        for parent in executable.parents:
+
+            if parent.suffix == ".app":
+                return parent
+
+        return None
+
+    # --------------------------------------------------
+
+    @staticmethod
     def is_appimage() -> bool:
         """
         Erkennt, ob WeintCompanion als AppImage läuft.

@@ -45,11 +45,18 @@ There is no linter or formatter configured.
 ./scripts/build_linux.sh          # PyInstaller build -> dist/WeintCompanion
 ./scripts/build_appimage.sh       # wraps the Linux build into an AppImage (requires linuxdeploy)
 ./scripts/build_windows.ps1       # PyInstaller + Inno Setup -> dist/WeintCompanion-Setup.exe
+./scripts/build_macos.sh          # (on a Mac) PyInstaller BUNDLE -> dist/WeintCompanion-macOS.dmg
 ```
 
-CI (`.github/workflows/build.yml`) builds Linux (AppImage) and Windows
-(Inno Setup installer) on every `v*` tag push and publishes a GitHub
-Release with both artifacts. `WeintCompanion.spec` is the PyInstaller
+CI (`.github/workflows/build.yml`) builds Linux (AppImage), Windows
+(Inno Setup installer) and macOS (`.dmg`, Apple Silicon, `macos-latest`)
+on every `v*` tag push and publishes a GitHub Release with all three.
+The Mac build is **ad-hoc signed, not notarized** (no Apple developer
+account): the first launch needs right-click → *Öffnen* (or *Systemein-
+stellungen → Datenschutz & Sicherheit → Trotzdem öffnen*). Self-updates
+afterwards don't hit Gatekeeper again — `packaging/macos/updater.sh`
+swaps the bundle from the downloaded `.dmg` and strips quarantine. UPX is
+off on macOS because it breaks the signature. `WeintCompanion.spec` is the PyInstaller
 spec (entry point `app.py`, bundles `assets/`, `resources/icons`, and the
 Linux updater script; also lists `CHANGELOG.md` under `datas` — see
 `../systems/update-system.md`).

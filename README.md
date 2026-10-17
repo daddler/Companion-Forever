@@ -126,7 +126,7 @@ Zusätzlich wird eine Logdatei erstellt, die bei der Fehlersuche unterstützt.
 | -------------- | ------------- |
 | Linux          | ✅ Unterstützt |
 | Windows        | ✅ Unterstützt |
-| macOS          | 📅 Geplant    |
+| macOS          | ✅ Unterstützt (Apple Silicon, ab macOS 12) |
 
 ---
 

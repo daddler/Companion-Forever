@@ -195,11 +195,57 @@ jobs:
             dist/WeintCompanion-Setup.exe
             dist/WeintCompanion-Setup.exe.sha256
 
+  macos:
+
+    needs: test
+
+    #
+    # Gebaut wird für Apple Silicon (M1 und neuer). Für Intel-Macs gibt
+    # es keinen eigenen Build: GitHub stellt seine Intel-Runner ein,
+    # dort bleibt nur der Start aus dem Quellcode.
+    #
+
+    runs-on: macos-latest
+
+    steps:
+
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Python installieren
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Abhängigkeiten installieren
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: macOS Build
+        run: |
+          chmod +x scripts/build_macos.sh
+          ./scripts/build_macos.sh
+
+      - name: Prüfsumme erstellen
+        run: |
+          cd dist
+          shasum -a 256 WeintCompanion-macOS.dmg > WeintCompanion-macOS.dmg.sha256
+
+      - name: macOS Build hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: WeintCompanion-macOS
+          path: |
+            dist/WeintCompanion-macOS.dmg
+            dist/WeintCompanion-macOS.dmg.sha256
+
   release:
 
     needs:
       - linux
       - windows
+      - macos
 
     runs-on: ubuntu-latest
 
@@ -234,6 +280,12 @@ jobs:
         with:
           name: WeintCompanion-Windows
           path: release/windows
+
+      - name: macOS Build herunterladen
+        uses: actions/download-artifact@v4
+        with:
+          name: WeintCompanion-macOS
+          path: release/macos
 
       - name: GitHub Release erstellen
         uses: softprops/action-gh-release@v2
@@ -270,3 +322,5 @@ jobs:
             release/windows/WeintCompanion-Setup.exe.sha256
             release/linux/WeintCompanion-x86_64.AppImage
             release/linux/WeintCompanion-x86_64.AppImage.sha256
+            release/macos/WeintCompanion-macOS.dmg
+            release/macos/WeintCompanion-macOS.dmg.sha256

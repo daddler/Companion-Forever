@@ -6,6 +6,7 @@ import subprocess
 from core.downloader import ChecksumError
 from core.github_updater import GitHubUpdater
 from core.linux_updater import LinuxUpdater
+from core.macos_updater import MacOSUpdater
 from core.paths import Paths
 from core.windows_updater import WindowsUpdater
 from core.runtime import Runtime
@@ -38,6 +39,7 @@ class CompanionUpdater:
 
         self.linux = LinuxUpdater()
         self.windows = WindowsUpdater()
+        self.macos = MacOSUpdater()
 
         self._changelog_commits = None
 
@@ -562,20 +564,35 @@ class CompanionUpdater:
                 return True
 
             #
-            # macOS - für 1.0 NICHT offiziell unterstützt: es gibt
-            # weder ein Build-Skript noch einen CI-Job für ein
-            # .dmg-Release, dieser Zweig ist ungetestet und läuft nur
-            # noch mit, falls ihn jemand manuell aus dem Quellcode
-            # startet. Vor einer echten macOS-Unterstützung braucht
-            # es mindestens einen eigenen Build-/CI-Prozess (siehe
-            # scripts/build_linux.sh bzw. build_windows.ps1 als
-            # Vorbild) sowie einen Test auf echter Hardware.
+            # macOS (.app aus dem .dmg)
             #
 
-            self.manager.logger.warning(
-                "macOS wird von WeintCompanion aktuell nicht offiziell "
-                "unterstützt - der Installer-Start ist ungetestet."
-            )
+            bundle = Runtime.macos_app_bundle()
+
+            if bundle is not None:
+
+                self.manager.logger.info(
+                    "Bereite macOS-Update vor..."
+                )
+
+                script = self.macos.prepare()
+
+                self._spawn_detached(
+                    [
+                        "/bin/bash",
+                        str(script),
+                        str(bundle),
+                        str(file),
+                        str(os.getpid()),
+                    ]
+                )
+
+                return True
+
+            #
+            # Entwicklung (aus dem Quellcode gestartet): kein Bundle,
+            # das sich ersetzen liesse - die Datei wird nur geöffnet.
+            #
 
             self.manager.logger.info(
                 "Starte Installer..."

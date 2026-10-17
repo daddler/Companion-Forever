@@ -3,7 +3,9 @@
 `core/paths.py` centralizes all on-disk locations
 (config/cache/downloads/backups/logs/reports), branching on
 `platform.system()`: `~/.local/share/WeintCompanion` on Linux,
-`%LOCALAPPDATA%/WeintCompanion` on Windows. Rule of thumb for new files:
+`%LOCALAPPDATA%/WeintCompanion` on Windows,
+`~/Library/Application Support/WeintCompanion` on macOS (an existing
+pre-5.2 `~/.weintcompanion` is kept). Rule of thumb for new files:
 anything reproducible goes under `cache()`, anything the user would be
 upset to lose goes under `config()`.
 

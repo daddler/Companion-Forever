@@ -18,21 +18,14 @@ from pathlib import Path
 
 try:
 
-    _crash_log_dir = (
-        Path.home()
-        / ".local"
-        / "share"
-        / "WeintCompanion"
-        / "cache"
-        / "logs"
-        if platform.system() == "Linux"
-        else Path(
-            os.getenv("LOCALAPPDATA", str(Path.home()))
-        )
-        / "WeintCompanion"
-        / "cache"
-        / "logs"
-    )
+    #
+    # Derselbe Ort wie Paths.logs() - core.paths kommt ohne Qt aus
+    # und darf deshalb schon hier geladen werden.
+    #
+
+    from core.paths import Paths as _CrashPaths
+
+    _crash_log_dir = _CrashPaths.base() / "cache" / "logs"
 
     _crash_log_dir.mkdir(parents=True, exist_ok=True)
 

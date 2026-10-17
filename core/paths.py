@@ -43,6 +43,26 @@ class Paths:
                 )
 
         #
+        # macOS - der vom System vorgesehene Ort für Anwendungsdaten.
+        # Bis 5.2 landete der Mac im Fallback unten; wer die App dort
+        # schon aus dem Quellcode laufen hatte, behält seinen Ordner.
+        #
+
+        if system == "Darwin":
+
+            legacy = Path.home() / ".weintcompanion"
+
+            if legacy.is_dir():
+                return legacy
+
+            return (
+                Path.home()
+                / "Library"
+                / "Application Support"
+                / "WeintCompanion"
+            )
+
+        #
         # Fallback
         #
 

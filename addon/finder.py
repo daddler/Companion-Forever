@@ -65,6 +65,14 @@ class WoWFinder:
             Path("D:/Program Files"),
             Path("E:/Program Files (x86)"),
             Path("E:/Program Files"),
+
+            #
+            # macOS - der Blizzard-Installer legt "World of Warcraft"
+            # unter /Applications an.
+            #
+
+            Path("/Applications"),
+            Path.home() / "Applications",
         ]
 
     # --------------------------------------------------
@@ -147,6 +155,15 @@ class WoWFinder:
             for child in directory.iterdir():
 
                 if child.is_symlink():
+                    continue
+
+                #
+                # macOS: in ein App-Bundle (Xcode, Browser, ...) führt
+                # keine WoW-Installation - und hineinzusteigen kostete
+                # unter /Applications Zehntausende Ordner.
+                #
+
+                if child.suffix == ".app":
                     continue
 
                 if not child.is_dir():
