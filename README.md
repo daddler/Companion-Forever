@@ -1,7 +1,7 @@
 # WeintCompanion 5 — Forever Edition
 
 <p align="center">
-  <img src="assets/companion_banner.png" alt="WeintCompanion" width="900">
+  <img src="docs/images/weintcompanion_banner.jpg" alt="WeintCompanion – World of Warcraft: Forever" width="900">
 </p>
 
 <p align="center">
