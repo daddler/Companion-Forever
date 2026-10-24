@@ -46,6 +46,7 @@ Vier Regeln, die nicht nach Geschmack sind:
 from __future__ import annotations
 
 import json
+import shutil
 import os
 import time
 
@@ -266,7 +267,68 @@ class CharacterStore:
 
             return
 
+        self._forever_wipe()
+
         self.adopt_untagged()
+
+    #
+    # 1.0.0: einmal alles weg. Viele haben die Beta gespielt, und deren
+    # Charaktere stehen hier - auf Forever gibt es sie nicht. Die Liste
+    # wird einmal geleert (die alte Datei bleibt als characters.beta.json
+    # liegen) und füllt sich erst mit der ersten Anmeldung in Forever
+    # wieder (`apply()` nimmt nur an, solange `_forever_` gefunden ist).
+    #
+
+    WIPE_KEY = "forever_character_wipe_done"
+
+    def _forever_wipe(self):
+
+        config = getattr(self.manager, "config", None)
+
+        data = getattr(config, "data", None)
+
+        if not isinstance(data, dict) or data.get(self.WIPE_KEY):
+            return
+
+        #
+        # Nur wer von einer Fassung vor der Umstellung kommt (die
+        # zuletzt gesehene Fassung ist höher als diese, z. B. 5.5.0):
+        # eine neue Installation hat nichts aus der Beta.
+        #
+
+        from core.version import VERSION, is_forever_switch
+
+        if not is_forever_switch(data.get("onboarding_seen_version", ""), VERSION):
+            return
+
+        if self.data:
+
+            try:
+                shutil.copy2(self.file, self.file.with_name("characters.beta.json"))
+
+            except OSError:
+                pass
+
+            count = len(self.data)
+
+            self.data = {}
+
+            self.save()
+
+            data["characters_untracked"] = []
+
+            self.manager.logger.info(
+                f"Umstellung auf Forever: {count} Charaktere aus der Beta "
+                "entfernt - die Liste füllt sich mit der ersten Anmeldung in Forever."
+            )
+
+        data[self.WIPE_KEY] = True
+
+        try:
+            config.save()
+
+        except Exception:
+            pass
 
     def save(self):
         """
@@ -451,6 +513,16 @@ class CharacterStore:
         Eintrag zurück, damit der Aufrufer ihn protokollieren kann,
         oder `None`, wenn nichts anzuwenden war.
         """
+
+        #
+        # Erst Forever: solange der Ordner `_forever_` nicht gefunden
+        # ist, stammt jede Meldung aus einer anderen Installation (Beta).
+        #
+
+        state = getattr(self.manager, "state", None)
+
+        if getattr(state, "forever_folder_missing", False):
+            return None
 
         sheet = parse_character_sheet(payload)
 

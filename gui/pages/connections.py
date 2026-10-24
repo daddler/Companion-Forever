@@ -338,11 +338,19 @@ class ConnectionsPage(Page):
             real=False,
         )
 
-        bridge_grid.addWidget(self.calendar_bridge, 0, 0)
-        bridge_grid.addWidget(self.roster_bridge, 0, 1)
-        bridge_grid.addWidget(self.loot_bridge, 1, 0)
-        bridge_grid.addWidget(self.analysis_bridge, 1, 1)
-        bridge_grid.addWidget(self.chat_bridge, 2, 0)
+        #
+        # Seit 1.0.0 ohne die beiden Raid-Brücken (Anmeldungen →
+        # Kalender, WeintTV & Academy): auf Forever wird erst einmal
+        # gelevelt. Die Karten bleiben gebaut (ihre Schalter tragen
+        # die Konfiguration), stehen aber nicht im Raster.
+        #
+
+        self.calendar_bridge.setVisible(False)
+        self.analysis_bridge.setVisible(False)
+
+        bridge_grid.addWidget(self.roster_bridge, 0, 0)
+        bridge_grid.addWidget(self.loot_bridge, 0, 1)
+        bridge_grid.addWidget(self.chat_bridge, 1, 0)
 
         bridge_grid.setColumnStretch(0, 1)
         bridge_grid.setColumnStretch(1, 1)

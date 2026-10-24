@@ -77,7 +77,7 @@ from gui.widgets.hero_banner import HeroButton
 # Vorbereitung sind aus der Spalte, der Bestand ist dazugekommen.
 #
 
-TOUR_EDITION = 5
+TOUR_EDITION = 6
 
 # Das Addon-Repository dieser Fassung (siehe
 # gui/pages/settings_sections/about.py).
@@ -141,9 +141,9 @@ TOUR_PAGES: tuple[TourPage, ...] = (
         "dashboard", "Erste Schritte",
         "So ist das Fenster aufgebaut",
         "Links steht die Navigationsspalte, in zwei Gruppen: SPIEL "
-        "(Übersicht, Meine Charaktere, Bestand, Charakterzuordnung, "
+        "(Übersicht, Meine Charaktere, Bestand, Berufe, "
         "Töne) und "
-        "SYSTEM (Addon & Updates, Verbindungen, Einstellungen, "
+        "SYSTEM (Addon & Updates, Addon-Fehler, Verbindungen, Einstellungen, "
         "Protokoll).\n\n"
         "Auf einem schmalen Fenster klappt die Spalte auf Symbole "
         "zusammen; die Beschriftung wird dann zum Tooltip.\n\n"
@@ -309,18 +309,23 @@ TOUR_PAGES: tuple[TourPage, ...] = (
     ),
 
     TourPage(
-        "charaktere", "Dein Spiel",
-        "Charakterzuordnung",
-        "Der Kalender-Invite im Spiel lädt echte Charakternamen ein. Den "
-        "kennt der Bot aber nur von Spielern, die diese App verknüpft und "
-        "ihre Twinkliste gepflegt haben — für alle anderen schickte er "
-        "den Discord-Namen weiter, und den gibt es im Spiel nicht.\n\n"
-        "Auf dieser Seite trägt die Gildenleitung die fehlenden Namen von "
-        "Hand nach.\n\n"
-        "Ohne die passende Rolle ist die Seite gesperrt und erklärt, "
-        "wofür sie da wäre. Sie verschwindet nicht — ein Bereich, der je "
-        "nach Rolle gar nicht existiert, lässt sich weder erklären noch "
-        "erfragen.",
+        "vorbereitung", "Dein Spiel",
+        "Berufe — wer kann was herstellen",
+        "Unter **Berufe** steht für jeden Charakter, welchen Beruf er auf "
+        "welcher Stufe hat und welche Rezepte er kennt. Die Suche „Wer "
+        "kann das?“ findet ein Rezept über alle Twinks.\n\n"
+        "Rezepte kennt WeintCodex, sobald du im Spiel einmal das "
+        "Berufsfenster geöffnet hast; bis dahin steht dort „Fenster nie "
+        "offen“ und nie „0 Rezepte“.",
+    ),
+
+    TourPage(
+        "changelog", "System",
+        "Addon-Fehler — zum Weiterschicken",
+        "Fängt WeintCodex im Spiel einen eigenen Fehler, steht er unter "
+        "**Addon-Fehler**. Ein Klick auf „Alle kopieren“ legt einen "
+        "fertigen Bericht in die Zwischenablage — den schickst du dem "
+        "Entwickler.",
     ),
 
     # ------------------------------------------------------

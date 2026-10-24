@@ -58,7 +58,7 @@ class DiscordSection(SectionContent):
         super().__init__(
             "EINSTELLUNGEN · DISCORD",
             "Discord",
-            "Verknüpfe deinen Discord-Account für den Raid-Roster-Export.",
+            "Verknüpfe deinen Discord-Account für den Abgleich deiner Charaktere mit dem Bot.",
         )
 
         self.manager = manager
@@ -444,17 +444,15 @@ class DiscordSection(SectionContent):
             if account.get("authorized"):
 
                 self.hint_label.setText(
-                    "Dein Account darf den Raid-Roster automatisch "
-                    "abrufen - Companion übergibt neue Anmeldungen "
-                    "automatisch ans Addon."
+                    "Dein Account ist mit dem Bot verbunden und hat "
+                    "die Rolle der Gildenleitung."
                 )
 
             else:
 
                 self.hint_label.setText(
-                    "Verbunden, aber dieser Account darf den "
-                    "Raid-Roster nicht abrufen (fehlende Rolle). "
-                    "Wende dich an einen Raidlead/Officer."
+                    "Verbunden. Deine Charaktere gleicht die App mit "
+                    "dem Bot ab."
                 )
 
             self.login_button.setText("Erneut verbinden")
@@ -471,7 +469,7 @@ class DiscordSection(SectionContent):
 
             self.hint_label.setText(
                 "Verknüpfe deinen Discord-Account, damit Companion "
-                "deinen Raid-Roster automatisch ans Addon übergeben kann."
+                "deine Charaktere mit dem Bot abgleichen kann."
             )
 
             self.login_button.setText("Mit Discord verbinden")
@@ -560,7 +558,7 @@ class DiscordSection(SectionContent):
 
             self.manager.logger.warning(
                 f"Discord verbunden als {result.get('username')}, "
-                "aber ohne Berechtigung für den Raid-Roster-Export."
+                "ohne Rolle der Gildenleitung."
             )
 
         self.refresh()

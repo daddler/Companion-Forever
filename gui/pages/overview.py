@@ -29,6 +29,8 @@ Zahlen; die Gründe stehen jeweils an Ort und Stelle.
 
 from __future__ import annotations
 
+from core.version import update_label
+
 import threading
 import time
 
@@ -539,6 +541,8 @@ class UpdateRow(QFrame):
         self.note_head.setVisible(bool(note_head))
 
         self.excerpt.setText(excerpt)
+
+        self.install.setText(update_label(installed, available, "Jetzt aktualisieren"))
 
     def set_running(self, running: bool, note: str = ""):
 
@@ -1916,6 +1920,20 @@ class OverviewPage(Page):
 
         config = getattr(self.manager, "config", None)
 
+        #
+        # 1.0.0: ist ein Main gesetzt ("Meine Charaktere", Stern),
+        # grüsst die App immer ihn - der Spieler hat ihn selbst gewählt,
+        # das ist die bessere Antwort als der zuletzt eingeloggte Twink.
+        # Der Schlüssel ist "Name-Realm"; ein Name enthält nie "-".
+        #
+
+        if config is not None:
+
+            main = str(config.data.get("character_main") or "").strip()
+
+            if main:
+                return main.partition("-")[0]
+
         if config is not None:
 
             name = str(
@@ -2100,6 +2118,11 @@ class OverviewPage(Page):
 
         self._open_addon_page()
 
+    def _open_settings_page(self):
+        """Zu Einstellungen → WoW-Client (Ordner `_forever_` wählen)."""
+
+        self.openSettingsSection.emit("wow_client")
+
     def _open_addon_page(self):
         """
         Zu "Addon & Updates" - dorthin, wo Installation, Update und
@@ -2225,6 +2248,24 @@ class OverviewPage(Page):
         # einzige Aufgabe auf "blockierend".
         #
 
+        if getattr(state, "forever_folder_missing", False):
+
+            tasks.append(Task(
+                key="forever-folder",
+                title="Ordner _forever_ nicht gefunden",
+                detail=(
+                    "Die App sucht World of Warcraft: Forever im Ordner "
+                    "_forever_ unter „World of Warcraft“. Ist Forever "
+                    "installiert, wähle den Ordner unter Einstellungen → "
+                    "WoW-Client. Bis dahin arbeitet die App mit "
+                    + (f"„{state.wow_path.name}“." if state.wow_path else "keinem Spielordner.")
+                ),
+                action="Einstellungen",
+                on_action=self._open_settings_page,
+                urgency=URGENCY_DUE,
+                icon="folder",
+            ))
+
         if not state.addon_found:
 
             tasks.append(Task(
@@ -2248,7 +2289,9 @@ class OverviewPage(Page):
                 detail=(
                     f"{state.addon_version} → {state.github_version}"
                 ),
-                action="Jetzt aktualisieren",
+                action=update_label(
+                    state.addon_version, state.github_version, "Jetzt aktualisieren"
+                ),
                 on_action=self._open_addon_page,
                 urgency=URGENCY_DUE,
                 icon="download",
@@ -2263,7 +2306,9 @@ class OverviewPage(Page):
                     f"{state.companion_version} → "
                     f"{state.companion_latest_version}"
                 ),
-                action="Ansehen",
+                action=update_label(
+                    state.companion_version, state.companion_latest_version, "Ansehen"
+                ),
                 on_action=self._open_addon_page,
                 urgency=URGENCY_IDLE,
                 icon="companion",

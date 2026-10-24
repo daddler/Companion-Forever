@@ -280,6 +280,15 @@ def read_changelog_sections(
     upper = parse_version(up_to_version)
     since = parse_version(since_version) if since_version else None
 
+    #
+    # Umstellung auf Forever: die zuletzt gesehene Fassung (5.x) ist
+    # höher als die neue (1.0.0). Eine untere Grenze darüber schlösse
+    # alles aus - gezeigt wird dann nur der Abschnitt der neuen Fassung.
+    #
+
+    if since is not None and since >= upper:
+        since = None
+
     result: list[tuple[str, str]] = []
     started = False
 

@@ -2,6 +2,45 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.0
+
+**Umstellung auf Forever.** WeintCompanion und WeintCodex zählen ab jetzt
+neu: die Companion beginnt bei 1.0.0, WeintCodex bei 1.0.0.0. Deine
+Einstellungen, Backups und dein Discord-Konto bleiben, wie sie sind. Wer
+von einer älteren Fassung kommt, sieht einmal den Knopf „Umstellung auf
+Forever“ – danach laufen Updates wieder ganz normal.
+
+**Berufe aller Charaktere.** Neue Seite *Berufe*: welcher Charakter
+welchen Beruf auf welcher Stufe hat, welche Rezepte er kennt – und eine
+Suche „Wer kann das?“ über alle Twinks. Die Stufe kennt WeintCodex ab
+1.0.0.0, nachdem du dich einmal eingeloggt hast.
+
+**Erst einmal leveln.** Auf Forever wird lange nicht geraidet – die
+Companion räumt deshalb alles Raidbezogene aus dem Weg: die
+Charakterzuordnung für Raid-Einladungen, die Module WeintTV und Academy
+in den Einstellungen und die Brücken „Raid-Anmeldungen → Kalender“ und
+„WeintTV & Academy ingame“ ruhen. Nichts davon ist gelöscht – es kommt
+zurück, wenn es auf Forever Raids gibt.
+
+**Begrüßung mit deinem Main.** Ist ein Main-Charakter gesetzt (bei der
+Einrichtung gefragt oder per Stern unter *Meine Charaktere*), begrüßt
+dich die App immer mit seinem Namen.
+
+**Spielordner `_forever_`.** Die App sucht World of Warcraft: Forever im
+Ordner `_forever_`. Fehlt er, steht ein Hinweis auf der Übersicht; steht
+dein Pfad noch auf einem anderen Ordner (z. B. der Beta) und liegt
+`_forever_` daneben, stellt die App von selbst um.
+
+**Frische Charakterliste für Forever.** Einmalig wird die Liste deiner
+Charaktere geleert – darin standen noch die Charaktere aus der Beta. Sie
+füllt sich wieder, sobald du dich zum ersten Mal in Forever einloggst
+(aus dem Ordner `_forever_`). Die alte Liste bleibt als
+`characters.beta.json` im Einstellungsordner liegen.
+
+**Addon-Fehler zum Kopieren.** Neue Seite *Addon-Fehler*: die Fehler,
+die WeintCodex im Spiel gefangen hat, mit einem Klick als fertiger
+Bericht in der Zwischenablage – zum Weiterschicken an den Entwickler.
+
 ## 5.5.0
 
 **Eigene Töne aus jeder Datei – ohne Zusatzprogramm.** Die Companion

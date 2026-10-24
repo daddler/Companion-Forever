@@ -45,9 +45,10 @@ def test_expected_navigation_order():
         "OVERVIEW",
         "CHARACTERS",
         "INVENTORY",
-        "CHARACTER_LINKS",
+        "PROFESSIONS",
         "SOUNDS",
         "ADDON",
+        "ADDON_ERRORS",
         "CONNECTIONS",
         "SETTINGS",
         "LOGS",
@@ -83,7 +84,7 @@ def test_the_raid_center_rests_and_is_not_in_the_column():
         "Übersicht",
         "Meine Charaktere",
         "Bestand",
-        "Charakterzuordnung",
+        "Berufe",
         "Töne",
     ]
 

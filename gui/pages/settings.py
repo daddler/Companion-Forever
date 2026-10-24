@@ -17,7 +17,7 @@ from .settings_sections.auto_update import AutoUpdateSection
 from .settings_sections.backups import BackupsSection
 from .settings_sections.discord import DiscordSection
 from .settings_sections.general import GeneralSection
-from .settings_sections.modules import ModulesSection
+from .settings_sections.modules import ModulesSection  # noqa: F401 - ruht, siehe SECTIONS
 from .settings_sections.wow_client import WowClientSection
 
 
@@ -26,7 +26,11 @@ SECTIONS = [
     ("general", "Allgemein", GeneralSection),
     ("wow_client", "WoW-Client", WowClientSection),
     ("discord", "Discord", DiscordSection),
-    ("modules", "Module", ModulesSection),
+    #
+    # "Module" (WeintTV, Academy, Kampflog-Quelle) ruht seit 1.0.0 mit
+    # dem Raid Center: auf Forever wird erst einmal gelevelt. Zurück
+    # mit dieser Zeile: ("modules", "Module", ModulesSection),
+    #
     ("auto_update", "Auto-Update", AutoUpdateSection),
     ("backups", "Backups", BackupsSection),
     ("appearance", "Erscheinungsbild", AppearanceSection),

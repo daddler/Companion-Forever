@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QStackedWidget,
     QVBoxLayout,
@@ -66,6 +67,7 @@ STEP_TITLES = (
     "WoW-Ordner",
     "Addon installieren",
     "Discord verbinden",
+    "Main-Charakter",
     "Aussehen wählen",
 )
 
@@ -201,7 +203,7 @@ class SetupWizard(QDialog):
 
         root.setSpacing(tokens.SPACE[3])
 
-        self.step_label = eyebrow_label("1 / 4")
+        self.step_label = eyebrow_label(f"1 / {len(STEP_TITLES)}")
 
         root.addWidget(self.step_label)
 
@@ -214,6 +216,7 @@ class SetupWizard(QDialog):
         self._build_wow_step()
         self._build_addon_step()
         self._build_discord_step()
+        self._build_main_step()
         self._build_appearance_step()
 
         #
@@ -273,6 +276,9 @@ class SetupWizard(QDialog):
         )
 
     def _go_next(self):
+
+        if hasattr(self, "main_input"):
+            self._save_main()
 
         if self._index == len(STEP_TITLES) - 1:
 
@@ -429,8 +435,8 @@ class SetupWizard(QDialog):
         step = _Step(
             "SCHRITT 2",
             "WeintCodex installieren.",
-            "Das Addon bringt WeintTV und die Academy ins Spiel und "
-            "verbindet WoW mit dieser App.",
+            "Das Addon begleitet dich beim Leveln und verbindet WoW "
+            "mit dieser App.",
         )
 
         self.addon_button = QPushButton("Installieren")
@@ -506,8 +512,8 @@ class SetupWizard(QDialog):
         step = _Step(
             "SCHRITT 3",
             "Discord verbinden.",
-            "Verknüpft dein Discord-Konto für den Raid-Roster-Export "
-            "und den Charakter-Abgleich mit dem Bot.",
+            "Verknüpft dein Discord-Konto für den Charakter-Abgleich "
+            "mit dem Bot.",
         )
 
         self.discord_button = QPushButton("Mit Discord verbinden")
@@ -634,10 +640,62 @@ class SetupWizard(QDialog):
     # Schritt 4: Akzent und Dichte
     # --------------------------------------------------
 
-    def _build_appearance_step(self):
+    # --------------------------------------------------
+    # Schritt 4: Main-Charakter (1.0.0)
+    # --------------------------------------------------
+
+    def _build_main_step(self):
+        """
+        Wen die App begrüsst. Gespeichert als `character_main` (wie der
+        Stern unter "Meine Charaktere"); leer lassen geht - dann grüsst
+        die App den zuletzt eingeloggten Charakter.
+        """
 
         step = _Step(
             "SCHRITT 4",
+            "Wer ist dein Main?",
+            "Die App begrüßt dich mit seinem Namen. Am besten mit Realm, "
+            "z. B. Weint-Everlook. Später änderbar über den Stern unter "
+            "„Meine Charaktere“.",
+        )
+
+        step.hide_status()
+
+        self.main_input = QLineEdit()
+
+        self.main_input.setPlaceholderText("Name-Realm")
+
+        self.main_input.setText(
+            str(self.manager.config.data.get("character_main") or "")
+        )
+
+        self.main_input.editingFinished.connect(self._save_main)
+
+        step.action_row.addWidget(self.main_input, 1)
+
+        self.stack.addWidget(step)
+
+        self._steps.append(step)
+
+    def _save_main(self):
+
+        name = self.main_input.text().strip()
+
+        name = name[:1].upper() + name[1:] if name else ""
+
+        config = self.manager.config
+
+        if name == str(config.data.get("character_main") or ""):
+            return
+
+        config.data["character_main"] = name
+
+        config.save()
+
+    def _build_appearance_step(self):
+
+        step = _Step(
+            "SCHRITT 5",
             "Wie soll es aussehen?",
             "Beides lässt sich später in den Einstellungen jederzeit "
             "ändern.",

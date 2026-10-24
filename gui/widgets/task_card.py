@@ -368,8 +368,7 @@ class TaskCard(Card):
         #
 
         self.empty = QLabel(
-            "Nichts offen. Alles, was vor dem Raid zu erledigen wäre, "
-            "ist erledigt."
+            "Nichts offen. Viel Spaß beim Leveln!"
         )
 
         self.empty.setFont(font("small"))

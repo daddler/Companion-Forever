@@ -1,4 +1,5 @@
 import threading
+from pathlib import Path
 import time
 
 from addon.finder import WoWFinder
@@ -476,7 +477,13 @@ class CompanionManager(QObject):
 
         try:
 
-            if self.config.data.get(
+            #
+            # Raid-Anmeldungen → Gilden-Kalender ruht seit 1.0.0 mit
+            # den anderen Raid-Teilen (RAID_FEATURES): auf Forever wird
+            # erst einmal gelevelt.
+            #
+
+            if RAID_FEATURES and self.config.data.get(
                 "roster_sync_enabled",
                 True,
             ):
@@ -667,6 +674,24 @@ class CompanionManager(QObject):
                 self.config.set_wow_path(wow_path)
 
         #
+        # 1.0.0: gesucht wird `_forever_`. Steht der gespeicherte Pfad
+        # auf einem anderen Ordner (z. B. `_classic_beta_` aus der Beta)
+        # und liegt `_forever_` daneben, wird umgestellt. Fehlt er,
+        # bleibt der Pfad stehen - aber die Übersicht weist darauf hin.
+        #
+        wow_path = self._prefer_forever_folder(client, wow_path)
+
+        self.state.forever_folder_missing = bool(client.folder_names) and (
+            wow_path is None
+            or Path(wow_path).name not in client.folder_names
+        )
+
+        if self.state.forever_folder_missing:
+            self.logger.info(
+                f"Der Spielordner {client.folder_names[0]} wurde nicht gefunden."
+            )
+
+        #
         # Ein anderer Pfad heißt eine andere SavedVariables-Datei, in
         # der noch gar nichts steht. Der Merker in AddonAnalysisSync
         # kennt nur den Inhalt, nicht das Ziel - ohne dieses
@@ -708,6 +733,32 @@ class CompanionManager(QObject):
         else:
 
             self.state.addons_path = None
+
+    def _prefer_forever_folder(self, client, wow_path):
+
+        if wow_path is None or not client.folder_names:
+            return wow_path
+
+        wow_path = Path(wow_path)
+
+        if wow_path.name in client.folder_names:
+            return wow_path
+
+        from core.wow_folder import is_installation
+
+        for name in client.folder_names:
+
+            candidate = wow_path.parent / name
+
+            if candidate.is_dir() and is_installation(candidate, client):
+
+                self.logger.info(f"Spielordner auf {candidate} umgestellt.")
+
+                self.config.set_wow_path(candidate)
+
+                return candidate
+
+        return wow_path
 
     # --------------------------------------------------
     # Addon

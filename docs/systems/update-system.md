@@ -25,6 +25,27 @@ call `stop_auto_sync()` **before** it, has to restart auto-sync on
 failure, and quits the process on success. One runner also means one busy
 flag — two pages cannot start two installs into the same folder.
 
+## Umstellung auf Forever (1.0.0): die Zählung beginnt neu
+
+Companion (5.5.0 → 1.0.0) und WeintCodex (6.146.0.0 → 1.0.0.0) zählen
+seit der Umstellung neu. Das trägt, weil **beide Kanäle auf
+Ungleichheit prüfen, nicht auf „höher“** (`versions_equal()` in
+`core/version.py`, `github != addon` in `check_github()`): eine
+installierte 5.5.0 sieht 1.0.0 als Update. Das darf so bleiben - eine
+Umstellung auf „nur höher“ würde jede künftige Neuzählung blockieren.
+
+Ist die angebotene Fassung *kleiner* als die installierte
+(`is_forever_switch()`), heisst der Knopf „Umstellung auf Forever“
+(`update_label()`, Übersicht und *Addon & Updates*). Danach laufen
+Updates wieder aufwärts und der Knopf heisst wie immer. Bestehende
+Companions bis 5.5.0 zeigen ihren alten Knopftext - der steht in ihrem
+Programm; erst 1.0.0 kennt das Wort. Für das Addon (6.146 → 1.0.0.0)
+erscheint es, sobald die Companion selbst auf 1.0.0 ist.
+
+`read_changelog_sections()` zeigt bei einer zuletzt gesehenen Fassung
+über der neuen nur den Abschnitt der neuen (sonst wäre „Was ist neu“
+nach der Umstellung leer).
+
 ## A finished check has to reach the screen by itself
 
 `CompanionManager.state_changed` is emitted at the end of `full_refresh()`

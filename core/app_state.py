@@ -24,6 +24,14 @@ class AppState:
 
     wow_found: bool = False
 
+    #
+    # 1.0.0: der Ordner `_forever_` fehlt - kein Spielordner, oder einer
+    # unter anderem Namen (eine Beta, von Hand gewählt). Die Übersicht
+    # sagt das als Aufgabe.
+    #
+
+    forever_folder_missing: bool = False
+
     wow_path: Path | None = None
 
     addons_path: Path | None = None

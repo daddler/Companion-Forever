@@ -23,6 +23,8 @@ stattdessen ehrlich, was bekannt ist: dass gerade etwas läuft.
 
 from __future__ import annotations
 
+from core.version import update_label
+
 from datetime import datetime
 
 from PySide6.QtCore import Qt
@@ -876,9 +878,11 @@ class AddonPage(Page):
 
             self.addon_card.set_status("UPDATE VERFÜGBAR", "warn")
 
-            self.addon_card.primary_button.setText(
-                f"Auf {state.github_version} aktualisieren"
-            )
+            self.addon_card.primary_button.setText(update_label(
+                state.addon_version,
+                state.github_version,
+                f"Auf {state.github_version} aktualisieren",
+            ))
 
             self.addon_card.primary_button.setEnabled(True)
 
@@ -920,9 +924,11 @@ class AddonPage(Page):
 
             self.companion_card.set_status("UPDATE VERFÜGBAR", "warn")
 
-            self.companion_card.primary_button.setText(
-                f"Auf {state.companion_latest_version} aktualisieren"
-            )
+            self.companion_card.primary_button.setText(update_label(
+                state.companion_version,
+                state.companion_latest_version,
+                f"Auf {state.companion_latest_version} aktualisieren",
+            ))
 
             self.companion_card.primary_button.setEnabled(True)
 

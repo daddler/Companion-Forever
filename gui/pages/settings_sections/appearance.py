@@ -140,8 +140,7 @@ class AppearanceSection(SectionContent):
         density_col.addWidget(
             _description(
                 "Wie viel Luft zwischen den Zeilen steht. Kompakt "
-                "bringt mehr auf einen Bildschirm - für WeintTV mit "
-                "25 Zeilen der Unterschied zwischen Scrollen und nicht."
+                "bringt mehr auf einen Bildschirm."
             )
         )
 

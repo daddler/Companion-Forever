@@ -752,8 +752,7 @@ class CharactersPage(Page):
                         f"unter Stufe {minimum}."
                     ),
                     explanation=(
-                        f"Diese Seite zeigt, womit du in den Raid gehst, "
-                        f"und führt deshalb nur Charaktere ab Stufe "
+                        f"Diese Seite führt nur Charaktere ab Stufe "
                         f"{minimum}. Melde dich einmal mit einem an - "
                         f"danach steht er hier, auch wenn du ihn längere "
                         f"Zeit nicht spielst."
@@ -865,8 +864,7 @@ class CharactersPage(Page):
             text += (
                 f" {hidden} Charakter{'e' if hidden != 1 else ''} unter "
                 f"Stufe {minimum} {'sind' if hidden != 1 else 'ist'} "
-                f"ausgeblendet, damit hier steht, womit du in den Raid "
-                f"gehst."
+                f"ausgeblendet (einstellbar über characters_min_level)."
             )
 
         #

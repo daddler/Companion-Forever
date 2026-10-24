@@ -1,4 +1,4 @@
-VERSION = "5.5.0"
+VERSION = "1.0.0"
 
 
 def parse_version(value):
@@ -44,3 +44,30 @@ def parse_version(value):
 def versions_equal(a, b):
 
     return parse_version(a) == parse_version(b)
+
+
+#
+# Die Umstellung auf Forever (1.0.0): Companion und Addon zählen neu ab
+# 1.0 (vorher 5.5.0 und 6.146.0.0). Ein Update gilt weiter, sobald die
+# Fassungen *verschieden* sind (`versions_equal`), nicht erst, wenn die
+# neue höher ist - deshalb sehen bestehende Installationen 1.0.0 trotz
+# der kleineren Zahl. Ist die angebotene Fassung kleiner als die
+# installierte, ist es genau diese Umstellung, und der Knopf sagt das,
+# statt "aktualisieren" auf eine kleinere Zahl zu schreiben. Danach
+# laufen Updates wieder aufwärts, und der Knopf heisst wie immer.
+#
+
+SWITCH_LABEL = "Umstellung auf Forever"
+
+
+def is_forever_switch(installed, latest) -> bool:
+
+    if not installed or not latest or str(installed).strip() in ("-", ""):
+        return False
+
+    return parse_version(latest) < parse_version(installed)
+
+
+def update_label(installed, latest, default: str) -> str:
+
+    return SWITCH_LABEL if is_forever_switch(installed, latest) else default

@@ -81,7 +81,7 @@ class PageId(IntEnum):
     OVERVIEW = 0
     CHARACTERS = 1
     INVENTORY = 2
-    CHARACTER_LINKS = 3
+    PROFESSIONS = 3
     SOUNDS = 4
 
     #
@@ -89,9 +89,10 @@ class PageId(IntEnum):
     #
 
     ADDON = 5
-    CONNECTIONS = 6
-    SETTINGS = 7
-    LOGS = 8
+    ADDON_ERRORS = 6
+    CONNECTIONS = 7
+    SETTINGS = 8
+    LOGS = 9
 
 
 #
@@ -289,12 +290,13 @@ def build_page_specs() -> tuple[PageSpec, ...]:
     """
 
     from gui.pages.addon import AddonPage
-    from gui.pages.character_links import CharacterLinksPage
+    from gui.pages.addon_errors import AddonErrorsPage
     from gui.pages.characters import CharactersPage
     from gui.pages.connections import ConnectionsPage
     from gui.pages.inventory import InventoryPage
     from gui.pages.logs import LogsPage
     from gui.pages.overview import OverviewPage
+    from gui.pages.professions import ProfessionsPage
     from gui.pages.settings import SettingsPage
     from gui.pages.sounds import SoundsPage
 
@@ -340,22 +342,27 @@ def build_page_specs() -> tuple[PageSpec, ...]:
         ),
 
         #
-        # Die Charakterzuordnung ist Werkzeug der Gildenleitung, steht
-        # aber bei allen in der Spalte: ohne die Rolle antwortet der
-        # Bot mit 403, und dann erklaert die Seite, wofuer sie da
-        # waere. Dieselbe Regel wie im Addon (core/access.lua:
-        # "lock, don't hide").
+        # Neu in 1.0.0: Berufe und Rezepte aller Charaktere, aus dem
+        # Spielstand; Namen aus dem Bestand des installierten Addons.
         #
 
         PageSpec(
-            page_id=PageId.CHARACTER_LINKS,
-            label="Charakterzuordnung",
+            page_id=PageId.PROFESSIONS,
+            label="Berufe",
             group=GROUP_GAME,
-            icon="charaktere",
-            page_factory=CharacterLinksPage,
+            icon="vorbereitung",
+            page_factory=ProfessionsPage,
             scroll=False,
-            attribute="character_links",
+            attribute="professions",
         ),
+
+        #
+        # Die Charakterzuordnung (Raid-Anmeldung → Ingame-Einladung)
+        # ruht seit 1.0.0 wie das Raid Center: auf Forever wird erst
+        # einmal gelevelt. Code und Tests bleiben
+        # (`gui/pages/character_links.py`); zurück mit einem Eintrag in
+        # `PageId` und einem `PageSpec`.
+        #
 
         PageSpec(
             page_id=PageId.SOUNDS,
@@ -373,6 +380,21 @@ def build_page_specs() -> tuple[PageSpec, ...]:
             icon="software",
             page_factory=AddonPage,
             attribute="addon",
+        ),
+
+        #
+        # Neu in 1.0.0: die Fehler, die WeintCodex im Spiel gefangen
+        # hat, zum Kopieren und Weiterschicken.
+        #
+
+        PageSpec(
+            page_id=PageId.ADDON_ERRORS,
+            label="Addon-Fehler",
+            group=GROUP_SYSTEM,
+            icon="changelog",
+            page_factory=AddonErrorsPage,
+            scroll=False,
+            attribute="addon_errors",
         ),
 
         PageSpec(

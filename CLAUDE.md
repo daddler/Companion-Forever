@@ -68,6 +68,15 @@ WeintCodex Bot (Discord bot backend)  ←─────────────
   code and its tests stay. Don't delete it, and don't re-enable it with
   Mists of Pandaria data. Detail: `docs/systems/raid-center.md`,
   *Ruht seit 5.1*. The rule below applies once it is back.
+- **Since 1.0.0 everything raid-shaped rests, too** — Forever starts
+  with levelling. Charakterzuordnung (no nav entry), the settings section
+  "Module" (WeintTV/Academy), the bridges "Raid-Anmeldungen → Kalender"
+  and "WeintTV & Academy ingame" (hidden, `roster_sync` gated by
+  `RAID_FEATURES`). Resting, not deleted; same way back as the Raid Center.
+- **Versions compare on inequality, not "higher".** The 1.0.0 reset
+  (from 5.5.0 / addon 6.146.0.0) relies on it; a lower offered version
+  labels the button „Umstellung auf Forever“ (`core/version.py`).
+  Detail: `docs/systems/update-system.md`.
 - **A raid/pull is the central object; Live, Analyse, Lernen and Quelle
   are four perspectives on it, never four places.** The context header
   lives outside the view stack so it survives a perspective change, and
@@ -155,6 +164,7 @@ Linux/Windows/AppImage build commands.
 | Qt segfaults, startup ordering, platform paths | `docs/architecture/qt-pitfalls.md` |
 | Raid Center (ruht seit 5.1; Informationsarchitektur, vier Ansichten, RaidContext, Tiefenverweise) | `docs/systems/raid-center.md` |
 | Bestand aller Charaktere, Gold, Lua-Leser für SavedVariables | `docs/systems/inventory.md` |
+| Berufe aller Charaktere (`core/professions.py`, Namen aus `data/professions.lua` des installierten Addons), Addon-Fehler (`core/addon_errors.py`, `SavedData.errors`) | Modulkommentare dort; Lader `gui/controllers/saved_loader.py` |
 | WeintTV/Academy (live), ratings, lesson catalog, "wer bin ich", Datenquelle/Quellenzeile/Wegweiser | `docs/systems/weinttv-academy.md` |
 | Archiv-Modus, Wiedergabe/Replay | `docs/systems/archive-and-replay.md` |
 | Addon-/Companion-Updates, Storage-Warnung, Changelog-Anzeige | `docs/systems/update-system.md` |
