@@ -3,315 +3,315 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WeintCompanion herunterladen</title>
-<meta name="description" content="Die Desktop-App für das WoW-Addon WeintCodex – herunterladen und installieren.">
-<meta property="og:title" content="WeintCompanion herunterladen">
-<meta property="og:description" content="Die Desktop-App für WeintCodex – World of Warcraft: Forever.">
-<meta property="og:image" content="https://daddler.github.io/Companion-Forever/banner.jpg">
-<meta name="theme-color" content="#0b0a08">
+<title>WeintCompanion — Die Schaltzentrale für WeintCodex</title>
+<meta name="description" content="WeintCompanion installiert und aktualisiert WeintCodex, sichert deine Installation und verbindet Addon und Gilden-Discord. Für World of Warcraft: Forever.">
+<meta name="theme-color" content="#0c0d0e">
 <link rel="icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0b0a08;
-    --panel: rgba(24, 21, 16, 0.86);
-    --line: rgba(201, 162, 74, 0.28);
-    --line-soft: rgba(255, 255, 255, 0.07);
-    --text: #ece5d6;
-    --muted: #a59c8a;
-    --gold: #d6ab52;
-    --gold-hi: #f3d68c;
-    --gold-lo: #8f6a25;
-    --green: #3fd16a;
-    --violet: #9b6cf0;
-  }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    margin: 0; color: var(--text); background: var(--bg);
-    font: 16px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
-    background-image:
-      radial-gradient(900px 500px at 12% 0%, rgba(63, 209, 106, 0.10), transparent 60%),
-      radial-gradient(900px 600px at 95% 10%, rgba(155, 108, 240, 0.10), transparent 60%);
-    background-attachment: fixed;
-  }
-  a { color: var(--gold-hi); }
-  main { max-width: 960px; margin: 0 auto; padding: 0 16px 64px; }
-
-  /* Banner */
-  .hero { position: relative; margin: 0 -16px; }
-  .hero img { display: block; width: 100%; height: auto; }
-  .hero::after {
-    content: ""; position: absolute; inset: auto 0 0 0; height: 35%;
-    background: linear-gradient(to bottom, transparent, var(--bg));
-  }
-  @media (min-width: 992px) {
-    .hero { margin: 24px 0 0; border-radius: 16px; overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
-  }
-
-  .tagline {
-    text-align: center; margin: 8px auto 28px; max-width: 560px;
-    color: var(--muted); font-size: 17px; position: relative;
-  }
-
-  /* Download */
-  .download { text-align: center; margin-bottom: 56px; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 12px;
-    font: 700 19px/1 Cinzel, Georgia, serif; letter-spacing: 0.04em;
-    color: #1d1405; text-decoration: none;
-    padding: 18px 34px; border-radius: 12px;
-    background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo));
-    border: 1px solid #f7e2a6;
-    box-shadow: 0 0 0 4px rgba(214, 171, 82, 0.15), 0 10px 40px rgba(214, 171, 82, 0.35);
-    transition: transform .15s ease, box-shadow .15s ease;
-  }
-  .btn:hover { transform: translateY(-2px);
-    box-shadow: 0 0 0 5px rgba(214, 171, 82, 0.22), 0 14px 50px rgba(214, 171, 82, 0.5); }
-  .btn svg { width: 22px; height: 22px; flex: none; }
-  .meta { color: var(--muted); font-size: 14px; margin: 14px 0 0; }
-  .platforms {
-    display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px;
-  }
-  .platforms a {
-    color: var(--text); text-decoration: none; font-size: 14px;
-    padding: 8px 14px; border-radius: 999px;
-    border: 1px solid var(--line-soft); background: rgba(255, 255, 255, 0.03);
-  }
-  .platforms a:hover { border-color: var(--line); color: var(--gold-hi); }
-
-  /* Überschriften */
-  h2 {
-    font: 700 24px/1.25 Cinzel, Georgia, serif; letter-spacing: 0.03em;
-    color: var(--gold-hi); text-align: center; margin: 0 0 8px;
-  }
-  .sub { text-align: center; color: var(--muted); margin: 0 auto 24px; max-width: 620px; }
-  .divider {
-    display: flex; align-items: center; gap: 14px; margin: 0 auto 20px; max-width: 280px;
-  }
-  .divider::before, .divider::after {
-    content: ""; flex: 1; height: 1px;
-    background: linear-gradient(to right, transparent, var(--gold), transparent);
-  }
-  .divider span { width: 8px; height: 8px; transform: rotate(45deg);
-    background: var(--green); box-shadow: 0 0 12px var(--green); }
-
-  /* Funktionen */
-  .features {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 14px; margin-bottom: 56px;
-  }
-  .feature {
-    background: var(--panel); border: 1px solid var(--line-soft);
-    border-radius: 14px; padding: 20px;
-  }
-  .feature b { display: block; font-family: Cinzel, Georgia, serif; color: var(--gold-hi);
-    font-size: 16px; margin-bottom: 4px; }
-  .feature p { margin: 0; color: var(--muted); font-size: 14px; }
-
-  /* Anleitung */
-  .guide {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 16px; padding: 28px 24px; margin-bottom: 40px;
-  }
-  .tabs { display: flex; gap: 6px; justify-content: center; margin-bottom: 22px; flex-wrap: wrap; }
-  .tab {
-    font: 600 14px Inter, system-ui, sans-serif; color: var(--muted);
-    background: transparent; border: 1px solid var(--line-soft);
-    padding: 8px 18px; border-radius: 999px; cursor: pointer;
-  }
-  .tab[aria-selected="true"] { color: #1d1405; background: var(--gold); border-color: var(--gold); }
-  .panel[hidden] { display: none; }
-  .steps { list-style: none; counter-reset: s; padding: 0; margin: 0; }
-  .steps li {
-    counter-increment: s; position: relative;
-    padding: 2px 0 18px 52px; min-height: 40px;
-  }
-  .steps li::before {
-    content: counter(s); position: absolute; left: 0; top: 0;
-    width: 34px; height: 34px; border-radius: 50%;
-    display: grid; place-items: center;
-    font: 700 15px Cinzel, Georgia, serif; color: var(--gold-hi);
-    border: 1px solid var(--gold); background: rgba(214, 171, 82, 0.08);
-  }
-  .steps li:not(:last-child)::after {
-    content: ""; position: absolute; left: 17px; top: 38px; bottom: 4px;
-    width: 1px; background: var(--line);
-  }
-  .note {
-    margin-top: 6px; padding: 14px 16px; border-radius: 10px; font-size: 15px;
-    background: rgba(63, 209, 106, 0.06); border: 1px solid rgba(63, 209, 106, 0.25);
-  }
-  .note strong { color: var(--green); }
-  code {
-    font: 13px ui-monospace, SFMono-Regular, Consolas, monospace;
-    background: rgba(0, 0, 0, 0.45); border: 1px solid var(--line-soft);
-    padding: 2px 6px; border-radius: 5px; word-break: break-all; color: var(--gold-hi);
-  }
-  .why { color: var(--muted); font-size: 14px; text-align: center; margin: 22px auto 0; max-width: 640px; }
-
-  footer { text-align: center; color: var(--muted); font-size: 14px; }
-  footer a { color: var(--muted); }
-
-  @media (max-width: 520px) {
-    .btn { font-size: 17px; padding: 16px 22px; }
-    .guide { padding: 22px 16px; }
-    h2 { font-size: 21px; }
-  }
-  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } html { scroll-behavior: auto; } }
+:root {
+  color-scheme: dark;
+  --bg: #0b0d0f;
+  --bg-soft: #101316;
+  --panel: #15191b;
+  --panel-2: #1a1e20;
+  --line: rgba(224, 190, 110, .20);
+  --line-soft: rgba(255,255,255,.085);
+  --text: #f1eee5;
+  --muted: #a7aaa5;
+  --muted-2: #777f7b;
+  --gold: #d7b76b;
+  --gold-hi: #f3dda1;
+  --green: #80c89b;
+  --violet: #a68be8;
+  --serif: "Cinzel", Georgia, serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --width: 1180px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body {
+  margin: 0; background:
+    radial-gradient(950px 620px at 4% 0%, rgba(68, 137, 96, .12), transparent 65%),
+    radial-gradient(780px 640px at 98% 18%, rgba(113, 80, 167, .10), transparent 66%),
+    linear-gradient(180deg, #0b0d0f 0%, #0e1113 48%, #0b0d0f 100%);
+  color: var(--text); font: 15px/1.7 var(--sans); -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+button { font: inherit; }
+.wrap { width: min(var(--width), calc(100% - 44px)); margin: 0 auto; }
+.topbar { position: sticky; top: 0; z-index: 50; border-bottom: 1px solid rgba(255,255,255,.055); background: rgba(10,12,13,.86); backdrop-filter: blur(18px); }
+.nav { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
+.brand { display:flex; align-items:center; gap:13px; text-decoration:none; min-width:0; }
+.brand-mark { width:42px; height:42px; flex:none; border-radius:13px; display:grid; place-items:center; border:1px solid rgba(215,183,107,.38); color:var(--gold-hi); background:linear-gradient(145deg,rgba(215,183,107,.15),rgba(128,200,155,.055)); box-shadow:inset 0 1px rgba(255,255,255,.08),0 0 30px rgba(215,183,107,.05); }
+.brand-mark svg { width:26px; height:26px; }
+.brand-words { display:flex; flex-direction:column; line-height:1.15; gap:5px; }
+.brand-name { font:700 15px/1 var(--serif); letter-spacing:.09em; white-space:nowrap; }
+.brand-sub { font-size:9px; font-weight:600; color:var(--muted-2); letter-spacing:.19em; white-space:nowrap; }
+.navlinks { display:flex; align-items:center; gap:27px; }
+.navlinks a { color:#c4c6bf; font-size:12px; font-weight:600; text-decoration:none; transition:color .18s; }
+.navlinks a:hover { color:var(--gold-hi); }
+.nav-cta { display:inline-flex; gap:9px; align-items:center; color:#17170f!important; background:linear-gradient(135deg,#f0d58f,#c49a49); padding:11px 15px; border-radius:9px; box-shadow:0 4px 22px rgba(215,183,107,.13); }
+.nav-cta svg { width:15px; height:15px; }
+.mobile-menu { display:none; }
+/* Banner artwork */
+.banner-shell { margin-top:30px; position:relative; border:1px solid rgba(215,183,107,.27); border-radius:18px; padding:5px; background:linear-gradient(135deg,rgba(215,183,107,.1),rgba(255,255,255,.018) 40%,rgba(128,200,155,.08)); box-shadow:0 28px 90px rgba(0,0,0,.44),0 0 60px rgba(77,98,74,.07); overflow:hidden; }
+.banner-shell::before { content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit; background:linear-gradient(115deg,rgba(243,221,161,.10),transparent 25%,transparent 75%,rgba(166,139,232,.07)); z-index:1; }
+.banner-img { display:block; width:100%; height:auto; border-radius:13px; }
+.banner-caption { position:absolute; z-index:2; left:22px; bottom:18px; display:flex; align-items:center; gap:9px; border:1px solid rgba(255,255,255,.14); background:rgba(10,12,13,.62); backdrop-filter:blur(8px); padding:8px 12px; border-radius:999px; color:#ddd9cf; font-size:10px; letter-spacing:.14em; text-transform:uppercase; }
+.live-dot { width:7px; height:7px; display:inline-block; background:var(--green); border-radius:50%; box-shadow:0 0 12px rgba(128,200,155,.85); }
+.hero-intro { display:grid; grid-template-columns:1.15fr .85fr; gap:44px; align-items:center; padding:49px 12px 54px; }
+.eyebrow { color:var(--green); text-transform:uppercase; font-weight:700; letter-spacing:.2em; font-size:10px; display:flex; align-items:center; gap:10px; margin:0 0 16px; }
+.eyebrow::before { content:""; height:1px; width:25px; background:var(--green); box-shadow:0 0 9px rgba(128,200,155,.42); }
+h1,h2,h3,p { margin-top:0; }
+h1 { margin-bottom:16px; max-width:680px; font:600 clamp(34px,4.1vw,54px)/1.1 var(--serif); letter-spacing:-.035em; }
+h1 .accent { color:var(--gold-hi); text-shadow:0 0 35px rgba(215,183,107,.13); }
+.lead { color:#afb4af; max-width:610px; font-size:15px; line-height:1.85; margin:0; }
+.cta-row { display:flex; flex-wrap:wrap; gap:12px; margin-top:27px; }
+.btn { display:inline-flex; justify-content:center; align-items:center; gap:11px; min-height:48px; border-radius:10px; padding:0 19px; font-size:13px; font-weight:700; text-decoration:none; transition:transform .18s,border-color .18s,box-shadow .18s; }
+.btn:hover { transform:translateY(-2px); }
+.btn-primary { color:#17170f; background:linear-gradient(135deg,#f0d995,#c7a14d); border:1px solid #f2dc9b; box-shadow:0 8px 28px rgba(197,154,70,.17), inset 0 1px rgba(255,255,255,.28); }
+.btn-primary:hover { box-shadow:0 12px 35px rgba(197,154,70,.27); }
+.btn-secondary { color:#e8e6dd; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.14); }
+.btn-secondary:hover { border-color:rgba(215,183,107,.4); }
+.btn svg { width:17px; height:17px; flex:none; }
+.hero-footnote { margin-top:13px; font-size:11px; color:var(--muted-2); }
+.hero-footnote span { color:var(--green); }
+.download-card { position:relative; padding:25px; border:1px solid var(--line); border-radius:15px; background:linear-gradient(145deg,rgba(30,34,34,.96),rgba(18,21,22,.96)); box-shadow:inset 0 1px rgba(255,255,255,.04),0 25px 60px rgba(0,0,0,.25); }
+.download-card::before { content:""; position:absolute; width:120px; height:120px; top:-1px; right:-1px; border-radius:0 15px 0 100%; background:radial-gradient(circle at top right,rgba(128,200,155,.09),transparent 68%); pointer-events:none; }
+.card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:19px; }
+.card-top h2 { font:600 18px/1.35 var(--serif); margin:0 0 5px; }
+.card-top p { color:var(--muted); font-size:11px; margin:0; }
+.latest-pill { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; color:#a9d8b6; border:1px solid rgba(128,200,155,.22); background:rgba(128,200,155,.07); border-radius:999px; padding:5px 8px; font-size:9px; letter-spacing:.06em; text-transform:uppercase; }
+.latest-pill::before { content:""; width:5px; height:5px; background:var(--green); border-radius:50%; }
+.main-download { width:100%; }
+.platform-list { margin-top:17px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.platform { cursor:pointer; text-decoration:none; display:flex; flex-direction:column; gap:5px; align-items:center; justify-content:center; min-height:77px; border-radius:10px; border:1px solid var(--line-soft); background:rgba(255,255,255,.018); color:#deded5; transition:background .18s,border-color .18s,transform .18s; }
+.platform:hover,.platform.is-detected { background:rgba(128,200,155,.06); border-color:rgba(128,200,155,.42); transform:translateY(-1px); }
+.platform svg { width:21px; height:21px; color:#b8c2b9; }
+.platform.is-detected svg { color:var(--green); }
+.platform strong { font-size:10px; font-weight:600; }
+.platform small { color:var(--muted-2); font-size:9px; }
+.divider { display:flex; align-items:center; gap:14px; width:160px; margin:0 auto 18px; }
+.divider::before,.divider::after { content:""; flex:1; height:1px; background:linear-gradient(90deg,transparent,rgba(215,183,107,.6),transparent); }
+.divider span { width:6px; height:6px; transform:rotate(45deg); border:1px solid var(--gold); background:var(--green); box-shadow:0 0 11px rgba(128,200,155,.45); }
+.section { padding:59px 0; border-top:1px solid rgba(255,255,255,.055); }
+.section-head { text-align:center; margin:0 auto 33px; max-width:700px; }
+.section-kicker { color:var(--muted-2); font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; margin:0 0 9px; }
+h2.section-title { font:600 clamp(24px,3vw,34px)/1.25 var(--serif); letter-spacing:-.02em; margin:0 0 11px; }
+.section-title em { color:var(--gold-hi); font-style:normal; }
+.section-desc { color:var(--muted); font-size:13px; max-width:610px; margin:0 auto; }
+.feature-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.feature { min-height:200px; padding:22px 19px; border:1px solid var(--line-soft); border-radius:13px; background:linear-gradient(150deg,rgba(26,30,31,.94),rgba(17,20,21,.91)); transition:transform .18s,border-color .18s,background .18s; }
+.feature:hover { transform:translateY(-3px); border-color:rgba(215,183,107,.33); background:linear-gradient(150deg,rgba(33,38,37,.98),rgba(17,20,21,.95)); }
+.iconbox { width:39px; height:39px; display:grid; place-items:center; border:1px solid rgba(215,183,107,.22); border-radius:11px; color:var(--gold-hi); background:rgba(215,183,107,.055); margin-bottom:17px; }
+.iconbox svg { width:20px; height:20px; }
+.feature h3 { font:600 13px/1.35 var(--serif); margin:0 0 8px; color:#ece5d4; }
+.feature p { color:var(--muted); font-size:11px; line-height:1.75; margin:0; }
+.ecosystem { display:grid; grid-template-columns:1fr 54px 1fr 54px 1fr; align-items:stretch; gap:0; }
+.eco-card { position:relative; overflow:hidden; border:1px solid var(--line-soft); background:linear-gradient(150deg,#171b1c,#101314); border-radius:14px; min-height:185px; padding:23px 21px; }
+.eco-card::after { position:absolute; content:""; width:130px; height:130px; right:-65px; bottom:-75px; border-radius:50%; background:var(--glow,rgba(215,183,107,.08)); filter:blur(10px); }
+.eco-card.codex { --glow:rgba(128,200,155,.13); }
+.eco-card.companion { border-color:rgba(215,183,107,.31); --glow:rgba(215,183,107,.14); }
+.eco-card.discord { --glow:rgba(166,139,232,.13); }
+.eco-symbol { width:44px; height:44px; display:grid; place-items:center; border-radius:12px; margin-bottom:17px; color:var(--gold-hi); background:rgba(215,183,107,.07); border:1px solid rgba(215,183,107,.20); }
+.eco-card.codex .eco-symbol { color:var(--green); border-color:rgba(128,200,155,.22); background:rgba(128,200,155,.06); }
+.eco-card.discord .eco-symbol { color:var(--violet); border-color:rgba(166,139,232,.22); background:rgba(166,139,232,.06); }
+.eco-symbol svg { width:22px; height:22px; }
+.eco-card h3 { font:600 15px var(--serif); margin:0 0 7px; }
+.eco-card p { color:var(--muted); font-size:11px; line-height:1.7; margin:0; }
+.eco-link { display:grid; place-items:center; color:var(--gold); position:relative; }
+.eco-link::before { content:""; position:absolute; width:100%; top:50%; height:1px; background:linear-gradient(90deg,rgba(215,183,107,.12),rgba(215,183,107,.62),rgba(166,139,232,.22)); }
+.eco-link span { z-index:1; width:29px; height:29px; display:grid; place-items:center; border:1px solid rgba(215,183,107,.32); border-radius:50%; background:#121516; box-shadow:0 0 20px rgba(215,183,107,.06); }
+.eco-link svg { width:14px; height:14px; }
+.eco-note { text-align:center; font-size:11px; color:var(--muted-2); margin:20px auto 0; }
+.guide-layout { display:grid; grid-template-columns:.68fr 1.32fr; gap:22px; align-items:start; }
+.guide-aside { padding:25px; border-radius:14px; border:1px solid var(--line); background:linear-gradient(150deg,rgba(30,34,33,.78),rgba(17,20,21,.94)); }
+.guide-aside .eyebrow { font-size:9px; }
+.guide-aside h3 { font:600 19px/1.35 var(--serif); margin:0 0 10px; }
+.guide-aside p { color:var(--muted); font-size:12px; margin:0 0 20px; }
+.aside-list { list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+.aside-list li { display:flex; align-items:center; gap:10px; color:#d1d4cc; font-size:11px; }
+.check { display:grid; place-items:center; width:19px; height:19px; border-radius:6px; border:1px solid rgba(128,200,155,.24); color:var(--green); background:rgba(128,200,155,.055); flex:none; }
+.check svg { width:12px; height:12px; }
+.guide { border:1px solid var(--line-soft); border-radius:14px; padding:24px; background:rgba(18,21,22,.8); }
+.tabs { display:flex; flex-wrap:wrap; gap:7px; border-bottom:1px solid var(--line-soft); padding-bottom:16px; margin-bottom:21px; }
+.tab { cursor:pointer; border:1px solid transparent; border-radius:8px; padding:8px 12px; background:transparent; color:var(--muted); font-size:11px; font-weight:600; }
+.tab[aria-selected="true"] { background:rgba(215,183,107,.09); border-color:rgba(215,183,107,.25); color:var(--gold-hi); }
+.panel[hidden] { display:none; }
+.steps { list-style:none; margin:0; padding:0; counter-reset:steps; display:grid; gap:17px; }
+.steps li { counter-increment:steps; position:relative; padding-left:45px; min-height:31px; font-size:12px; line-height:1.8; color:#d0d2cb; }
+.steps li::before { content:counter(steps,decimal-leading-zero); position:absolute; left:0; top:1px; width:31px; height:31px; border-radius:9px; display:grid; place-items:center; color:var(--gold-hi); background:rgba(215,183,107,.065); border:1px solid rgba(215,183,107,.26); font:600 10px var(--serif); }
+.steps strong { color:#eee5d0; }
+code { font:11px ui-monospace,SFMono-Regular,Consolas,monospace; color:var(--gold-hi); background:rgba(0,0,0,.3); border:1px solid var(--line-soft); border-radius:5px; padding:3px 5px; word-break:break-word; }
+.note { margin-top:20px; border-left:2px solid var(--green); border-radius:0 9px 9px 0; padding:13px 15px; background:rgba(128,200,155,.055); color:var(--muted); font-size:11px; line-height:1.75; }
+.note strong { color:var(--green); }
+.source-note { color:var(--muted-2); font-size:10px; line-height:1.7; margin:19px 0 0; }
+.final-cta { padding:39px 34px; border:1px solid rgba(215,183,107,.27); border-radius:16px; display:flex; align-items:center; justify-content:space-between; gap:30px; background:radial-gradient(500px 260px at 100% 50%,rgba(166,139,232,.08),transparent 65%),radial-gradient(500px 260px at 0 50%,rgba(128,200,155,.08),transparent 65%),linear-gradient(120deg,#171b1c,#111415); box-shadow:inset 0 1px rgba(255,255,255,.035); }
+.final-cta h2 { font:600 clamp(22px,2.8vw,31px)/1.25 var(--serif); margin:0 0 9px; }
+.final-cta p { color:var(--muted); font-size:12px; margin:0; }
+footer { margin-top:60px; padding:28px 0 32px; border-top:1px solid rgba(255,255,255,.06); color:var(--muted-2); font-size:11px; }
+.footer-inner { display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.footer-brand { display:flex; gap:10px; align-items:center; color:#d4d0c7; }
+.footer-brand span { font:600 11px var(--serif); letter-spacing:.1em; }
+.footer-links { display:flex; flex-wrap:wrap; gap:19px; }
+footer a { color:#a9ada6; text-decoration:none; }
+footer a:hover { color:var(--gold-hi); }
+.footer-copy { text-align:right; }
+@media (max-width:900px) {
+ .navlinks { gap:16px; }
+ .hero-intro { grid-template-columns:1fr; gap:27px; padding-top:38px; }
+ .download-card { max-width:none; }
+ .feature-grid { grid-template-columns:repeat(2,1fr); }
+ .guide-layout { grid-template-columns:1fr; }
+ .guide-aside { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:center; }
+ .guide-aside h3 { grid-column:1/-1; margin-bottom:-14px; }
+ .guide-aside p { margin-bottom:0; }
+}
+@media (max-width:680px) {
+ .wrap { width:min(var(--width),calc(100% - 28px)); }
+ .nav { min-height:66px; }
+ .navlinks a:not(.nav-cta) { display:none; }
+ .brand-mark { width:37px; height:37px; }
+ .brand-name { font-size:12px; }
+ .brand-sub { font-size:8px; }
+ .nav-cta { padding:10px 11px; font-size:11px!important; }
+ .banner-shell { margin-top:16px; padding:3px; border-radius:12px; }
+ .banner-img { border-radius:9px; }
+ .banner-caption { left:10px; bottom:10px; font-size:8px; padding:6px 9px; }
+ .hero-intro { padding:33px 3px 39px; }
+ h1 { font-size:35px; }
+ .lead { font-size:13px; }
+ .download-card { padding:19px; }
+ .card-top h2 { font-size:16px; }
+ .latest-pill { display:none; }
+ .platform-list { gap:5px; }
+ .platform { min-height:72px; }
+ .section { padding:45px 0; }
+ .feature-grid { grid-template-columns:1fr 1fr; gap:8px; }
+ .feature { min-height:185px; padding:17px 14px; }
+ .feature h3 { font-size:12px; }
+ .feature p { font-size:10px; }
+ .ecosystem { grid-template-columns:1fr; gap:8px; }
+ .eco-card { min-height:0; display:grid; grid-template-columns:46px 1fr; column-gap:13px; padding:17px; }
+ .eco-symbol { grid-row:span 2; margin:0; }
+ .eco-card h3 { align-self:end; margin-bottom:3px; }
+ .eco-card p { align-self:start; }
+ .eco-link { height:23px; transform:rotate(90deg); }
+ .guide-aside { display:block; padding:20px; }
+ .guide-aside h3 { margin-bottom:10px; }
+ .guide-aside p { margin-bottom:18px; }
+ .guide { padding:17px; }
+ .tabs { gap:4px; }
+ .tab { padding:8px 10px; }
+ .final-cta { padding:25px 20px; display:block; }
+ .final-cta .btn { margin-top:18px; }
+ .footer-inner { align-items:flex-start; flex-direction:column; }
+ .footer-copy { text-align:left; }
+}
+@media (prefers-reduced-motion:reduce) { html{scroll-behavior:auto} *{transition:none!important} }
 </style>
 </head>
 <body>
-
-<main>
-
-<div class="hero">
-  <img src="banner.jpg" width="1400" height="706"
-       alt="WeintCompanion – World of Warcraft: Forever – Das Gilden-Ökosystem">
-</div>
-
-<p class="tagline">
-  Installiert und aktualisiert WeintCodex mit einem Klick, sichert deine
-  Einstellungen und verbindet das Addon mit dem Gilden-Discord.
-</p>
-
-<section class="download">
-  <a id="main-btn" class="btn" href="#alle">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 3v12"/><path d="m6 10 6 6 6-6"/><path d="M4 20h16"/>
-    </svg>
-    <span id="main-label">Herunterladen</span>
-  </a>
-  <p class="meta" id="main-hint">Immer die neueste Version · kostenlos</p>
-  <div class="platforms" id="alle">
-    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-Setup.exe">Windows</a>
-    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-macOS.dmg">macOS (Apple M1 und neuer)</a>
-    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-x86_64.AppImage">Linux</a>
+<header class="topbar">
+  <div class="wrap nav">
+    <a class="brand" href="#start" aria-label="WeintCompanion Startseite">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><path d="M12 2 15 7 21 9 17 13 18 20 12 17 6 20 7 13 3 9 9 7 12 2Z"/><path d="M12 7v10M8 10l4 2 4-2"/><circle cx="12" cy="12" r="8.7" opacity=".38"/></svg></span>
+      <span class="brand-words"><span class="brand-name">WEINTCOMPANION</span><span class="brand-sub">FOREVER EDITION</span></span>
+    </a>
+    <nav class="navlinks" aria-label="Hauptnavigation">
+      <a href="#funktionen">Funktionen</a><a href="#oekosystem">Ökosystem</a><a href="#installation">Installation</a>
+      <a href="https://github.com/daddler/Companion-Forever" target="_blank" rel="noreferrer">GitHub ↗</a>
+      <a class="nav-cta" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg>Download</a>
+    </nav>
   </div>
-</section>
+</header>
+<main id="start" class="wrap">
+  <section class="banner-shell" aria-label="WeintCompanion Banner">
+    <img class="banner-img" src="banner.jpg" alt="WeintCompanion — World of Warcraft: Forever — Das Gilden-Ökosystem" width="1776" height="896">
+    <div class="banner-caption"><span class="live-dot"></span> Die Companion für WeintCodex</div>
+  </section>
 
-<section class="features" aria-label="Funktionen">
-  <div class="feature"><b>Addon mit einem Klick</b>
-    <p>Findet dein WoW, installiert WeintCodex und hält es aktuell.</p></div>
-  <div class="feature"><b>Automatische Backups</b>
-    <p>Deine Einstellungen werden vor jedem Update gesichert.</p></div>
-  <div class="feature"><b>Discord-Anbindung</b>
-    <p>Verbindet Addon und Gilden-Bot – ohne Kopieren von Dateien.</p></div>
-  <div class="feature"><b>Aktualisiert sich selbst</b>
-    <p>Neue Versionen kommen direkt in der App, ohne erneuten Download.</p></div>
-</section>
-
-<section class="guide" aria-labelledby="guide-title">
-  <h2 id="guide-title">Der erste Start</h2>
-  <div class="divider"><span></span></div>
-  <p class="sub">
-    Dein Computer fragt beim ersten Öffnen einmal nach, ob du WeintCompanion
-    vertraust. Das ist normal – so kommst du in einer Minute weiter.
-  </p>
-
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-win" aria-controls="win" aria-selected="true">Windows</button>
-    <button class="tab" role="tab" id="tab-mac" aria-controls="mac" aria-selected="false">macOS</button>
-    <button class="tab" role="tab" id="tab-linux" aria-controls="linux" aria-selected="false">Linux</button>
-  </div>
-
-  <div class="panel" id="win" role="tabpanel" aria-labelledby="tab-win">
-    <ol class="steps">
-      <li>Öffne <code>WeintCompanion-Setup.exe</code> aus deinen Downloads.</li>
-      <li>Erscheint „Der Computer wurde durch Windows geschützt“: klicke auf
-        <strong>Weitere Informationen</strong> und dann auf <strong>Trotzdem ausführen</strong>.</li>
-      <li>Folge dem Installer – fertig. Updates kommen ab jetzt in der App.</li>
-    </ol>
-    <div class="note">
-      <strong>Download blockiert oder Datei verschwunden?</strong>
-      Dein Virenscanner hat sie vorsichtshalber in Quarantäne geschoben. Im
-      Browser kannst du unter den Downloads <em>Beibehalten</em> wählen; bei
-      Windows Defender stellst du sie unter <em>Windows-Sicherheit → Viren- &amp;
-      Bedrohungsschutz → Schutzverlauf</em> wieder her. Bitte schalte den
-      Virenscanner dafür <strong>nicht</strong> ab – frag im Zweifel im Discord.
+  <section class="hero-intro" aria-labelledby="main-title">
+    <div>
+      <p class="eyebrow">Eine Verbindung. Ein Ökosystem.</p>
+      <h1 id="main-title">Weniger verwalten.<br><span class="accent">Mehr spielen.</span></h1>
+      <p class="lead">WeintCompanion hält WeintCodex aktuell, schützt deine Installation mit Backups und verbindet das Addon mit eurem Gilden-Discord. Alles an einem Ort — ohne manuelles Kopieren und ohne unnötige Umwege.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg>Jetzt herunterladen</a>
+        <a class="btn btn-secondary" href="https://github.com/daddler/Companion-Forever" target="_blank" rel="noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>Quellcode ansehen</a>
+      </div>
+      <p class="hero-footnote"><span>●</span> Kostenlos · Open Source · Windows, macOS und Linux</p>
     </div>
-  </div>
+    <aside class="download-card" id="download" aria-labelledby="download-title">
+      <div class="card-top"><div><h2 id="download-title">Dein Abenteuer beginnt hier.</h2><p>Wähle dein Betriebssystem für den passenden Download.</p></div><span class="latest-pill">Latest Release</span></div>
+      <a id="main-download" class="btn btn-primary main-download" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-x86_64.AppImage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg><span id="main-download-label">Für Linux herunterladen</span></a>
+      <div class="platform-list" aria-label="Weitere Plattformen">
+        <a class="platform" data-os="win" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-Setup.exe"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.1 10.7 4v7.1H3V5.1Zm8.7-1.3L21 2.5v8.6h-9.3V3.8ZM3 12.3h7.7v7.1L3 18.3v-6Zm8.7 0H21v8.7l-9.3-1.3v-7.4Z"/></svg><strong>Windows</strong><small>Setup.exe</small></a>
+        <a class="platform" data-os="mac" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-macOS.dmg"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.2c.02 2.16 1.9 2.88 1.92 2.9-.02.05-.3 1.05-.99 2.08-.6.9-1.23 1.8-2.22 1.82-.97.02-1.28-.58-2.4-.58-1.1 0-1.45.56-2.36.6-.95.04-1.67-.98-2.28-1.88-1.24-1.8-2.18-5.08-.91-7.3.63-1.1 1.75-1.8 2.97-1.82.93-.02 1.8.63 2.38.63.57 0 1.63-.78 2.75-.67.47.02 1.8.19 2.66 1.43-.07.04-1.59.92-1.57 2.8ZM14.6 5.76c.5-.6.85-1.42.75-2.24-.73.03-1.62.49-2.14 1.09-.47.53-.88 1.36-.77 2.16.81.06 1.66-.41 2.16-1.01Z"/></svg><strong>macOS</strong><small>Apple Silicon</small></a>
+        <a class="platform" data-os="linux" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-x86_64.AppImage"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v2.2c-1.2.8-2 2.15-2 3.8 0 2.5 1.5 4.8 3.5 5.6L8 21h8l-.5-2.4c2-.8 3.5-3.1 3.5-5.6 0-1.65-.8-3-2-3.8V7a5 5 0 0 0-5-5Zm-2 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm4 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2ZM9 12h6v2H9v-2Z"/></svg><strong>Linux</strong><small>AppImage</small></a>
+      </div>
+      <p class="hero-footnote" style="margin-bottom:0">Der Download führt immer zur neuesten veröffentlichten Version.</p>
+    </aside>
+  </section>
 
-  <div class="panel" id="mac" role="tabpanel" aria-labelledby="tab-mac" hidden>
-    <ol class="steps">
-      <li>Öffne <code>WeintCompanion-macOS.dmg</code> und zieh WeintCompanion in den
-        Ordner <strong>Programme</strong>.</li>
-      <li>Starte WeintCompanion. macOS meldet, dass es nicht geöffnet werden kann –
-        klicke auf <strong>Fertig</strong> (nicht „In den Papierkorb“).</li>
-      <li>Öffne <strong>Systemeinstellungen → Datenschutz &amp; Sicherheit</strong>,
-        scrolle nach unten und klicke bei WeintCompanion auf <strong>Dennoch öffnen</strong>.
-        Bestätige mit deinem Passwort.</li>
-    </ol>
-    <div class="note">
-      <strong>Klappt das nicht?</strong> Öffne das Programm <em>Terminal</em>, füge
-      diese Zeile ein und drück Enter:<br>
-      <code>xattr -cr /Applications/WeintCompanion.app</code><br>
-      Danach startet WeintCompanion normal. Intel-Macs werden leider nicht unterstützt.
+  <section class="section" id="funktionen" aria-labelledby="features-title">
+    <div class="section-head"><p class="section-kicker">Alles Wichtige. An einem Ort.</p><h2 class="section-title" id="features-title">Dein Codex. <em>Unter Kontrolle.</em></h2><div class="divider"><span></span></div><p class="section-desc">Die alltägliche Verwaltung läuft im Hintergrund. Du behältst den Überblick — die Companion kümmert sich um den Rest.</p></div>
+    <div class="feature-grid">
+      <article class="feature"><div class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg></div><h3>Installation mit einem Klick</h3><p>Erkennt den WoW-Ordner und legt WeintCodex am richtigen Ort ab — ohne manuelle Dateisuche.</p></article>
+      <article class="feature"><div class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9Z"/><path d="M8 5V3h8v2M8 10h8M8 14h5"/><path d="m16 16 1.5 1.5L20 15"/></svg></div><h3>Backups vor Updates</h3><p>Vor einer Aktualisierung werden vorhandene Dateien gesichert, damit du bei Problemen nicht bei null anfängst.</p></article>
+      <article class="feature"><div class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 1M4 17l2 1a7 7 0 0 0 12.4-3"/></svg></div><h3>Updates ohne Umwege</h3><p>Prüft auf neue Releases und installiert Aktualisierungen direkt über die Companion.</p></article>
+      <article class="feature"><div class="iconbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg></div><h3>Verbindung zu Discord</h3><p>Verknüpft dein Konto und überträgt ausgewählte Gildendaten zwischen Addon und Bot.</p></article>
     </div>
-  </div>
+  </section>
 
-  <div class="panel" id="linux" role="tabpanel" aria-labelledby="tab-linux" hidden>
-    <ol class="steps">
-      <li>Rechtsklick auf <code>WeintCompanion-x86_64.AppImage</code> → <em>Eigenschaften</em>
-        → „Als Programm ausführen“ erlauben (oder
-        <code>chmod +x WeintCompanion-x86_64.AppImage</code>).</li>
-      <li>Doppelklick zum Starten – fertig.</li>
-    </ol>
-  </div>
+  <section class="section" id="oekosystem" aria-labelledby="eco-title">
+    <div class="section-head"><p class="section-kicker">Drei Bausteine. Ein gemeinsames Ziel.</p><h2 class="section-title" id="eco-title">Das <em>Weint-Ökosystem.</em></h2><div class="divider"><span></span></div><p class="section-desc">Im Spiel, auf dem Desktop und im Gilden-Discord — jeder Baustein übernimmt eine Aufgabe und arbeitet mit den anderen zusammen.</p></div>
+    <div class="ecosystem">
+      <article class="eco-card codex"><div class="eco-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Z"/><path d="M4 5.5V21M8 7h8M8 11h7"/></svg></div><h3>WeintCodex</h3><p>Das Addon im Spiel: Leveln, Charaktere, Berufe, Gruppencheck und Gildeninformationen.</p></article>
+      <div class="eco-link" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span></div>
+      <article class="eco-card companion"><div class="eco-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4M7 8h10M7 12h5"/></svg></div><h3>WeintCompanion</h3><p>Die Schaltzentrale: Installation, Updates, Backups und die Verbindung zwischen den Systemen.</p></article>
+      <div class="eco-link" aria-hidden="true"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span></div>
+      <article class="eco-card discord"><div class="eco-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7.5c2.6-1 5.4-1 8 0l2.2 9A13 13 0 0 1 14 19l-.8-1.5M10 17.5 9.2 19a13 13 0 0 1-4.2-2.5l2.2-9"/><path d="M9 12h.01M15 12h.01M9 14.5a5 5 0 0 0 6 0"/></svg></div><h3>WeintCodex Bot</h3><p>Der Gilden-Bot in Discord: Termine, Anmeldungen und gemeinsame Abläufe für eure Gruppe.</p></article>
+    </div>
+    <p class="eco-note">Die Synchronisierung erfolgt über die vorgesehenen Verknüpfungen und Daten-Bridges.</p>
+  </section>
 
-  <p class="why">
-    Warum die Nachfrage? WeintCompanion ist ein Gildenprojekt. Das Zertifikat,
-    mit dem Windows und macOS ein Programm sofort als „bekannt“ einstufen,
-    kostet jedes Jahr Hunderte Euro. Der Quellcode ist öffentlich auf GitHub einsehbar.
-  </p>
-</section>
+  <section class="section" id="installation" aria-labelledby="guide-title">
+    <div class="section-head"><p class="section-kicker">Schnell startklar</p><h2 class="section-title" id="guide-title">Einmal einrichten. <em>Dann los.</em></h2><div class="divider"><span></span></div><p class="section-desc">Wähle dein Betriebssystem. Die Companion ist in wenigen Schritten startbereit.</p></div>
+    <div class="guide-layout">
+      <aside class="guide-aside"><p class="eyebrow">Was dich erwartet</p><h3>Kein kompliziertes Setup.</h3><p>WeintCompanion ist ein Gildenprojekt. Beim ersten Start kann dein Betriebssystem eine Sicherheitswarnung anzeigen, weil die App nicht mit einem kostenpflichtigen Publisher-Zertifikat signiert ist.</p><ul class="aside-list"><li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>Quellcode öffentlich auf GitHub</li><li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>Direkte Links zu den Releases</li><li><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>Kein separater Addon-Manager nötig</li></ul></aside>
+      <div class="guide">
+        <div class="tabs" role="tablist" aria-label="Installationsanleitung">
+          <button class="tab" role="tab" id="tab-win" aria-controls="panel-win" aria-selected="false">Windows</button>
+          <button class="tab" role="tab" id="tab-mac" aria-controls="panel-mac" aria-selected="false">macOS</button>
+          <button class="tab" role="tab" id="tab-linux" aria-controls="panel-linux" aria-selected="true">Linux</button>
+        </div>
+        <div class="panel" id="panel-win" role="tabpanel" aria-labelledby="tab-win" hidden><ol class="steps"><li>Lade <code>WeintCompanion-Setup.exe</code> herunter und öffne die Datei.</li><li>Wenn Windows „Der Computer wurde durch Windows geschützt“ meldet, prüfe die Herkunft. Wenn du der offiziellen GitHub-Release-Datei vertraust, wähle <strong>Weitere Informationen</strong> und danach <strong>Trotzdem ausführen</strong>.</li><li>Folge dem Installationsassistenten. Danach öffnest du WeintCompanion wie jedes andere Programm.</li></ol><div class="note"><strong>Wichtig:</strong> Bitte schalte deinen Virenscanner nicht aus. Wird die Datei blockiert, prüfe den Download und frage bei Unsicherheit im Gilden-Discord nach.</div></div>
+        <div class="panel" id="panel-mac" role="tabpanel" aria-labelledby="tab-mac" hidden><ol class="steps"><li>Öffne <code>WeintCompanion-macOS.dmg</code> und ziehe WeintCompanion in den Ordner <strong>Programme</strong>.</li><li>Wenn macOS den Start blockiert, öffne <strong>Systemeinstellungen → Datenschutz &amp; Sicherheit</strong> und suche nach der Option, die App dennoch zu öffnen.</li><li>Bestätige die Rückfrage und starte WeintCompanion erneut.</li></ol><div class="note"><strong>Hinweis:</strong> Laut Projektbeschreibung wird Apple Silicon unterstützt (M1 und neuer). Intel-Macs werden derzeit nicht unterstützt.</div></div>
+        <div class="panel" id="panel-linux" role="tabpanel" aria-labelledby="tab-linux"><ol class="steps"><li>Lade die <code>WeintCompanion-x86_64.AppImage</code> herunter.</li><li>Öffne die Dateieigenschaften und aktiviere <strong>Als Programm ausführen</strong> — oder nutze im Terminal <code>chmod +x WeintCompanion-x86_64.AppImage</code>.</li><li>Starte die App per Doppelklick. Anschließend erkennt WeintCompanion die WoW-Installation oder hilft dir beim Einrichten des Pfads.</li></ol><div class="note"><strong>Falls die App nicht startet:</strong> Prüfe zunächst, ob die nötigen FUSE-Bibliotheken deiner Distribution vorhanden sind. Bei Fragen hilft der Gilden-Discord weiter.</div></div>
+        <p class="source-note">Sicherheitsmeldungen unterscheiden sich je nach Betriebssystem und Version. Lade die App nur über die offiziellen Projekt-Releases herunter.</p>
+      </div>
+    </div>
+  </section>
 
-<footer>
-  <p>Fragen? Melde dich im Gilden-Discord.<br>
-  <a href="https://github.com/daddler/Companion-Forever/releases">Alle Versionen und Änderungen</a></p>
-</footer>
-
+  <section class="final-cta" aria-label="WeintCompanion herunterladen"><div><p class="eyebrow">Bereit für den nächsten Schritt?</p><h2>Deine Gilde. Verbunden.</h2><p>Hol dir WeintCompanion und halte WeintCodex auf dem neuesten Stand.</p></div><a class="btn btn-primary" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg>Companion herunterladen</a></section>
 </main>
-
+<footer><div class="wrap footer-inner"><div><div class="footer-brand"><span class="brand-mark" style="width:29px;height:29px;border-radius:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round"><path d="M12 2 15 7 21 9 17 13 18 20 12 17 6 20 7 13 3 9 9 7 12 2Z"/></svg></span><span>WEINTCOMPANION · FOREVER EDITION</span></div><p style="margin:12px 0 0">Ein Community-Projekt für World of Warcraft: Forever.</p></div><div class="footer-links"><a href="https://github.com/daddler/Companion-Forever" target="_blank" rel="noreferrer">Quellcode</a><a href="https://github.com/daddler/Companion-Forever/releases" target="_blank" rel="noreferrer">Alle Releases</a><a href="https://github.com/daddler/Codex-Forever" target="_blank" rel="noreferrer">WeintCodex</a></div><div class="footer-copy">Mit Hingabe für die Gilde gebaut.<br>© WeintCompanion</div></div></footer>
 <script>
-  (function () {
-    var base = "https://github.com/daddler/Companion-Forever/releases/latest/download/";
-    var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
-
-    function show(id) {
-      tabs.forEach(function (t) {
-        var on = t.getAttribute("aria-controls") === id;
-        t.setAttribute("aria-selected", on ? "true" : "false");
-        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
-      });
-    }
-    tabs.forEach(function (t) {
-      t.addEventListener("click", function () { show(t.getAttribute("aria-controls")); });
-    });
-
-    // Betriebssystem erkennen: großer Knopf und passende Anleitung.
-    var ua = navigator.userAgent;
-    var os = /Windows/i.test(ua) ? "win"
-           : /Macintosh|Mac OS X/i.test(ua) && !/iPhone|iPad/i.test(ua) ? "mac"
-           : /Linux/i.test(ua) && !/Android/i.test(ua) ? "linux" : null;
-    var map = {
-      win:   ["WeintCompanion-Setup.exe",       "Für Windows herunterladen"],
-      mac:   ["WeintCompanion-macOS.dmg",       "Für macOS herunterladen"],
-      linux: ["WeintCompanion-x86_64.AppImage", "Für Linux herunterladen"]
-    };
-    if (!os) {
-      document.getElementById("main-hint").textContent =
-        "Läuft auf Windows, macOS und Linux – wähle dein System:";
-      return;
-    }
-    document.getElementById("main-btn").href = base + map[os][0];
-    document.getElementById("main-label").textContent = map[os][1];
-    show(os);
-  })();
+(function(){
+  const base='https://github.com/daddler/Companion-Forever/releases/latest/download/';
+  const map={win:{file:'WeintCompanion-Setup.exe',label:'Für Windows herunterladen'},mac:{file:'WeintCompanion-macOS.dmg',label:'Für macOS herunterladen'},linux:{file:'WeintCompanion-x86_64.AppImage',label:'Für Linux herunterladen'}};
+  const ua=navigator.userAgent;
+  const detected=/Windows/i.test(ua)?'win':(/Macintosh|Mac OS X/i.test(ua)&&!/iPhone|iPad/i.test(ua))?'mac':(/Linux/i.test(ua)&&!/Android/i.test(ua))?'linux':null;
+  const main=document.getElementById('main-download'); const label=document.getElementById('main-download-label');
+  const tabs=[...document.querySelectorAll('.tab[role="tab"]')];
+  function show(id){tabs.forEach(t=>{const on=t.getAttribute('aria-controls')==='panel-'+id;t.setAttribute('aria-selected',on?'true':'false');const p=document.getElementById(t.getAttribute('aria-controls'));if(p)p.hidden=!on;});}
+  tabs.forEach(t=>t.addEventListener('click',()=>show(t.id==='tab-win'?'win':t.id==='tab-mac'?'mac':'linux')));
+  if(detected){main.href=base+map[detected].file;label.textContent=map[detected].label;document.querySelectorAll('.platform').forEach(a=>a.classList.toggle('is-detected',a.dataset.os===detected));show(detected);} else {show('linux');}
+})();
 </script>
 </body>
 </html>
