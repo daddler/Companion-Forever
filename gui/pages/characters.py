@@ -62,11 +62,12 @@ from __future__ import annotations
 
 import time
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -166,11 +167,22 @@ class CharacterCard(Card):
     """
     Eine Karte je Charakter: Name in Klassenfarbe, Spezialisierung,
     Stufe, Gegenstandsstufe und wann er zuletzt gemeldet hat.
+
+    Seit 5.4.0 anklickbar (öffnet die Einzelansicht) und mit den
+    Hinweisen im Klartext statt nur als Zahl - "2 HINWEISE" ohne zu
+    sagen welche war eine Frage, die man nur per Tooltip beantwortet
+    bekam, und den fand niemand.
     """
 
-    def __init__(self, sheet: dict, parent=None):
+    opened = Signal(dict)
+
+    def __init__(self, sheet: dict, parent=None, main: bool = False):
 
         super().__init__(parent=parent)
+
+        self._sheet = sheet
+
+        self.setCursor(Qt.PointingHandCursor)
 
         color = class_color(sheet.get("class", ""))
 
@@ -206,7 +218,20 @@ class CharacterCard(Card):
 
         restyle(self.name, f"color:{color};background:transparent;")
 
-        titles.addWidget(self.name)
+        name_row = QHBoxLayout()
+
+        name_row.setContentsMargins(0, 0, 0, 0)
+
+        name_row.setSpacing(tokens.SPACE[1])
+
+        name_row.addWidget(self.name)
+
+        if main:
+            name_row.addWidget(Chip("★ MAIN", "accent"), alignment=Qt.AlignVCenter)
+
+        name_row.addStretch(1)
+
+        titles.addLayout(name_row)
 
         #
         # Klasse, Spezialisierung, Realm
@@ -312,9 +337,9 @@ class CharacterCard(Card):
                 )
             )
 
-            self.setToolTip("\n".join(
+            self._issue_lines = [
                 str(issue.get("text", "")) for issue in issues
-            ))
+            ]
 
         elif sheet.get("slots"):
 
@@ -337,7 +362,58 @@ class CharacterCard(Card):
 
         foot.addWidget(self.seen, alignment=Qt.AlignVCenter)
 
+        #
+        # Die Hinweise selbst, höchstens drei - der Rest in der
+        # Einzelansicht.
+        #
+
+        for line in _issue_texts(sheet)[:3]:
+
+            label = QLabel(f"• {line}")
+
+            label.setFont(font("small"))
+
+            enable_wrap(label)
+
+            restyle(
+                label,
+                f"color:{tokens.STATE_TEXT['warn']};background:transparent;",
+            )
+
+            self.addWidget(label)
+
+        if len(_issue_texts(sheet)) > 3:
+
+            more = QLabel(f"… und {len(_issue_texts(sheet)) - 3} weitere")
+
+            more.setFont(font("small"))
+
+            restyle(more, f"color:{tokens.TEXT['muted']};background:transparent;")
+
+            self.addWidget(more)
+
         self.addLayout(foot)
+
+        self.setToolTip("Klicken für Details, Main und Verfolgen")
+
+    def mouseReleaseEvent(self, event):
+
+        if event.button() == Qt.LeftButton and self.rect().contains(event.position().toPoint()):
+            self.opened.emit(self._sheet)
+
+        super().mouseReleaseEvent(event)
+
+
+def _issue_texts(sheet: dict) -> list[str]:
+
+    return [
+        str(issue.get("text", "")).strip()
+        for issue in sorted(
+            sheet.get("issues") or [],
+            key=lambda issue: issue.get("priority", 9),
+        )
+        if str(issue.get("text", "")).strip()
+    ]
 
 
 def _stat(label: str, value: str) -> QVBoxLayout:
@@ -431,9 +507,49 @@ class CharactersPage(Page):
 
         self.note.hide()
 
+        self.manage_button = QPushButton("Charaktere verwalten …")
+
+        self.manage_button.setObjectName("secondary")
+
+        self.manage_button.setCursor(Qt.PointingHandCursor)
+
+        self.manage_button.clicked.connect(self._manage)
+
+        self.header.addAction(self.manage_button)
+
         self._signature = None
 
     # --------------------------------------------------
+
+    def _manage(self):
+
+        from gui.dialogs.character_dialog import TrackingDialog
+
+        store = self._store()
+
+        if store is None:
+            return
+
+        TrackingDialog(store, self).exec()
+
+        self._signature = None
+
+        self.refresh()
+
+    def _open_character(self, sheet: dict):
+
+        from gui.dialogs.character_dialog import CharacterDialog
+
+        store = self._store()
+
+        if store is None:
+            return
+
+        CharacterDialog(sheet, store, self).exec()
+
+        self._signature = None
+
+        self.refresh()
 
     def _open_addon(self):
 
@@ -481,6 +597,18 @@ class CharactersPage(Page):
 
         return (len(store.foreign()), store.foreign_label())
 
+    def _main_key(self) -> str:
+
+        store = self._store()
+
+        return store.main_key() if store is not None and hasattr(store, "main_key") else ""
+
+    def _untracked_count(self) -> int:
+
+        store = self._store()
+
+        return len(store.untracked()) if store is not None and hasattr(store, "untracked") else 0
+
     def refresh(self):
 
         sheets = self._sheets()
@@ -511,6 +639,8 @@ class CharactersPage(Page):
             minimum,
             foreign,
             foreign_label,
+            self._main_key(),
+            self._untracked_count(),
         )
 
         if signature == self._signature:
@@ -683,8 +813,17 @@ class CharactersPage(Page):
 
         for index, sheet in enumerate(sheets):
 
+            store = self._store()
+
+            card = CharacterCard(
+                sheet,
+                main=bool(store is not None and hasattr(store, "is_main") and store.is_main(sheet)),
+            )
+
+            card.opened.connect(self._open_character)
+
             self.grid.addWidget(
-                CharacterCard(sheet),
+                card,
                 index // COLUMNS,
                 index % COLUMNS,
             )
@@ -745,6 +884,18 @@ class CharactersPage(Page):
                 f"angezeigt - gespeichert "
                 f"{'bleiben sie' if foreign != 1 else 'bleibt er'}."
             )
+
+        untracked = self._untracked_count()
+
+        if untracked:
+
+            text += (
+                f" {untracked} Charakter{'e' if untracked != 1 else ''} "
+                f"verfolgst du nicht - „Charaktere verwalten“ holt "
+                f"{'sie' if untracked != 1 else 'ihn'} zurück."
+            )
+
+        text += " Ein Klick auf eine Karte zeigt Hinweise und Ausrüstung."
 
         self.note.setText(text)
 

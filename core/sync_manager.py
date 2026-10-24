@@ -218,8 +218,15 @@ class SyncManager:
                 # `core/character_sync_client.py`.
                 #
 
+                store = getattr(self.manager, "characters", None)
+
+                payload = (
+                    store.filter_roster_payload(message["payload"])
+                    if store is not None else message["payload"]
+                )
+
                 success = self.character_client.send(
-                    message["payload"],
+                    payload,
                     self.manager.config.get_wow_client_id(),
                 )
 

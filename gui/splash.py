@@ -53,7 +53,7 @@ class SplashScreen(QWidget):
 
     WIDTH = 900
 
-    ASPECT = 9 / 16
+    ASPECT = 896 / 1776  # assets/splash.png, Banner seit 5.4.0
 
     RADIUS = 14
 
@@ -75,7 +75,7 @@ class SplashScreen(QWidget):
     # unveränderlich, einmal echt.
     #
 
-    CROP_BOTTOM = 0.023
+    CROP_BOTTOM = 0.0  # neuer Banner trägt keinen Fuß mehr
 
     #
     # Der Streifen unter dem Bild, in dem der echte Text steht. Als

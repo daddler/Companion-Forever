@@ -2,6 +2,23 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 5.4.0
+
+**Neuer Startbildschirm.** WeintCompanion begrüßt dich mit dem neuen
+Banner des Gilden-Ökosystems.
+
+**Deine Charaktere, wie du sie willst.**
+- **Hinweise im Klartext:** Statt nur „2 Hinweise“ steht auf der Karte,
+  *was* fehlt – leerer Platz, zerbrochene Waffe.
+- **Anklicken:** Jede Karte öffnet eine Einzelansicht mit allen Hinweisen
+  und der gemeldeten Ausrüstung.
+- **Main markieren:** Ein Stern macht einen Charakter zu deinem Main; er
+  steht immer zuerst.
+- **Selbst bestimmen, was verfolgt wird:** Unter *Charaktere verwalten*
+  nimmst du Bankcharaktere und alte Twinks einfach heraus. Sie
+  verschwinden aus der Liste und werden nicht mehr an den Bot gemeldet –
+  gelöscht wird nichts, ein Haken holt sie zurück.
+
 ## 5.3.0
 
 **Dein eigener Warnton für „Raus da!“.** Neu in der Navigation: *Töne*.

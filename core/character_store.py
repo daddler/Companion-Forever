@@ -575,19 +575,139 @@ class CharacterStore:
             if belongs_to(sheet, active)
         ]
 
+    # --------------------------------------------------
+    # Main und Verfolgen (5.4.0)
+    # --------------------------------------------------
+    #
+    # Das Addon meldet jeden Charakter, mit dem man sich anmeldet - auch
+    # den Bankcharakter und den Twink von vor drei Jahren. Was davon
+    # hier stehen (und an den Bot gehen) soll, entscheidet der Spieler:
+    # `characters_untracked` (Liste von `sheet_key`) blendet aus, ohne
+    # zu löschen; `character_main` markiert einen Charakter als Main.
+    #
+
+    @staticmethod
+    def key_of(sheet: dict) -> str:
+
+        return sheet_key(sheet.get("name", ""), sheet.get("realm", ""))
+
+    def _untracked_keys(self) -> set[str]:
+
+        value = self._config_data().get("characters_untracked") or []
+
+        return {str(k) for k in value} if isinstance(value, list) else set()
+
+    def _save_config(self):
+
+        config = getattr(self.manager, "config", None)
+
+        save = getattr(config, "save", None)
+
+        if callable(save):
+            save()
+
+    def is_tracked(self, sheet: dict) -> bool:
+
+        return self.key_of(sheet) not in self._untracked_keys()
+
+    def set_tracked(self, sheet: dict, tracked: bool) -> None:
+
+        keys = self._untracked_keys()
+
+        key = self.key_of(sheet)
+
+        if tracked:
+            keys.discard(key)
+        else:
+            keys.add(key)
+
+        self._config_data()["characters_untracked"] = sorted(keys)
+
+        if not tracked and self.main_key() == key:
+            self._config_data()["character_main"] = ""
+
+        self._save_config()
+
+    def main_key(self) -> str:
+
+        return str(self._config_data().get("character_main") or "")
+
+    def is_main(self, sheet: dict) -> bool:
+
+        return bool(self.main_key()) and self.key_of(sheet) == self.main_key()
+
+    def set_main(self, sheet: dict | None) -> None:
+        """Markiert `sheet` als Main; `None` hebt die Markierung auf."""
+
+        self._config_data()["character_main"] = (
+            self.key_of(sheet) if sheet else ""
+        )
+
+        if sheet:
+            self.set_tracked(sheet, True)
+        else:
+            self._save_config()
+
+    def untracked(self) -> list[dict]:
+        """Charaktere dieser Spielversion, die der Spieler abgewählt hat."""
+
+        return [
+            sheet for sheet in self.own_characters()
+            if not self.is_tracked(sheet)
+        ]
+
+    def filter_roster_payload(self, payload: str) -> str:
+        """
+        Die Twinkliste des Addons (`Name|Klasse|Realm,…`) ohne die
+        abgewählten Charaktere - was hier nicht verfolgt wird, geht
+        auch nicht an den Bot.
+        """
+
+        untracked = self._untracked_keys()
+
+        if not untracked:
+            return payload
+
+        kept = []
+
+        for entry in str(payload or "").split(","):
+
+            parts = [p.strip() for p in entry.split("|")]
+
+            if not parts[0]:
+                continue
+
+            realm = parts[2] if len(parts) > 2 else ""
+
+            if sheet_key(parts[0], realm) in untracked:
+                continue
+
+            if not realm and any(
+                k.split("-", 1)[0].lower() == parts[0].lower()
+                for k in untracked
+            ):
+                continue
+
+            kept.append(entry.strip())
+
+        return ",".join(kept)
+
     def characters(self) -> list[dict]:
         """
         Die Charaktere, die die Seiten zeigen: diese Spielversion, ab
-        der eingestellten Stufe, zuletzt gespielter zuerst.
+        der eingestellten Stufe, nur verfolgte - der Main zuerst, dann
+        zuletzt gespielter zuerst.
         """
 
         minimum = self.min_level()
 
-        return [
+        shown = [
             sheet
             for sheet in self.own_characters()
-            if is_high_level(sheet, minimum)
+            if is_high_level(sheet, minimum) and self.is_tracked(sheet)
         ]
+
+        return sorted(shown, key=lambda sheet: not self.is_main(sheet))
 
     def hidden(self) -> list[dict]:
         """
@@ -603,7 +723,7 @@ class CharacterStore:
         return [
             sheet
             for sheet in self.own_characters()
-            if not is_high_level(sheet, minimum)
+            if not is_high_level(sheet, minimum) and self.is_tracked(sheet)
         ]
 
     def foreign(self) -> list[dict]:
