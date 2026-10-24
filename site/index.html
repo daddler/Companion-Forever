@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeintCompanion herunterladen</title>
+<meta name="description" content="Die Desktop-App für das WoW-Addon WeintCodex – herunterladen und installieren.">
+<link rel="icon" href="icon.png">
+<style>
+  :root {
+    --bg: #f6f4ef; --card: #ffffff; --text: #1d1b18; --muted: #6b665d;
+    --line: #e2ddd2; --accent: #b8862b; --accent-text: #ffffff; --note: #fbf5e6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141312; --card: #1e1c1a; --text: #ece8e1; --muted: #a39d92;
+      --line: #34302b; --accent: #d9a441; --accent-text: #1b1508; --note: #26211a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 40px 16px 64px; }
+  header { text-align: center; margin-bottom: 32px; }
+  header img { width: 88px; height: 88px; }
+  h1 { font-size: 30px; margin: 12px 0 4px; }
+  header p { color: var(--muted); margin: 0; }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 24px; margin-bottom: 20px;
+  }
+  .primary { text-align: center; }
+  .btn {
+    display: inline-block; background: var(--accent); color: var(--accent-text);
+    text-decoration: none; font-weight: 600; font-size: 18px;
+    padding: 14px 28px; border-radius: 10px;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .small { color: var(--muted); font-size: 14px; margin-top: 12px; }
+  .others { margin-top: 16px; font-size: 15px; }
+  .others a { color: var(--text); margin: 0 8px; }
+  h2 { font-size: 20px; margin: 0 0 12px; }
+  ol { padding-left: 22px; margin: 0; }
+  li { margin-bottom: 8px; }
+  .note {
+    background: var(--note); border-left: 4px solid var(--accent);
+    padding: 12px 16px; border-radius: 6px; margin-top: 16px; font-size: 15px;
+  }
+  details { border-top: 1px solid var(--line); padding: 14px 0; }
+  details:first-of-type { border-top: 0; padding-top: 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details > div { margin-top: 12px; }
+  code {
+    background: var(--bg); border: 1px solid var(--line);
+    padding: 2px 6px; border-radius: 4px; font-size: 14px; word-break: break-all;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 14px; }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <img src="icon.png" alt="">
+  <h1>WeintCompanion</h1>
+  <p>Die Desktop-App für das WoW-Addon WeintCodex</p>
+</header>
+
+<section class="card primary">
+  <a id="main-btn" class="btn" href="#alle">Herunterladen</a>
+  <p class="small" id="main-hint">Immer die neueste Version. Kostenlos.</p>
+  <p class="others" id="alle">
+    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-Setup.exe">Windows</a>·
+    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-macOS.dmg">macOS (Apple M1 und neuer)</a>·
+    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-x86_64.AppImage">Linux</a>
+  </p>
+</section>
+
+<section class="card">
+  <h2>Warnung beim ersten Start? Das ist normal.</h2>
+  <p>
+    WeintCompanion ist ein kleines Gildenprojekt. Ein Zertifikat, mit dem
+    Windows und macOS das Programm sofort als „bekannt“ einstufen, kostet
+    jedes Jahr Hunderte Euro – das haben wir nicht. Darum fragt dein
+    Computer beim <strong>ersten</strong> Start nach. Danach nie wieder,
+    und auch Updates laufen ohne Nachfrage direkt in der App.
+  </p>
+
+  <details id="win" open>
+    <summary>Windows</summary>
+    <div>
+      <ol>
+        <li>Öffne <code>WeintCompanion-Setup.exe</code> aus deinen Downloads.</li>
+        <li>Erscheint „Der Computer wurde durch Windows geschützt“: klicke auf
+          <strong>Weitere Informationen</strong> und dann auf
+          <strong>Trotzdem ausführen</strong>.</li>
+        <li>Folge dem Installer. Fertig.</li>
+      </ol>
+      <div class="note">
+        <strong>Der Download wurde blockiert oder die Datei ist verschwunden?</strong>
+        Dann hat dein Virenscanner sie vorsichtshalber in Quarantäne
+        geschoben. Im Browser kannst du unter den Downloads
+        <em>Beibehalten</em> wählen; bei Windows Defender stellst du sie unter
+        <em>Windows-Sicherheit → Viren- &amp; Bedrohungsschutz → Schutzverlauf</em>
+        wieder her. Schalte deinen Virenscanner dafür bitte
+        <strong>nicht</strong> ab. Wenn du unsicher bist, frag im Discord nach.
+      </div>
+    </div>
+  </details>
+
+  <details id="mac">
+    <summary>macOS</summary>
+    <div>
+      <ol>
+        <li>Öffne <code>WeintCompanion-macOS.dmg</code> und zieh WeintCompanion in
+          den Ordner <strong>Programme</strong>.</li>
+        <li>Starte WeintCompanion. macOS meldet, dass es nicht geöffnet werden kann –
+          klicke auf <strong>Fertig</strong> (nicht „In den Papierkorb“).</li>
+        <li>Öffne <strong>Systemeinstellungen → Datenschutz &amp; Sicherheit</strong>,
+          scrolle nach unten und klicke bei WeintCompanion auf
+          <strong>Dennoch öffnen</strong>. Bestätige mit deinem Passwort.</li>
+      </ol>
+      <div class="note">
+        Klappt das nicht? Öffne das Programm <em>Terminal</em> und füge diese
+        Zeile ein, dann Enter:<br>
+        <code>xattr -cr /Applications/WeintCompanion.app</code><br>
+        Danach startet WeintCompanion normal. Intel-Macs werden leider nicht
+        unterstützt.
+      </div>
+    </div>
+  </details>
+
+  <details id="linux">
+    <summary>Linux</summary>
+    <div>
+      <ol>
+        <li>Rechtsklick auf <code>WeintCompanion-x86_64.AppImage</code> →
+          <em>Eigenschaften</em> → „Als Programm ausführen“ erlauben
+          (oder <code>chmod +x WeintCompanion-x86_64.AppImage</code>).</li>
+        <li>Doppelklick zum Starten.</li>
+      </ol>
+    </div>
+  </details>
+</section>
+
+<footer>
+  <p>Fragen? Melde dich im Gilden-Discord.<br>
+  <a href="https://github.com/daddler/Companion-Forever/releases">Alle Versionen und Änderungen</a></p>
+</footer>
+
+</main>
+<script>
+  // Erkennt das Betriebssystem und macht den großen Knopf passend.
+  (function () {
+    var base = "https://github.com/daddler/Companion-Forever/releases/latest/download/";
+    var ua = navigator.userAgent;
+    var os = /Windows/i.test(ua) ? "win"
+           : /Macintosh|Mac OS X/i.test(ua) && !/iPhone|iPad/i.test(ua) ? "mac"
+           : /Linux/i.test(ua) && !/Android/i.test(ua) ? "linux" : null;
+    var map = {
+      win:   ["WeintCompanion-Setup.exe",      "Für Windows herunterladen"],
+      mac:   ["WeintCompanion-macOS.dmg",      "Für macOS herunterladen"],
+      linux: ["WeintCompanion-x86_64.AppImage", "Für Linux herunterladen"]
+    };
+    if (!os) {
+      document.getElementById("main-hint").textContent =
+        "WeintCompanion läuft auf Windows, macOS und Linux – wähle dein System:";
+      return;
+    }
+    var btn = document.getElementById("main-btn");
+    btn.href = base + map[os][0];
+    btn.textContent = map[os][1];
+    ["win", "mac", "linux"].forEach(function (id) {
+      document.getElementById(id).open = (id === os);
+    });
+  })();
+</script>
+</body>
+</html>

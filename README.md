@@ -9,6 +9,11 @@
   Für <em>World of Warcraft: Forever</em>.
 </p>
 
+<p align="center">
+  <strong>👉 <a href="https://daddler.github.io/Companion-Forever/">WeintCompanion herunterladen</a></strong><br>
+  <sub>mit Hilfe für die Warnung beim ersten Start</sub>
+</p>
+
 ---
 
 # Übersicht
