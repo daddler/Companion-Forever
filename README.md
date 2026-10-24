@@ -1,12 +1,17 @@
 # WeintCompanion 5 — Forever Edition
 
 <p align="center">
-  <img src="assets/companion_banner.png" alt="WeintCompanion" width="900">
+  <img src="docs/images/weintcompanion_banner.jpg" alt="WeintCompanion – World of Warcraft: Forever" width="900">
 </p>
 
 <p align="center">
   <strong>Die offizielle Desktop-Anwendung für WeintCodex.</strong><br>
   Für <em>World of Warcraft: Forever</em>.
+</p>
+
+<p align="center">
+  <strong>👉 <a href="https://daddler.github.io/Companion-Forever/">WeintCompanion herunterladen</a></strong><br>
+  <sub>mit Hilfe für die Warnung beim ersten Start</sub>
 </p>
 
 ---

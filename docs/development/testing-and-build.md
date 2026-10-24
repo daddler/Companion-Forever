@@ -56,10 +56,20 @@ account): the first launch needs right-click → *Öffnen* (or *Systemein-
 stellungen → Datenschutz & Sicherheit → Trotzdem öffnen*). Self-updates
 afterwards don't hit Gatekeeper again — `packaging/macos/updater.sh`
 swaps the bundle from the downloaded `.dmg` and strips quarantine. UPX is
-off on macOS because it breaks the signature. `WeintCompanion.spec` is the PyInstaller
+off everywhere: on macOS it breaks the signature, on Windows it makes
+antivirus scanners quarantine the unsigned build. `WeintCompanion.spec` is the PyInstaller
 spec (entry point `app.py`, bundles `assets/`, `resources/icons`, and the
 Linux updater script; also lists `CHANGELOG.md` under `datas` — see
 `../systems/update-system.md`).
+
+The builds are **not code-signed** (no certificate, by choice: too
+expensive for the user count). First-time users are guided past the
+SmartScreen/Gatekeeper warnings by the download page in `site/`
+(published to GitHub Pages by `.github/workflows/pages.yml`). It links
+`releases/latest/download/<asset>`, so **the asset names
+`WeintCompanion-Setup.exe`, `WeintCompanion-macOS.dmg` and
+`WeintCompanion-x86_64.AppImage` must never change** — the page and the
+in-app updater both depend on them.
 
 ## Where the tests that matter for each system live
 

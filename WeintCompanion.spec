@@ -15,6 +15,13 @@ VERSION = re.search(
 
 IS_MACOS = sys.platform == "darwin"
 
+#
+# UPX ist überall aus. Auf macOS zerbricht es die Signatur, auf
+# Windows hält es die Virenscanner für Packer-Malware: mit UPX
+# gepackte PyInstaller-Dateien landen deutlich öfter in Quarantäne.
+# Ohne UPX ist der Build etwas größer - mehr kostet es nicht.
+#
+
 a = Analysis(
     ["app.py"],
     pathex=[],
@@ -60,7 +67,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=not IS_MACOS,  # UPX zerbricht die macOS-Signatur
+    upx=False,  # siehe UPX-Kommentar oben
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -78,7 +85,7 @@ coll = COLLECT(
     a.binaries,
     a.datas,
     strip=False,
-    upx=not IS_MACOS,  # UPX zerbricht die macOS-Signatur
+    upx=False,  # siehe UPX-Kommentar oben
     upx_exclude=[],
     name="WeintCompanion",
 )
