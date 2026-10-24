@@ -1948,16 +1948,22 @@ class OverviewPage(Page):
                 if name:
                     return name
 
-        state = getattr(self.manager, "state", None)
-
-        name = str(getattr(state, "discord_name", "") or "").strip()
-
         #
-        # "-" ist der Anfangswert von `AppState.discord_name` und
-        # heißt "nicht bekannt", nicht "so heißt der Nutzer".
+        # Nie `discord_name`: das ist der Name des BOTS. Die Übersicht
+        # grüßte damit "WeintCodex" statt den Spieler.
         #
 
-        return "" if name in ("", "-") else name
+        return ""
+
+    def _discord_link(self) -> str:
+        """Zustand der Verknüpfung, rein lokal (kein Abruf)."""
+
+        store = getattr(self.manager, "discord_account", None)
+
+        try:
+            return store.state() if store is not None else "none"
+        except Exception:
+            return "none"
 
     def _refresh_greeting(self):
         """
@@ -2225,8 +2231,8 @@ class OverviewPage(Page):
                 key="addon-missing",
                 title="WeintCodex ist nicht installiert",
                 detail=(
-                    "Ohne das Addon im Spiel bleiben Auswertung, "
-                    "Vorbereitung und Charakterliste leer."
+                    "Ohne das Addon im Spiel bleiben Charaktere, "
+                    "Bestand und eigene Töne leer."
                 ),
                 action="Jetzt installieren",
                 on_action=self._open_addon_page,
@@ -2270,7 +2276,25 @@ class OverviewPage(Page):
         # Störung.
         #
 
-        if not state.discord_connected:
+        link = self._discord_link()
+
+        if link == "rejected":
+
+            tasks.append(Task(
+                key="discord",
+                title="Discord-Anmeldung abgelaufen",
+                detail=(
+                    "Der Bot kennt die gespeicherte Anmeldung nicht "
+                    "mehr. Einmal neu verbinden, dann läuft der "
+                    "Abgleich wieder."
+                ),
+                action="Neu verbinden",
+                on_action=lambda: self.openSettingsSection.emit("discord"),
+                urgency=URGENCY_DUE,
+                icon="discord",
+            ))
+
+        elif link == "none":
 
             tasks.append(Task(
                 key="discord",

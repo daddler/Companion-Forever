@@ -92,6 +92,18 @@ class AppState:
 
     discord_latency: int | None = None
 
+    #
+    # Das KONTO, getrennt vom Bot darüber: `discord_connected` heißt
+    # "der Bot antwortet", nicht "du bist angemeldet". Beides stand
+    # an vier Stellen der Oberfläche für dasselbe - daher kam
+    # "angezeigt verbunden, aber nicht angemeldet".
+    # Werte: core/discord_account.py, LINK_*.
+    #
+
+    discord_account_state: str = "none"
+
+    discord_account_name: str = ""
+
     # --------------------------------------------------
     # Wann zuletzt etwas passiert ist
     # --------------------------------------------------

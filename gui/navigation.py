@@ -82,15 +82,16 @@ class PageId(IntEnum):
     CHARACTERS = 1
     INVENTORY = 2
     CHARACTER_LINKS = 3
+    SOUNDS = 4
 
     #
     # SYSTEM
     #
 
-    ADDON = 4
-    CONNECTIONS = 5
-    SETTINGS = 6
-    LOGS = 7
+    ADDON = 5
+    CONNECTIONS = 6
+    SETTINGS = 7
+    LOGS = 8
 
 
 #
@@ -295,6 +296,7 @@ def build_page_specs() -> tuple[PageSpec, ...]:
     from gui.pages.logs import LogsPage
     from gui.pages.overview import OverviewPage
     from gui.pages.settings import SettingsPage
+    from gui.pages.sounds import SoundsPage
 
     return (
 
@@ -353,6 +355,15 @@ def build_page_specs() -> tuple[PageSpec, ...]:
             page_factory=CharacterLinksPage,
             scroll=False,
             attribute="character_links",
+        ),
+
+        PageSpec(
+            page_id=PageId.SOUNDS,
+            label="Töne",
+            group=GROUP_GAME,
+            icon="sound",
+            page_factory=SoundsPage,
+            attribute="sounds",
         ),
 
         PageSpec(

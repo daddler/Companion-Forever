@@ -40,7 +40,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.discord_account import is_usable
+from core.discord_account import LINK_OK, is_usable, link_text
 from core.wow_clients import released_clients
 from core.wow_folder import check_client_folder
 
@@ -534,11 +534,17 @@ class SetupWizard(QDialog):
 
         account = self.manager.discord_account.load()
 
-        if is_usable(account):
+        link = self.manager.discord_account.state()
+
+        if is_usable(account) and link == LINK_OK:
 
             step.set_status(
                 "ok", f"Verbunden als {account.get('username', '-')}.",
             )
+
+        elif is_usable(account):
+
+            step.set_status("info", link_text(link)[1])
 
         else:
 

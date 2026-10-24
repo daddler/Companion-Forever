@@ -110,3 +110,21 @@ beide.
 sieben Clients konnte damit etwas anfangen — die UI zeigte „Verbunden als …"
 und kein einziger Abruf lief. `is_usable()` prüft das Token, nicht nur die
 Existenz eines Eintrags.
+
+## Gespeichert ist nicht bestätigt (5.3.0)
+
+Gemeldet als „angezeigt verbunden, aber nicht angemeldet“. Zwei Ursachen:
+die Navigationsspalte zeigte ohne Konto den Namen des **Bots** als
+verbundenes Konto (`state.discord_connected` heißt nur „Bot antwortet“),
+und mit Konto reichte `is_usable()` – ein abgelegtes Token, ohne dass je
+gefragt wurde, ob der Bot es noch kennt.
+
+Seitdem fragt `CompanionManager._check_discord_account()` in jedem
+Prüflauf `GET /companion/access-profile` und hält die Antwort auf der
+Klasse fest (`note_auth_ok()`, `note_auth_rejected()`,
+`note_unreachable()`); `DiscordAccountStore.state()` liefert daraus einen
+von fünf Zuständen (`link_state()`, rein). 2xx und 403 bestätigen, 401
+geht durch die Zählregel oben, 404/5xx lassen den Stand stehen,
+Netzfehler heißt `unreachable` – eine frühere Ablehnung hebt Schweigen
+nicht auf. Ein frischer Login (`save()`) gilt als bestätigt. Gezeigt als
+verbunden wird nur `ok`.

@@ -2,6 +2,29 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 5.3.0
+
+**Dein eigener Warnton für „Raus da!“.** Neu in der Navigation: *Töne*.
+Wähle bis zu fünf eigene Dateien – mp3, wav, flac, ogg und mehr – oder
+zieh sie einfach ins Fenster. Die Companion kürzt sie auf vier Sekunden,
+blendet sauber aus und legt sie dem Addon hin; im Spiel stehen sie unter
+*Komfort → Raus da! → Ton* ganz oben. Anhören, umbenennen, ersetzen,
+entfernen – alles auf einer Seite. Die Töne liegen in einem eigenen
+Ordner und überstehen jedes Addon-Update. Braucht WeintCodex 6.146.0.0.
+
+Ehrlich gesagt: Umwandeln kann die Companion nur, wenn ffmpeg installiert
+ist – ohne nimmt sie nur fertige .ogg-Dateien. Und WoW lernt neue Dateien
+erst beim Spielstart kennen, /reload reicht dafür nicht.
+
+**„Verbunden“ heißt jetzt wirklich verbunden.** Unten links stand
+„verbunden“, obwohl keine Anmeldung galt: ohne Konto zeigte die Spalte
+den Namen des *Bots* als dein Konto, und mit Konto reichte eine
+gespeicherte Anmeldung – ob der Bot sie noch kannte, fragte niemand. Die
+Companion fragt jetzt bei jeder Prüfung nach und sagt ehrlich, was gilt:
+*verbunden*, *wird geprüft*, *Bot offline* oder *abgelehnt – bitte neu
+verbinden*. Die Übersicht grüßt dich auch nicht mehr mit dem Namen des
+Bots.
+
 ## 5.2.0
 
 **WeintCompanion gibt es jetzt auch für den Mac.** Zu jedem Release

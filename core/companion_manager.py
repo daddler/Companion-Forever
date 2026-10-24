@@ -22,7 +22,14 @@ from core.sync_manager import SyncManager
 from PySide6.QtCore import QObject, QTimer, Signal
 from core.discord_status import DiscordStatus
 from core import discord_account
-from core.discord_account import DiscordAccountStore
+import httpx
+
+from core.backend_config import BOT_BASE_URL
+from core.discord_account import (
+    DiscordAccountStore,
+    LINK_NONE,
+    is_usable,
+)
 from core.discord_auth import DiscordAuth
 from core.access_profile_sync import AccessProfileSync
 from core.discord_roster_sync import DiscordRosterSync
@@ -857,6 +864,78 @@ class CompanionManager(QObject):
     # --------------------------------------------------
 
     def check_discord(self):
+
+        try:
+            self._check_discord_bot()
+        finally:
+            self._check_discord_account()
+
+    def _check_discord_account(self):
+        """
+        Fragt den Bot, ob er das gespeicherte Token noch kennt.
+
+        Läuft im selben Hintergrundtakt wie der Statusabruf (nie in
+        `refresh()`, siehe docs/architecture/navigation.md). Eine 401
+        geht durch `note_auth_rejected()` - die eine Stelle, die über
+        das Entlinken entscheidet; hier wird nur gefragt.
+        """
+
+        store = self.discord_account
+
+        account = store.load()
+
+        if not is_usable(account):
+
+            self.state.discord_account_state = LINK_NONE
+            self.state.discord_account_name = ""
+
+            return
+
+        self.state.discord_account_name = str(
+            account.get("username") or ""
+        ).strip()
+
+        try:
+
+            response = httpx.get(
+                f"{BOT_BASE_URL}/companion/access-profile",
+                headers={
+                    "Authorization": f"Bearer {account['companion_token']}",
+                },
+                timeout=10,
+            )
+
+        except Exception as exc:
+
+            store.note_unreachable()
+
+            self.logger.warning(
+                f"Discord-Anmeldung nicht prüfbar - Bot nicht erreichbar "
+                f"({exc})."
+            )
+
+        else:
+
+            code = response.status_code
+
+            #
+            # 403 heißt: Token bekannt, nur ohne Berechtigung - das
+            # ist eine gültige Anmeldung. 404 (Endpunkt fehlt) und
+            # 5xx (Bot kann nicht prüfen, docs/companion-auth.md)
+            # sagen nichts über das Token und lassen den Stand stehen.
+            #
+
+            if code == 401:
+                store.note_auth_rejected()
+            elif 200 <= code < 300 or code == 403:
+                store.note_auth_ok()
+
+        self.state.discord_account_state = store.state()
+
+        if self.state.discord_account_state == LINK_NONE:
+            self.state.discord_account_name = ""
+
+    def _check_discord_bot(self):
 
         data = self.discord.fetch()
 

@@ -18,7 +18,12 @@ from core.backend_config import (
     normalize_bot_url,
     write_bot_url_override,
 )
-from core.discord_account import is_usable
+from core.discord_account import (
+    LINK_OK,
+    LINK_REJECTED,
+    is_usable,
+    link_text,
+)
 from core.net_errors import bot_unreachable_text
 
 from gui.theme.colors import Colors
@@ -399,7 +404,34 @@ class DiscordSection(SectionContent):
         # wäre dann eine Behauptung, der kein einziger Abruf folgt.
         #
 
-        if is_usable(account):
+        link = self.manager.discord_account.state()
+
+        if is_usable(account) and link != LINK_OK:
+
+            #
+            # Token liegt da, aber der Bot hat es (noch) nicht
+            # bestätigt. "Verbunden als …" wäre genau die Behauptung,
+            # die als "angezeigt angemeldet, aber nicht angemeldet"
+            # gemeldet wurde.
+            #
+
+            name = account.get("username", "?")
+
+            self.status_label.setText(f"{name} – {link_text(link)[0]}")
+
+            colour = Colors.ERROR if link == LINK_REJECTED else Colors.WARNING
+
+            self.status_label.setStyleSheet(
+                f"font-size:14px;font-weight:700;color:{colour};"
+            )
+
+            self.hint_label.setText(link_text(link)[1])
+
+            self.login_button.setText("Erneut verbinden")
+
+            self.unlink_button.setEnabled(True)
+
+        elif is_usable(account):
 
             self.status_label.setText(
                 f"Verbunden als {account.get('username', '?')}"

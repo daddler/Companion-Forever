@@ -141,7 +141,8 @@ TOUR_PAGES: tuple[TourPage, ...] = (
         "dashboard", "Erste Schritte",
         "So ist das Fenster aufgebaut",
         "Links steht die Navigationsspalte, in zwei Gruppen: SPIEL "
-        "(Übersicht, Meine Charaktere, Bestand, Charakterzuordnung) und "
+        "(Übersicht, Meine Charaktere, Bestand, Charakterzuordnung, "
+        "Töne) und "
         "SYSTEM (Addon & Updates, Verbindungen, Einstellungen, "
         "Protokoll).\n\n"
         "Auf einem schmalen Fenster klappt die Spalte auf Symbole "
@@ -186,6 +187,17 @@ TOUR_PAGES: tuple[TourPage, ...] = (
         "Stimmt etwas nicht, legst du den Ordner unter Einstellungen → "
         "WoW-Client fest. Dort steht unter Linux auch der Befehl, mit "
         "dem „WoW starten“ das Spiel öffnet.",
+    ),
+
+    TourPage(
+        "sound", "Erste Schritte",
+        "Dein eigener Warnton",
+        "Unter Töne gibst du „Raus da!“ im Addon deine eigene Stimme: "
+        "bis zu fünf Dateien – ein Ruf, ein Gong, ein Zitat. Die App "
+        "kürzt sie auf wenige Sekunden und legt sie dem Addon hin; im "
+        "Spiel stehen sie ganz oben in der Liste der Töne.\n\n"
+        "WoW lernt neue Dateien nur beim Start kennen – nach dem ersten "
+        "Ton das Spiel einmal neu starten, /reload reicht nicht.",
     ),
 
     # ------------------------------------------------------

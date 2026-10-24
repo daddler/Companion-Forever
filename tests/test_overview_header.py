@@ -184,13 +184,18 @@ def test_the_ingame_character_is_the_name_we_greet(page):
     assert page.header.eyebrow.text().endswith(", Krallenwut")
 
 
-def test_without_a_known_character_the_discord_name_stands_in(page):
+def test_the_bots_name_is_never_used_as_the_players(page):
+
+    #
+    # `state.discord_name` ist der Name des BOTS. Bis 5.2 stand er im
+    # Gruß, als hieße der Spieler so.
+    #
 
     page.manager.config.data["academy_ingame_character"] = ""
 
     page.refresh()
 
-    assert page.header.eyebrow.text().endswith(", daddler")
+    assert "daddler" not in page.header.eyebrow.text()
 
 
 def test_an_unknown_name_is_not_invented(page):

@@ -199,9 +199,16 @@ class BridgeTile(Card):
         # es ist nicht abgeschaltet, es fehlt die Voraussetzung.
         #
 
+        link = getattr(state, "discord_account_state", "none")
+
         self.rows["roster"].setState(
-            "ok" if connected else "empty",
-            "AKTIV" if connected else "OHNE KONTO",
+            "ok" if connected and link == "ok" else "empty",
+            {
+                "ok": "AKTIV" if connected else "BOT OFFLINE",
+                "rejected": "NEU VERBINDEN",
+                "unverified": "WIRD GEPRÜFT",
+                "unreachable": "BOT OFFLINE",
+            }.get(link, "OHNE KONTO"),
         )
 
         self.synced.setText(

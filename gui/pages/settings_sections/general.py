@@ -163,8 +163,8 @@ class GeneralSection(SectionContent):
 
         tour_desc = QLabel(
             "Der Rundgang durch alle Bereiche der App, in Kapiteln — "
-            "Übersicht, Raid Center mit seinen vier Perspektiven, "
-            "Charaktere, Vorbereitung und die Systemseiten."
+            "Übersicht, Charaktere, Bestand, Töne und die "
+            "Systemseiten."
         )
 
         tour_desc.setWordWrap(True)

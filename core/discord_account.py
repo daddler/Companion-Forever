@@ -51,6 +51,49 @@ AUTH_REJECTION_WINDOW = 300.0
 AUTH_REJECTION_COOLDOWN = 60.0
 
 
+#
+# Was der Bot zuletzt zum gespeicherten Token gesagt hat.
+#
+# Lokal steht nur fest, ob ein Token abgelegt ist (`is_usable()`).
+# Ob der Bot es noch kennt, weiß erst eine Antwort von ihm - und genau
+# diese Lücke war der gemeldete Fehler "angezeigt wird verbunden, aber
+# angemeldet bin ich nicht": die Oberfläche hat das Vorhandensein des
+# Tokens als Anmeldung ausgegeben und den Online-Status des Bots als
+# Konto (`AppState.discord_connected` heißt "Bot erreichbar", nicht
+# "du bist angemeldet").
+#
+# Fünf Zustände, nie zusammengezogen - dieselbe Regel wie
+# `unknown ≠ 0` im Addon:
+#
+#   none        kein Token abgelegt
+#   unverified  Token da, der Bot hat dazu noch nichts gesagt
+#   ok          der Bot hat das Token angenommen
+#   rejected    der Bot hat es abgelehnt (401) - neu verbinden
+#   unreachable Token da, der Bot war nicht zu erreichen
+#
+
+LINK_NONE = "none"
+LINK_UNVERIFIED = "unverified"
+LINK_OK = "ok"
+LINK_REJECTED = "rejected"
+LINK_UNREACHABLE = "unreachable"
+
+
+def link_state(account, verdict: str | None) -> str:
+    """
+    Rein: aus Ablage und letzter Auskunft des Bots der eine Zustand,
+    den die Oberfläche zeigt.
+    """
+
+    if not is_usable(account):
+        return LINK_NONE
+
+    if verdict in (LINK_OK, LINK_REJECTED, LINK_UNREACHABLE):
+        return verdict
+
+    return LINK_UNVERIFIED
+
+
 class DiscordAccountError(Exception):
     """
     Die Verknüpfung liess sich nicht ablegen (unbrauchbare Daten oder
@@ -338,12 +381,23 @@ class DiscordAccountStore:
 
             pass
 
+        #
+        # Das Token kommt gerade frisch vom Bot - eine bessere
+        # Bestätigung gibt es nicht. Alte Ablehnungen gehören zum
+        # vorigen Token.
+        #
+
+        DiscordAccountStore._rejections = 0
+        DiscordAccountStore._last_rejection = None
+        DiscordAccountStore._verdict = LINK_OK
+
     # --------------------------------------------------
 
     def clear(self) -> None:
 
         DiscordAccountStore._rejections = 0
         DiscordAccountStore._last_rejection = None
+        DiscordAccountStore._verdict = None
 
         for path in (self.file, self.backup):
 
@@ -372,6 +426,33 @@ class DiscordAccountStore:
 
     _last_rejection: float | None = None
 
+    _verdict: str | None = None
+
+    def verdict(self) -> str | None:
+
+        return DiscordAccountStore._verdict
+
+    def state(self) -> str:
+        """Der Zustand der Verknüpfung, siehe `link_state()`."""
+
+        return link_state(self.load(), DiscordAccountStore._verdict)
+
+    def note_auth_ok(self) -> None:
+        """Der Bot hat das Token angenommen (Antwort 2xx oder 403)."""
+
+        DiscordAccountStore._rejections = 0
+        DiscordAccountStore._last_rejection = None
+        DiscordAccountStore._verdict = LINK_OK
+
+    def note_unreachable(self) -> None:
+        """
+        Der Bot war nicht zu erreichen. Eine frühere Ablehnung bleibt
+        stehen - Schweigen hebt sie nicht auf.
+        """
+
+        if DiscordAccountStore._verdict != LINK_REJECTED:
+            DiscordAccountStore._verdict = LINK_UNREACHABLE
+
     def note_auth_rejected(self) -> bool:
         """
         Meldet, dass der Bot das Companion-Token abgelehnt hat.
@@ -380,6 +461,8 @@ class DiscordAccountStore:
         wurde. Gesagt wird das hier und nicht beim Aufrufer - vier der
         fünf Aufrufer haben den Rückgabewert gar nicht ausgewertet.
         """
+
+        DiscordAccountStore._verdict = LINK_REJECTED
 
         now = time.monotonic()
 
@@ -419,3 +502,40 @@ class DiscordAccountStore:
         )
 
         return True
+
+
+#
+# Was zu jedem Zustand dasteht - an einer Stelle, damit Navigation,
+# Einstellungen und Einrichtung nicht drei Wortlaute pflegen.
+# (kurz, ausführlich)
+#
+
+LINK_TEXTS = {
+    LINK_NONE: (
+        "nicht verbunden",
+        "Noch nicht mit Discord verbunden.",
+    ),
+    LINK_UNVERIFIED: (
+        "wird geprüft",
+        "Gespeichert - der Bot hat die Anmeldung noch nicht bestätigt.",
+    ),
+    LINK_OK: (
+        "verbunden",
+        "Der Bot hat die Anmeldung bestätigt.",
+    ),
+    LINK_REJECTED: (
+        "abgelehnt",
+        "Der Bot kennt diese Anmeldung nicht mehr. Bitte erneut "
+        "verbinden.",
+    ),
+    LINK_UNREACHABLE: (
+        "Bot offline",
+        "Gespeichert, aber der Bot ist gerade nicht erreichbar - "
+        "ob die Anmeldung noch gilt, ist offen.",
+    ),
+}
+
+
+def link_text(state: str) -> tuple[str, str]:
+
+    return LINK_TEXTS.get(state, LINK_TEXTS[LINK_UNVERIFIED])

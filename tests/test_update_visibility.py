@@ -92,6 +92,7 @@ class _State:
         self.companion_update_available = False
         self.discord_connected = True
         self.discord_name = "Tester"
+        self.discord_account_state = "ok"
 
 
 class _Manager:
@@ -188,6 +189,7 @@ def test_without_an_account_the_roster_says_what_is_missing(tile):
     """
 
     tile.manager.state.discord_connected = False
+    tile.manager.state.discord_account_state = "none"
 
     tile.apply(tile.manager.state)
 
@@ -239,6 +241,9 @@ def nav():
     class _Store:
         def load(self):
             return None
+
+        def state(self):
+            return "none"
 
     manager.discord_account = _Store()
 

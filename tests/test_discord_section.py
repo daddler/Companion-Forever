@@ -58,6 +58,9 @@ class _Konten:
     def load(self):
         return {}
 
+    def state(self):
+        return "none"
+
 
 class _Manager:
 

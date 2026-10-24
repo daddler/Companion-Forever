@@ -99,6 +99,11 @@ WeintCodex Bot (Discord bot backend)  ←─────────────
   `demo_rules` / `demo_encounters` fixtures in `tests/conftest.py`.
 - **A single 401 must never unlink a Discord account.** Detail:
   `docs/companion-auth.md`.
+- **"Bot online" is not "you are signed in".** `state.discord_connected`
+  means the bot answers; the account is `DiscordAccountStore.state()`
+  (`LINK_*`: none/unverified/ok/rejected/unreachable, checked against the
+  bot in `check_discord()`). Only `ok` may be shown as connected, and
+  `state.discord_name` is the bot's name, never the player's.
 - **The Bestand page only reads `WeintCodex.lua`** (`core/lua_reader.py`,
   never evaluates anything). Bank never opened and gold never reported
   are *unknown*, never 0. Detail: `docs/systems/inventory.md`.
@@ -137,6 +142,7 @@ Linux/Windows/AppImage build commands.
 | WarcraftLogs Live/Archiv/Timeline | `docs/warcraftlogs-bridge.md` |
 | WCIMPORT-Protokoll (Bot-Slash-Commands → Addon) | `docs/wcimport-protocol.md` |
 | Charakterzuordnung, raid-roster, WeintAdmin-Backup | `docs/character-links-and-admin-bridge.md` |
+| Eigene Töne für „Raus da!“ (`WeintCodex_Sounds`, Seite Töne) | `docs/custom-sounds-bridge.md` |
 | Academy/Rotationshelfer lokale Nachrichten | `docs/academy-and-practice-bridge.md` |
 | Companion-Token/Auth, 401-Regel | `docs/companion-auth.md` |
 

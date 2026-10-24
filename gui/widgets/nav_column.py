@@ -60,7 +60,7 @@ from PySide6.QtWidgets import (
 # hier ist deshalb unbedenklich (main_window macht denselben).
 #
 
-from core.discord_account import is_usable
+from core.discord_account import LINK_NONE, LINK_OK, link_text
 
 from gui.navigation import PageId
 from gui.theme import tokens
@@ -746,31 +746,33 @@ class NavColumn(QFrame):
 
         self._refresh_update_badge(state)
 
-        account = self.manager.discord_account.load()
+        store = self.manager.discord_account
+
+        account = store.load()
 
         #
-        # Nur ein Eintrag MIT Companion-Token heisst "verbunden" -
-        # siehe core/discord_account.py:is_usable(). Ohne das meldete
-        # die Spalte einen Namen, wo nichts abrufbar war.
+        # Zwei Fehler, die zusammen "angezeigt verbunden, aber nicht
+        # angemeldet" ergaben: ohne Konto stand hier der Name des BOTS
+        # als verbundenes Konto ("Bot online"), und mit Konto reichte
+        # ein abgelegtes Token - ob der Bot es noch kennt, fragte
+        # niemand. Jetzt zählt nur `LINK_OK` als verbunden.
         #
 
-        if is_usable(account):
+        link = store.state()
 
-            username = account.get("username", "Discord")
+        short, _detail = link_text(link)
 
-            self.account.setState(True, username, "verbunden")
+        if link == LINK_NONE:
 
-        elif state.discord_connected:
-
-            self.account.setState(
-                True,
-                state.discord_name or "Discord",
-                "Bot online",
-            )
+            self.account.setState(False, "Nicht verbunden", "")
 
         else:
 
-            self.account.setState(False, "Nicht verbunden", "")
+            self.account.setState(
+                link == LINK_OK,
+                account.get("username") or "Discord",
+                short,
+            )
 
     # --------------------------------------------------
 
