@@ -5,145 +5,269 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WeintCompanion herunterladen</title>
 <meta name="description" content="Die Desktop-App für das WoW-Addon WeintCodex – herunterladen und installieren.">
+<meta property="og:title" content="WeintCompanion herunterladen">
+<meta property="og:description" content="Die Desktop-App für WeintCodex – World of Warcraft: Forever.">
+<meta property="og:image" content="https://daddler.github.io/Companion-Forever/banner.jpg">
+<meta name="theme-color" content="#0b0a08">
 <link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f4ef; --card: #ffffff; --text: #1d1b18; --muted: #6b665d;
-    --line: #e2ddd2; --accent: #b8862b; --accent-text: #ffffff; --note: #fbf5e6;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #141312; --card: #1e1c1a; --text: #ece8e1; --muted: #a39d92;
-      --line: #34302b; --accent: #d9a441; --accent-text: #1b1508; --note: #26211a;
-    }
+    --bg: #0b0a08;
+    --panel: rgba(24, 21, 16, 0.86);
+    --line: rgba(201, 162, 74, 0.28);
+    --line-soft: rgba(255, 255, 255, 0.07);
+    --text: #ece5d6;
+    --muted: #a59c8a;
+    --gold: #d6ab52;
+    --gold-hi: #f3d68c;
+    --gold-lo: #8f6a25;
+    --green: #3fd16a;
+    --violet: #9b6cf0;
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0; color: var(--text); background: var(--bg);
+    font: 16px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    background-image:
+      radial-gradient(900px 500px at 12% 0%, rgba(63, 209, 106, 0.10), transparent 60%),
+      radial-gradient(900px 600px at 95% 10%, rgba(155, 108, 240, 0.10), transparent 60%);
+    background-attachment: fixed;
   }
-  main { max-width: 720px; margin: 0 auto; padding: 40px 16px 64px; }
-  header { text-align: center; margin-bottom: 32px; }
-  header img { width: 88px; height: 88px; }
-  h1 { font-size: 30px; margin: 12px 0 4px; }
-  header p { color: var(--muted); margin: 0; }
-  .card {
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 14px; padding: 24px; margin-bottom: 20px;
+  a { color: var(--gold-hi); }
+  main { max-width: 960px; margin: 0 auto; padding: 0 16px 64px; }
+
+  /* Banner */
+  .hero { position: relative; margin: 0 -16px; }
+  .hero img { display: block; width: 100%; height: auto; }
+  .hero::after {
+    content: ""; position: absolute; inset: auto 0 0 0; height: 35%;
+    background: linear-gradient(to bottom, transparent, var(--bg));
   }
-  .primary { text-align: center; }
+  @media (min-width: 992px) {
+    .hero { margin: 24px 0 0; border-radius: 16px; overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
+  }
+
+  .tagline {
+    text-align: center; margin: 8px auto 28px; max-width: 560px;
+    color: var(--muted); font-size: 17px; position: relative;
+  }
+
+  /* Download */
+  .download { text-align: center; margin-bottom: 56px; }
   .btn {
-    display: inline-block; background: var(--accent); color: var(--accent-text);
-    text-decoration: none; font-weight: 600; font-size: 18px;
-    padding: 14px 28px; border-radius: 10px;
+    display: inline-flex; align-items: center; gap: 12px;
+    font: 700 19px/1 Cinzel, Georgia, serif; letter-spacing: 0.04em;
+    color: #1d1405; text-decoration: none;
+    padding: 18px 34px; border-radius: 12px;
+    background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo));
+    border: 1px solid #f7e2a6;
+    box-shadow: 0 0 0 4px rgba(214, 171, 82, 0.15), 0 10px 40px rgba(214, 171, 82, 0.35);
+    transition: transform .15s ease, box-shadow .15s ease;
   }
-  .btn:hover { filter: brightness(1.08); }
-  .small { color: var(--muted); font-size: 14px; margin-top: 12px; }
-  .others { margin-top: 16px; font-size: 15px; }
-  .others a { color: var(--text); margin: 0 8px; }
-  h2 { font-size: 20px; margin: 0 0 12px; }
-  ol { padding-left: 22px; margin: 0; }
-  li { margin-bottom: 8px; }
+  .btn:hover { transform: translateY(-2px);
+    box-shadow: 0 0 0 5px rgba(214, 171, 82, 0.22), 0 14px 50px rgba(214, 171, 82, 0.5); }
+  .btn svg { width: 22px; height: 22px; flex: none; }
+  .meta { color: var(--muted); font-size: 14px; margin: 14px 0 0; }
+  .platforms {
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px;
+  }
+  .platforms a {
+    color: var(--text); text-decoration: none; font-size: 14px;
+    padding: 8px 14px; border-radius: 999px;
+    border: 1px solid var(--line-soft); background: rgba(255, 255, 255, 0.03);
+  }
+  .platforms a:hover { border-color: var(--line); color: var(--gold-hi); }
+
+  /* Überschriften */
+  h2 {
+    font: 700 24px/1.25 Cinzel, Georgia, serif; letter-spacing: 0.03em;
+    color: var(--gold-hi); text-align: center; margin: 0 0 8px;
+  }
+  .sub { text-align: center; color: var(--muted); margin: 0 auto 24px; max-width: 620px; }
+  .divider {
+    display: flex; align-items: center; gap: 14px; margin: 0 auto 20px; max-width: 280px;
+  }
+  .divider::before, .divider::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+  .divider span { width: 8px; height: 8px; transform: rotate(45deg);
+    background: var(--green); box-shadow: 0 0 12px var(--green); }
+
+  /* Funktionen */
+  .features {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px; margin-bottom: 56px;
+  }
+  .feature {
+    background: var(--panel); border: 1px solid var(--line-soft);
+    border-radius: 14px; padding: 20px;
+  }
+  .feature b { display: block; font-family: Cinzel, Georgia, serif; color: var(--gold-hi);
+    font-size: 16px; margin-bottom: 4px; }
+  .feature p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* Anleitung */
+  .guide {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; padding: 28px 24px; margin-bottom: 40px;
+  }
+  .tabs { display: flex; gap: 6px; justify-content: center; margin-bottom: 22px; flex-wrap: wrap; }
+  .tab {
+    font: 600 14px Inter, system-ui, sans-serif; color: var(--muted);
+    background: transparent; border: 1px solid var(--line-soft);
+    padding: 8px 18px; border-radius: 999px; cursor: pointer;
+  }
+  .tab[aria-selected="true"] { color: #1d1405; background: var(--gold); border-color: var(--gold); }
+  .panel[hidden] { display: none; }
+  .steps { list-style: none; counter-reset: s; padding: 0; margin: 0; }
+  .steps li {
+    counter-increment: s; position: relative;
+    padding: 2px 0 18px 52px; min-height: 40px;
+  }
+  .steps li::before {
+    content: counter(s); position: absolute; left: 0; top: 0;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center;
+    font: 700 15px Cinzel, Georgia, serif; color: var(--gold-hi);
+    border: 1px solid var(--gold); background: rgba(214, 171, 82, 0.08);
+  }
+  .steps li:not(:last-child)::after {
+    content: ""; position: absolute; left: 17px; top: 38px; bottom: 4px;
+    width: 1px; background: var(--line);
+  }
   .note {
-    background: var(--note); border-left: 4px solid var(--accent);
-    padding: 12px 16px; border-radius: 6px; margin-top: 16px; font-size: 15px;
+    margin-top: 6px; padding: 14px 16px; border-radius: 10px; font-size: 15px;
+    background: rgba(63, 209, 106, 0.06); border: 1px solid rgba(63, 209, 106, 0.25);
   }
-  details { border-top: 1px solid var(--line); padding: 14px 0; }
-  details:first-of-type { border-top: 0; padding-top: 0; }
-  summary { cursor: pointer; font-weight: 600; }
-  details > div { margin-top: 12px; }
+  .note strong { color: var(--green); }
   code {
-    background: var(--bg); border: 1px solid var(--line);
-    padding: 2px 6px; border-radius: 4px; font-size: 14px; word-break: break-all;
+    font: 13px ui-monospace, SFMono-Regular, Consolas, monospace;
+    background: rgba(0, 0, 0, 0.45); border: 1px solid var(--line-soft);
+    padding: 2px 6px; border-radius: 5px; word-break: break-all; color: var(--gold-hi);
   }
+  .why { color: var(--muted); font-size: 14px; text-align: center; margin: 22px auto 0; max-width: 640px; }
+
   footer { text-align: center; color: var(--muted); font-size: 14px; }
   footer a { color: var(--muted); }
+
+  @media (max-width: 520px) {
+    .btn { font-size: 17px; padding: 16px 22px; }
+    .guide { padding: 22px 16px; }
+    h2 { font-size: 21px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } html { scroll-behavior: auto; } }
 </style>
 </head>
 <body>
+
 <main>
 
-<header>
-  <img src="icon.png" alt="">
-  <h1>WeintCompanion</h1>
-  <p>Die Desktop-App für das WoW-Addon WeintCodex</p>
-</header>
+<div class="hero">
+  <img src="banner.jpg" width="1400" height="706"
+       alt="WeintCompanion – World of Warcraft: Forever – Das Gilden-Ökosystem">
+</div>
 
-<section class="card primary">
-  <a id="main-btn" class="btn" href="#alle">Herunterladen</a>
-  <p class="small" id="main-hint">Immer die neueste Version. Kostenlos.</p>
-  <p class="others" id="alle">
-    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-Setup.exe">Windows</a>·
-    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-macOS.dmg">macOS (Apple M1 und neuer)</a>·
+<p class="tagline">
+  Installiert und aktualisiert WeintCodex mit einem Klick, sichert deine
+  Einstellungen und verbindet das Addon mit dem Gilden-Discord.
+</p>
+
+<section class="download">
+  <a id="main-btn" class="btn" href="#alle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 3v12"/><path d="m6 10 6 6 6-6"/><path d="M4 20h16"/>
+    </svg>
+    <span id="main-label">Herunterladen</span>
+  </a>
+  <p class="meta" id="main-hint">Immer die neueste Version · kostenlos</p>
+  <div class="platforms" id="alle">
+    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-Setup.exe">Windows</a>
+    <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-macOS.dmg">macOS (Apple M1 und neuer)</a>
     <a href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-x86_64.AppImage">Linux</a>
-  </p>
+  </div>
 </section>
 
-<section class="card">
-  <h2>Warnung beim ersten Start? Das ist normal.</h2>
-  <p>
-    WeintCompanion ist ein kleines Gildenprojekt. Ein Zertifikat, mit dem
-    Windows und macOS das Programm sofort als „bekannt“ einstufen, kostet
-    jedes Jahr Hunderte Euro – das haben wir nicht. Darum fragt dein
-    Computer beim <strong>ersten</strong> Start nach. Danach nie wieder,
-    und auch Updates laufen ohne Nachfrage direkt in der App.
+<section class="features" aria-label="Funktionen">
+  <div class="feature"><b>Addon mit einem Klick</b>
+    <p>Findet dein WoW, installiert WeintCodex und hält es aktuell.</p></div>
+  <div class="feature"><b>Automatische Backups</b>
+    <p>Deine Einstellungen werden vor jedem Update gesichert.</p></div>
+  <div class="feature"><b>Discord-Anbindung</b>
+    <p>Verbindet Addon und Gilden-Bot – ohne Kopieren von Dateien.</p></div>
+  <div class="feature"><b>Aktualisiert sich selbst</b>
+    <p>Neue Versionen kommen direkt in der App, ohne erneuten Download.</p></div>
+</section>
+
+<section class="guide" aria-labelledby="guide-title">
+  <h2 id="guide-title">Der erste Start</h2>
+  <div class="divider"><span></span></div>
+  <p class="sub">
+    Dein Computer fragt beim ersten Öffnen einmal nach, ob du WeintCompanion
+    vertraust. Das ist normal – so kommst du in einer Minute weiter.
   </p>
 
-  <details id="win" open>
-    <summary>Windows</summary>
-    <div>
-      <ol>
-        <li>Öffne <code>WeintCompanion-Setup.exe</code> aus deinen Downloads.</li>
-        <li>Erscheint „Der Computer wurde durch Windows geschützt“: klicke auf
-          <strong>Weitere Informationen</strong> und dann auf
-          <strong>Trotzdem ausführen</strong>.</li>
-        <li>Folge dem Installer. Fertig.</li>
-      </ol>
-      <div class="note">
-        <strong>Der Download wurde blockiert oder die Datei ist verschwunden?</strong>
-        Dann hat dein Virenscanner sie vorsichtshalber in Quarantäne
-        geschoben. Im Browser kannst du unter den Downloads
-        <em>Beibehalten</em> wählen; bei Windows Defender stellst du sie unter
-        <em>Windows-Sicherheit → Viren- &amp; Bedrohungsschutz → Schutzverlauf</em>
-        wieder her. Schalte deinen Virenscanner dafür bitte
-        <strong>nicht</strong> ab. Wenn du unsicher bist, frag im Discord nach.
-      </div>
-    </div>
-  </details>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-win" aria-controls="win" aria-selected="true">Windows</button>
+    <button class="tab" role="tab" id="tab-mac" aria-controls="mac" aria-selected="false">macOS</button>
+    <button class="tab" role="tab" id="tab-linux" aria-controls="linux" aria-selected="false">Linux</button>
+  </div>
 
-  <details id="mac">
-    <summary>macOS</summary>
-    <div>
-      <ol>
-        <li>Öffne <code>WeintCompanion-macOS.dmg</code> und zieh WeintCompanion in
-          den Ordner <strong>Programme</strong>.</li>
-        <li>Starte WeintCompanion. macOS meldet, dass es nicht geöffnet werden kann –
-          klicke auf <strong>Fertig</strong> (nicht „In den Papierkorb“).</li>
-        <li>Öffne <strong>Systemeinstellungen → Datenschutz &amp; Sicherheit</strong>,
-          scrolle nach unten und klicke bei WeintCompanion auf
-          <strong>Dennoch öffnen</strong>. Bestätige mit deinem Passwort.</li>
-      </ol>
-      <div class="note">
-        Klappt das nicht? Öffne das Programm <em>Terminal</em> und füge diese
-        Zeile ein, dann Enter:<br>
-        <code>xattr -cr /Applications/WeintCompanion.app</code><br>
-        Danach startet WeintCompanion normal. Intel-Macs werden leider nicht
-        unterstützt.
-      </div>
+  <div class="panel" id="win" role="tabpanel" aria-labelledby="tab-win">
+    <ol class="steps">
+      <li>Öffne <code>WeintCompanion-Setup.exe</code> aus deinen Downloads.</li>
+      <li>Erscheint „Der Computer wurde durch Windows geschützt“: klicke auf
+        <strong>Weitere Informationen</strong> und dann auf <strong>Trotzdem ausführen</strong>.</li>
+      <li>Folge dem Installer – fertig. Updates kommen ab jetzt in der App.</li>
+    </ol>
+    <div class="note">
+      <strong>Download blockiert oder Datei verschwunden?</strong>
+      Dein Virenscanner hat sie vorsichtshalber in Quarantäne geschoben. Im
+      Browser kannst du unter den Downloads <em>Beibehalten</em> wählen; bei
+      Windows Defender stellst du sie unter <em>Windows-Sicherheit → Viren- &amp;
+      Bedrohungsschutz → Schutzverlauf</em> wieder her. Bitte schalte den
+      Virenscanner dafür <strong>nicht</strong> ab – frag im Zweifel im Discord.
     </div>
-  </details>
+  </div>
 
-  <details id="linux">
-    <summary>Linux</summary>
-    <div>
-      <ol>
-        <li>Rechtsklick auf <code>WeintCompanion-x86_64.AppImage</code> →
-          <em>Eigenschaften</em> → „Als Programm ausführen“ erlauben
-          (oder <code>chmod +x WeintCompanion-x86_64.AppImage</code>).</li>
-        <li>Doppelklick zum Starten.</li>
-      </ol>
+  <div class="panel" id="mac" role="tabpanel" aria-labelledby="tab-mac" hidden>
+    <ol class="steps">
+      <li>Öffne <code>WeintCompanion-macOS.dmg</code> und zieh WeintCompanion in den
+        Ordner <strong>Programme</strong>.</li>
+      <li>Starte WeintCompanion. macOS meldet, dass es nicht geöffnet werden kann –
+        klicke auf <strong>Fertig</strong> (nicht „In den Papierkorb“).</li>
+      <li>Öffne <strong>Systemeinstellungen → Datenschutz &amp; Sicherheit</strong>,
+        scrolle nach unten und klicke bei WeintCompanion auf <strong>Dennoch öffnen</strong>.
+        Bestätige mit deinem Passwort.</li>
+    </ol>
+    <div class="note">
+      <strong>Klappt das nicht?</strong> Öffne das Programm <em>Terminal</em>, füge
+      diese Zeile ein und drück Enter:<br>
+      <code>xattr -cr /Applications/WeintCompanion.app</code><br>
+      Danach startet WeintCompanion normal. Intel-Macs werden leider nicht unterstützt.
     </div>
-  </details>
+  </div>
+
+  <div class="panel" id="linux" role="tabpanel" aria-labelledby="tab-linux" hidden>
+    <ol class="steps">
+      <li>Rechtsklick auf <code>WeintCompanion-x86_64.AppImage</code> → <em>Eigenschaften</em>
+        → „Als Programm ausführen“ erlauben (oder
+        <code>chmod +x WeintCompanion-x86_64.AppImage</code>).</li>
+      <li>Doppelklick zum Starten – fertig.</li>
+    </ol>
+  </div>
+
+  <p class="why">
+    Warum die Nachfrage? WeintCompanion ist ein Gildenprojekt. Das Zertifikat,
+    mit dem Windows und macOS ein Programm sofort als „bekannt“ einstufen,
+    kostet jedes Jahr Hunderte Euro. Der Quellcode ist öffentlich auf GitHub einsehbar.
+  </p>
 </section>
 
 <footer>
@@ -152,30 +276,41 @@
 </footer>
 
 </main>
+
 <script>
-  // Erkennt das Betriebssystem und macht den großen Knopf passend.
   (function () {
     var base = "https://github.com/daddler/Companion-Forever/releases/latest/download/";
+    var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+
+    function show(id) {
+      tabs.forEach(function (t) {
+        var on = t.getAttribute("aria-controls") === id;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+      });
+    }
+    tabs.forEach(function (t) {
+      t.addEventListener("click", function () { show(t.getAttribute("aria-controls")); });
+    });
+
+    // Betriebssystem erkennen: großer Knopf und passende Anleitung.
     var ua = navigator.userAgent;
     var os = /Windows/i.test(ua) ? "win"
            : /Macintosh|Mac OS X/i.test(ua) && !/iPhone|iPad/i.test(ua) ? "mac"
            : /Linux/i.test(ua) && !/Android/i.test(ua) ? "linux" : null;
     var map = {
-      win:   ["WeintCompanion-Setup.exe",      "Für Windows herunterladen"],
-      mac:   ["WeintCompanion-macOS.dmg",      "Für macOS herunterladen"],
+      win:   ["WeintCompanion-Setup.exe",       "Für Windows herunterladen"],
+      mac:   ["WeintCompanion-macOS.dmg",       "Für macOS herunterladen"],
       linux: ["WeintCompanion-x86_64.AppImage", "Für Linux herunterladen"]
     };
     if (!os) {
       document.getElementById("main-hint").textContent =
-        "WeintCompanion läuft auf Windows, macOS und Linux – wähle dein System:";
+        "Läuft auf Windows, macOS und Linux – wähle dein System:";
       return;
     }
-    var btn = document.getElementById("main-btn");
-    btn.href = base + map[os][0];
-    btn.textContent = map[os][1];
-    ["win", "mac", "linux"].forEach(function (id) {
-      document.getElementById(id).open = (id === os);
-    });
+    document.getElementById("main-btn").href = base + map[os][0];
+    document.getElementById("main-label").textContent = map[os][1];
+    show(os);
   })();
 </script>
 </body>
