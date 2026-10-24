@@ -50,7 +50,13 @@ WeintCodex_CustomSounds = {
   Probe und jedem Ton.
 - **Neue Dateien kennt WoW erst nach einem Neustart des Spiels**, nicht
   nach `/reload`. Beide Seiten sagen das dem Spieler.
-- **Umwandeln nur mit ffmpeg.** Gefunden (`PATH`): jede Eingabe wird zu
-  mono Ogg Vorbis, gekürzt auf 4 s mit 0,15 s Ausblenden. Ohne ffmpeg wird
+- **Umwandeln mit ffmpeg – seit 5.5.0 mitgeliefert.** `imageio-ffmpeg`
+  (requirements.txt) bringt ein statisches ffmpeg je Plattform mit, der
+  PyInstaller-Hook `hook-imageio_ffmpeg` packt es ein; `ffmpeg_path()`
+  nimmt es vor einem System-ffmpeg. Jede Eingabe wird zu mono Ogg
+  Vorbis (libvorbis), gekürzt auf 4 s mit 0,15 s Ausblenden; fehlt
+  libvorbis im Bau, nimmt ein zweiter Versuch den eingebauten
+  Vorbis-Kodierer (Stereo, `-strict experimental`). Lizenz: die
+  ffmpeg-Bauten sind GPL; `imageio-ffmpeg` selbst ist BSD. Ohne ffmpeg wird
   nur eine echte `.ogg` (Kopf `OggS`, ≤ 2 MB) kopiert; alles andere wird
   mit Grund abgelehnt, nie halb übernommen.

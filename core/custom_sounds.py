@@ -98,6 +98,24 @@ def clean_name(text: str, fallback: str) -> str:
 
 
 def ffmpeg_path() -> str | None:
+    """
+    Das mitgelieferte ffmpeg zuerst (seit 5.5.0 über `imageio-ffmpeg`
+    in jedem Installer), dann eines im System. Mitgeliefert zuerst,
+    weil dessen Fähigkeiten bekannt sind - ein System-ffmpeg kann ohne
+    libvorbis gebaut sein.
+    """
+
+    try:
+
+        import imageio_ffmpeg
+
+        bundled = imageio_ffmpeg.get_ffmpeg_exe()
+
+        if bundled and Path(bundled).is_file():
+            return bundled
+
+    except Exception:
+        pass
 
     return shutil.which("ffmpeg")
 
@@ -276,31 +294,49 @@ def convert(source: Path, target: Path, ffmpeg: str) -> None:
 
     fade_at = max(0.0, MAX_SECONDS - 0.15)
 
-    command = [
-        ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
-        "-i", str(source),
-        "-t", f"{MAX_SECONDS}",
-        "-af", f"afade=t=out:st={fade_at}:d=0.15",
-        "-ac", "1", "-ar", "44100",
-        "-c:a", "libvorbis", "-q:a", "5",
-        str(target),
-    ]
+    def command(codec: list[str]) -> list[str]:
 
-    try:
-        result = subprocess.run(
-            command, capture_output=True, text=True, timeout=60,
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        raise SoundError(f"Die Umwandlung ist gescheitert: {exc}") from exc
+        return [
+            ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
+            "-i", str(source),
+            "-t", f"{MAX_SECONDS}",
+            "-af", f"afade=t=out:st={fade_at}:d=0.15",
+            "-ar", "44100",
+            *codec,
+            str(target),
+        ]
 
-    if result.returncode != 0 or not _is_ogg(target):
+    #
+    # libvorbis zuerst. Fehlt er im jeweiligen ffmpeg-Bau, bleibt der
+    # eingebaute Vorbis-Kodierer - der kann nur Stereo und gilt als
+    # "experimentell", klingt für einen Warnton aber genauso.
+    #
 
-        detail = (result.stderr or "").strip().splitlines()[-1:] or ["unbekannt"]
+    attempts = (
+        ["-ac", "1", "-c:a", "libvorbis", "-q:a", "5"],
+        ["-ac", "2", "-c:a", "vorbis", "-strict", "experimental"],
+    )
 
-        raise SoundError(
-            "Die Datei liess sich nicht umwandeln "
-            f"({detail[0][:160]})."
-        )
+    result = None
+
+    for codec in attempts:
+
+        try:
+            result = subprocess.run(
+                command(codec), capture_output=True, text=True, timeout=60,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise SoundError(f"Die Umwandlung ist gescheitert: {exc}") from exc
+
+        if result.returncode == 0 and _is_ogg(target):
+            return
+
+    detail = (result.stderr or "").strip().splitlines()[-1:] or ["unbekannt"]
+
+    raise SoundError(
+        "Die Datei liess sich nicht umwandeln "
+        f"({detail[0][:160]})."
+    )
 
 
 def add(addons_path, source, name: str = "", key: str | None = None,

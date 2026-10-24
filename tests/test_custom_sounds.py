@@ -138,3 +138,27 @@ def test_ffmpeg_turns_a_long_wav_into_a_short_ogg(addons, tmp_path):
     out = addons / cs.FOLDER_NAME / sound.file
     assert out.read_bytes()[:4] == b"OggS"
     assert out.stat().st_size < wav.stat().st_size / 4
+
+
+def test_without_libvorbis_the_builtin_encoder_takes_over(addons, tmp_path):
+    """
+    Ein ffmpeg-Bau ohne libvorbis darf den Import nicht scheitern
+    lassen: der zweite Versuch nimmt den eingebauten Kodierer.
+    """
+
+    fake = tmp_path / "ffmpeg"
+    fake.write_text(
+        "#!/usr/bin/env python3\n"
+        "import sys\n"
+        "if 'libvorbis' in sys.argv: sys.exit(1)\n"
+        "open(sys.argv[-1], 'wb').write(b'OggS' + bytes(20))\n",
+        encoding="utf-8",
+    )
+    fake.chmod(0o755)
+
+    src = tmp_path / "a.mp3"
+    src.write_bytes(b"ID3")
+
+    sound = cs.add(addons, src, ffmpeg=str(fake))
+
+    assert (addons / cs.FOLDER_NAME / sound.file).read_bytes()[:4] == b"OggS"

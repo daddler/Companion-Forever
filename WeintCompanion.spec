@@ -36,6 +36,10 @@ a = Analysis(
         "PySide6.QtCore",
         "PySide6.QtGui",
         "PySide6.QtWidgets",
+        # ffmpeg für die Seite "Töne" (core/custom_sounds.py). Die
+        # Programmdatei selbst sammelt der Hook aus
+        # pyinstaller-hooks-contrib (hook-imageio_ffmpeg).
+        "imageio_ffmpeg",
     ],
     hookspath=[],
     hooksconfig={},

@@ -2,6 +2,14 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 5.5.0
+
+**Eigene Töne aus jeder Datei – ohne Zusatzprogramm.** Die Companion
+bringt den Umwandler (ffmpeg) jetzt selbst mit. mp3, wav, flac, m4a und
+mehr werden unter *Töne* auf jedem System in einen kurzen Warnton für
+„Raus da!“ verwandelt – vorher ging das unter Windows meist nur mit
+fertigen .ogg-Dateien.
+
 ## 5.4.0
 
 **Neuer Startbildschirm.** WeintCompanion begrüßt dich mit dem neuen
