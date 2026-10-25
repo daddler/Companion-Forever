@@ -304,7 +304,17 @@ class RaidScheduleSync:
 
         self._store(data)
 
-        if appointment and schedule.known:
+        #
+        # Nur mit Raid Center: solange es ruht (`RAID_FEATURES`), wird
+        # der Termin allein wegen der Dungeon-Einladungen abgerufen und
+        # nirgends als Raid gezeigt. Eine Zeile "Raidtermin übernommen"
+        # behauptete dann einen Raid, den es in der App nicht gibt -
+        # die Einladungen meldet core/dungeon_invites.py selbst.
+        #
+
+        from core.companion_manager import RAID_FEATURES
+
+        if RAID_FEATURES and appointment and schedule.known:
 
             self.manager.logger.success(
                 f"Raidtermin übernommen: {schedule.title}."

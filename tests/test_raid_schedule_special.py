@@ -360,3 +360,32 @@ def test_a_special_raid_survives_a_restart(monkeypatch, tmp_path):
     )
 
     assert tag.key == "special"
+
+
+def test_resting_raid_center_logs_no_raid(monkeypatch, tmp_path):
+    """
+    Ruht das Raid Center, wird der Termin nur für Dungeon-Einladungen
+    abgerufen - "Raidtermin übernommen" stünde dann für einen Raid, den
+    die App nirgends zeigt.
+    """
+
+    from core import companion_manager
+    from core import raid_schedule_sync as module
+
+    monkeypatch.setattr(module.Paths, "cache", staticmethod(lambda: tmp_path))
+    monkeypatch.setattr(module.DiscordAccountStore, "load", lambda self: {"companion_token": "t"})
+    monkeypatch.setattr(module.httpx, "get", lambda url, **kwargs: _Response(_both()))
+
+    lines = []
+    manager = types.SimpleNamespace(
+        logger=types.SimpleNamespace(success=lines.append, info=lines.append),
+    )
+
+    monkeypatch.setattr(companion_manager, "RAID_FEATURES", False)
+    assert module.RaidScheduleSync(manager).process() is True
+    assert not any("Raidtermin" in line for line in lines)
+
+    (tmp_path / module.CACHE_FILE).unlink()
+    monkeypatch.setattr(companion_manager, "RAID_FEATURES", True)
+    assert module.RaidScheduleSync(manager).process() is True
+    assert any("Raidtermin übernommen" in line for line in lines)
