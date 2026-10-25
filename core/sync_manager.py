@@ -230,6 +230,37 @@ class SyncManager:
                     self.manager.config.get_wow_client_id(),
                 )
 
+            elif message.get("type") == "craft_order_status":
+
+                #
+                # Ein Klick im Spiel auf Annehmen/Ablehnen/Erledigt
+                # (WeintCodex, Nutzlast "id|status"). Liegen bleibt die
+                # Nachricht nur, wenn der Bot gerade nicht erreichbar
+                # ist; was er ablehnt (schon erledigt, storniert), wird
+                # verworfen - sonst stünde sie für immer in der Schlange.
+                #
+
+                orders = getattr(self.manager, "craft_order_sync", None)
+
+                try:
+                    order_id, status = str(message.get("payload") or "").split("|", 1)
+                    order_id = int(order_id)
+                except ValueError:
+                    order_id, status = None, ""
+
+                if orders is None or order_id is None:
+
+                    self.reader.remove_message(message["id"])
+                    continue
+
+                result = orders.send_status(order_id, status.strip(), "codex")
+
+                if result == "retry":
+                    continue
+
+                self.reader.remove_message(message["id"])
+                continue
+
             elif message.get("type") == "loot":
 
                 #

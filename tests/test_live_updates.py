@@ -539,6 +539,7 @@ def _worker(schedule_changed: bool, update_changed: bool,
             process=lambda schedule: False
         ),
         guild_profile_sync=nothing,
+        craft_order_sync=types.SimpleNamespace(process=lambda: False),
         storage_watch=types.SimpleNamespace(
             process=lambda: storage_changed
         ),

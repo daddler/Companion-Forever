@@ -12,6 +12,13 @@ Zwei Fragen, zwei Hälften: links *wer hat welchen Beruf auf welcher
 Stufe*, rechts *wer kann dieses Rezept*. Was nicht bekannt ist, sagt
 die Seite: "Stufe unbekannt" statt 0, "Berufsfenster nie offen" statt
 "0 Rezepte".
+
+Darunter, seit 1.2.0, die **Aufträge** der Gilde (`core/craft_orders.py`):
+was du herstellen sollst und was du bestellt hast, mit Annehmen,
+Erledigt, Ablehnen und Stornieren. Der Abschnitt steht außerhalb des
+Stapels, damit er auch ohne gemeldete Berufe sichtbar ist. Die Knöpfe
+senden in einem eigenen Thread (`set_status_async`), nie aus
+`refresh()`.
 """
 
 from __future__ import annotations
@@ -216,7 +223,156 @@ class ProfessionsPage(Page):
 
         self.addWidget(self.stack, 1)
 
+        self.addWidget(self._build_orders())
+
         self._show_empty()
+
+    # --------------------------------------------------
+    # Aufträge
+    # --------------------------------------------------
+
+    ORDER_BUTTONS = (
+        ("accepted", "Annehmen"),
+        ("done", "Erledigt"),
+        ("declined", "Ablehnen"),
+        ("cancelled", "Stornieren"),
+    )
+
+    def _build_orders(self) -> Card:
+
+        card = Card()
+
+        card.addWidget(eyebrow_label("AUFTRÄGE"))
+
+        self.orders = QTreeWidget()
+
+        self.orders.setColumnCount(4)
+
+        self.orders.setHeaderLabels(["Auftrag", "Für / bei", "Material", "Status"])
+
+        self.orders.setMinimumHeight(140)
+
+        self.orders.setRootIsDecorated(False)
+
+        style_tree(self.orders)
+
+        head = self.orders.header()
+
+        head.setSectionResizeMode(0, QHeaderView.Stretch)
+
+        for column in (1, 2, 3):
+            head.setSectionResizeMode(column, QHeaderView.ResizeToContents)
+
+        self.orders.itemSelectionChanged.connect(self._update_order_buttons)
+
+        card.addWidget(self.orders)
+
+        row = QHBoxLayout()
+
+        row.setSpacing(8)
+
+        self.order_buttons = {}
+
+        for status, text in self.ORDER_BUTTONS:
+
+            button = QPushButton(text)
+
+            button.setObjectName("secondary")
+
+            button.setCursor(Qt.PointingHandCursor)
+
+            button.setEnabled(False)
+
+            button.clicked.connect(lambda _=False, s=status: self._set_order_status(s))
+
+            row.addWidget(button)
+
+            self.order_buttons[status] = button
+
+        row.addStretch(1)
+
+        card.addLayout(row)
+
+        self.orders_note = muted_label()
+
+        card.addWidget(self.orders_note)
+
+        return card
+
+    def _selected_order(self):
+
+        item = self.orders.currentItem()
+
+        return item.data(0, Qt.UserRole) if item is not None else None
+
+    def _update_order_buttons(self):
+
+        order = self._selected_order()
+
+        moves = order.moves() if order is not None else ()
+
+        for status, button in self.order_buttons.items():
+            button.setEnabled(status in moves)
+
+    def _set_order_status(self, status: str):
+
+        order = self._selected_order()
+
+        sync = getattr(self.manager, "craft_order_sync", None)
+
+        if order is None or sync is None:
+            return
+
+        for button in self.order_buttons.values():
+            button.setEnabled(False)
+
+        sync.set_status_async(order.id, status, done=lambda _result: self.manager.state_changed.emit())
+
+    def _draw_orders(self):
+
+        sync = getattr(self.manager, "craft_order_sync", None)
+
+        orders = sync.orders if sync is not None else ()
+
+        selected = self._selected_order()
+
+        self.orders.clear()
+
+        for order in orders:
+
+            who = order.character if order.role == "crafter" else f"bei {order.character}"
+
+            if order.role == "crafter" and order.requester_name:
+                who = f"{order.character} · von {order.requester_name}"
+
+            item = QTreeWidgetItem([
+                order.title() + (f" – {order.note}" if order.note else ""),
+                who,
+                "gestellt" if order.mats else "vom Hersteller",
+                order.status_label,
+            ])
+
+            item.setData(0, Qt.UserRole, order)
+
+            self.orders.addTopLevelItem(item)
+
+            if selected is not None and selected.id == order.id:
+                self.orders.setCurrentItem(item)
+
+        if sync is None or not sync.known:
+            self.orders_note.setText(
+                "Aufträge kommen über die Discord-Anmeldung (Verbindungen)."
+            )
+        elif not orders:
+            self.orders_note.setText(
+                "Keine Aufträge. Neue entstehen im Discord: #berufe → Rezept suchen."
+            )
+        else:
+            self.orders_note.setText(
+                "Im Spiel erscheinen Aufträge nach dem nächsten Einloggen oder /reload."
+            )
+
+        self._update_order_buttons()
 
     # --------------------------------------------------
 
@@ -270,6 +426,8 @@ class ProfessionsPage(Page):
         self.stack.setCurrentIndex(0)
 
     def refresh(self):
+
+        self._draw_orders()
 
         data = self.data
 

@@ -37,6 +37,7 @@ from core.discord_roster_sync import DiscordRosterSync
 from core.raid_schedule_sync import RaidScheduleSync
 from core.dungeon_invites import DungeonInviteSync
 from core.guild_profile_sync import GuildProfileSync
+from core.craft_orders import CraftOrderSync
 from core.storage_watch import StorageWatch
 from core.update_watch import UpdateWatch
 from core.last_pull_sync import LastPullSync
@@ -208,6 +209,7 @@ class CompanionManager(QObject):
         self.raid_schedule_sync = RaidScheduleSync(self)
         self.dungeon_invite_sync = DungeonInviteSync(self, self.addon_inbox)
         self.guild_profile_sync = GuildProfileSync(self)
+        self.craft_order_sync = CraftOrderSync(self, self.addon_inbox)
 
         #
         # Sieht im Hintergrund nach, ob eine neue Fassung bereitliegt.
@@ -564,6 +566,23 @@ class CompanionManager(QObject):
 
             self.logger.error(
                 f"Berufe-Meldung fehlgeschlagen: {exc}"
+            )
+
+        #
+        # Aufträge der Gilde: höchstens jede Minute abrufen, ans Addon
+        # geben; ein neuer Auftrag zeichnet die Anzeige nach (die
+        # Ansage macht das Hauptfenster, siehe _announce_orders()).
+        #
+
+        try:
+
+            if self.craft_order_sync.process():
+                dirty = True
+
+        except Exception as exc:
+
+            self.logger.error(
+                f"Aufträge nicht abgerufen: {exc}"
             )
 
         #

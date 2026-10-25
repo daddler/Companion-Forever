@@ -709,6 +709,39 @@ class MainWindow(QMainWindow):
 
         self._announce_storage()
 
+        self._announce_orders()
+
+    def _announce_orders(self):
+        """
+        Ein neuer Auftrag aus der Gilde - sofort, als Einblendung und
+        (bei verstecktem Fenster) als Sprechblase. Im Spiel erscheint er
+        erst beim nächsten Einloggen oder /reload; deshalb sagt die
+        Companion ihn selbst an.
+        """
+
+        orders = getattr(self.manager, "craft_order_sync", None)
+
+        if orders is None:
+            return
+
+        for order in orders.take_new():
+
+            text = f"Neuer Auftrag: {order.title()} für {order.character}"
+
+            if order.requester_name:
+                text += f" von {order.requester_name}"
+
+            toast = self.notify(text, "ok", "Ansehen")
+
+            if toast is not None and hasattr(toast, "actionTriggered"):
+                toast.actionTriggered.connect(self._open_professions_page)
+
+            self._announce_in_tray(text)
+
+    def _open_professions_page(self):
+
+        self.change_page(PageId.PROFESSIONS)
+
     def _announce_updates(self):
         """
         Ein gefundenes Update einmal als Meldung einblenden.
