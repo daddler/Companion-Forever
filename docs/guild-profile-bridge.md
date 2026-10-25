@@ -59,9 +59,9 @@ Authorization: Bearer <companion_token>
   wird keiner.
 - **„ok“ erst, wenn die Dauernachricht samt Sicherung geschrieben ist.**
   Der Bot hat keinen dauerhaften Speicher; die Nachricht trägt den
-  ganzen Stand als Anhang (`berufe_sicherung.dat`; bis Bot-Stand
-  1.1.0 `berufe_state.json`, wird noch gelesen) und wird beim Start
-  zurückgelesen. Ein „ok“ davor wäre beim nächsten Deploy verloren.
+  ganzen Stand als Anhang (`berufe_sicherung.dat`) an einer Nachricht
+  im **privaten Thread** `berufe-sicherung` des Berufe-Channels – nicht
+  an der sichtbaren Nachricht – und liest ihn beim Start zurück. Ein „ok“ davor wäre beim nächsten Deploy verloren.
 - **Gesendet wird nur bei Änderung** (Fingerabdruck der Meldung);
   gelesen wird nur, wenn sich eine SavedVariables-Datei oder die
   Auswahl der Charaktere geändert hat, höchstens alle zwei Minuten.
@@ -79,8 +79,7 @@ Authorization: Bearer <companion_token>
 
 ## Was im Discord steht
 
-**Genau eine Nachricht** im Channel: Erklärung, die Sicherung als kleine
-Dateizeile und drei Knöpfe – **„N Spieler gemeldet“**, *Rezept suchen*,
+**Genau eine Nachricht** im Channel: Erklärung und drei Knöpfe – **„N Spieler gemeldet“**, *Rezept suchen*,
 *Spieler ansehen*. Neue Meldungen ändern nur die Zahl im Knopf; der
 Channel wächst nicht. Die Liste je Spieler (Discord-Anzeigename, eine
 Zeile je Charakter: „Weintmage (34 Magier) – Schneiderei 215/225,
