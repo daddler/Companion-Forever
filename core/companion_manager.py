@@ -35,6 +35,8 @@ from core.discord_auth import DiscordAuth
 from core.access_profile_sync import AccessProfileSync
 from core.discord_roster_sync import DiscordRosterSync
 from core.raid_schedule_sync import RaidScheduleSync
+from core.dungeon_invites import DungeonInviteSync
+from core.guild_profile_sync import GuildProfileSync
 from core.storage_watch import StorageWatch
 from core.update_watch import UpdateWatch
 from core.last_pull_sync import LastPullSync
@@ -204,6 +206,8 @@ class CompanionManager(QObject):
         #
 
         self.raid_schedule_sync = RaidScheduleSync(self)
+        self.dungeon_invite_sync = DungeonInviteSync(self, self.addon_inbox)
+        self.guild_profile_sync = GuildProfileSync(self)
 
         #
         # Sieht im Hintergrund nach, ob eine neue Fassung bereitliegt.
@@ -524,13 +528,42 @@ class CompanionManager(QObject):
 
         try:
 
-            if RAID_FEATURES and self.raid_schedule_sync.process():
+            #
+            # Der Termin wird auch bei ruhendem Raid Center abgerufen:
+            # Dungeon-Einladungen kommen über denselben Endpunkt und
+            # gehören zum Leveln, nicht zum Raid. Die Raid-Anzeige
+            # bleibt trotzdem aus (Übersicht, Kalender) - weiter geht
+            # nur, was `dungeon` trägt (core/dungeon_invites.py).
+            #
+
+            changed = self.raid_schedule_sync.process()
+
+            if changed and RAID_FEATURES:
                 dirty = True
+
+            self.dungeon_invite_sync.process(
+                self.raid_schedule_sync.schedule
+            )
 
         except Exception as exc:
 
             self.logger.error(
                 f"Raidtermin-Abruf fehlgeschlagen: {exc}"
+            )
+
+        #
+        # Berufe & Twinks an den Bot (Berufe-Channel im Discord). Liest
+        # nur, wenn sich der Spielstand oder die Auswahl geändert hat.
+        #
+
+        try:
+
+            self.guild_profile_sync.process()
+
+        except Exception as exc:
+
+            self.logger.error(
+                f"Berufe-Meldung fehlgeschlagen: {exc}"
             )
 
         #

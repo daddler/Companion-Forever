@@ -411,6 +411,53 @@ class RaidDay:
 
 
 @dataclass(frozen=True)
+class DungeonRef:
+    """
+    Der Dungeon einer Dungeon-Einladung, wie der Bot ihn meldet.
+
+    `id` ist die Kennung aus WeintCodex (`data/dungeons.lua`) - das
+    Addon ordnet die Einladung darüber seinem Dungeon zu. Stufen und
+    Größe sind `None`, wenn der Bot sie nicht nennt, nie 0.
+    """
+
+    id: str
+
+    name: str
+
+    min_level: int | None = None
+
+    max_level: int | None = None
+
+    size: int | None = None
+
+
+def _parse_dungeon(data) -> DungeonRef | None:
+    """Fehlt `dungeon` (oder ist es unbrauchbar), ist es ein Raid."""
+
+    if not isinstance(data, dict):
+        return None
+
+    key = str(data.get("id") or "").strip()
+
+    if not key:
+        return None
+
+    def number(value):
+        try:
+            return int(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    return DungeonRef(
+        id=key,
+        name=str(data.get("name") or key),
+        min_level=number(data.get("min_level")),
+        max_level=number(data.get("max_level")),
+        size=number(data.get("size")),
+    )
+
+
+@dataclass(frozen=True)
 class RaidSchedule:
     """
     Was der Bot über den laufenden Raid weiß.
@@ -477,6 +524,13 @@ class RaidSchedule:
     #
 
     others: tuple["RaidSchedule", ...] = field(default_factory=tuple)
+
+    #
+    # Gesetzt, wenn das keine Raid-, sondern eine Dungeon-Einladung
+    # ist (Bot: Sonderraid mit `dungeon`). `None` = Raid.
+    #
+
+    dungeon: DungeonRef | None = None
 
     # --------------------------------------------------
 
@@ -672,6 +726,7 @@ def parse_schedule(data) -> RaidSchedule:
         composition=_parse_composition(data.get("composition")),
         signup=_parse_signup(data.get("discord")),
         others=_parse_others(data.get("others")),
+        dungeon=_parse_dungeon(data.get("dungeon")),
     )
 
 

@@ -230,17 +230,14 @@ class SyncManager:
                     self.manager.config.get_wow_client_id(),
                 )
 
-            #
-            # Loot-Meldungen sind ein neues, standardmäßig deaktiviertes
-            # Feature (Bridge-Karte "Loot-Verteilung"). Das Addon erfasst
-            # sie unabhängig davon immer - ist die Bridge hier ausgeschaltet,
-            # wird die Nachricht nur verworfen statt an den Bot gesendet.
-            #
+            elif message.get("type") == "loot":
 
-            elif message.get("type") == "loot" and not self.manager.config.data.get(
-                "loot_sync_enabled",
-                False,
-            ):
+                #
+                # Seit dem Aufräumen des Discord gibt es keinen
+                # Loot-Channel mehr; der Bot antwortet mit 410. Ohne
+                # diesen Zweig bliebe jede Meldung liegen und erzeugte
+                # in jedem Sync-Takt einen Fehler.
+                #
 
                 self.reader.remove_message(
                     message["id"]

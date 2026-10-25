@@ -532,8 +532,13 @@ def _worker(schedule_changed: bool, update_changed: bool,
             process=lambda: update_changed
         ),
         raid_schedule_sync=types.SimpleNamespace(
-            process=lambda: schedule_changed
+            process=lambda: schedule_changed,
+            schedule=None,
         ),
+        dungeon_invite_sync=types.SimpleNamespace(
+            process=lambda schedule: False
+        ),
+        guild_profile_sync=nothing,
         storage_watch=types.SimpleNamespace(
             process=lambda: storage_changed
         ),

@@ -132,6 +132,7 @@ Authorization: Bearer <companion_token>
 | `discord` | Fundort der Anmeldung; optional, alle IDs als **Zeichenkette** |
 | `raid_ids` | alle gleichzeitig laufenden Raids, der nächste zuerst |
 | `others` | **optional**: die übrigen laufenden Raids, siehe unten |
+| `dungeon` | **optional**: gesetzt bei einer Dungeon-Einladung, siehe unten; fehlt = Raid |
 
 ## Die Aufstellung (`roster`, `composition`)
 
@@ -414,3 +415,50 @@ als `raid_schedule.json` unter `Paths.cache()`, damit ein Start ohne
 erreichbaren Bot nicht mit „kein Termin bekannt" beginnt. **Ein
 Fehlschlag löscht nichts**: nur eine ausdrückliche `"idle"`-Antwort
 räumt den Termin weg.
+
+## Dungeon-Einladungen (`dungeon`)
+
+Im Discord gibt es neben Standard- und Sonderraid die **Dungeon-
+Einladung** („Raid erstellen“ → „Dungeon“). Für den Bot ist sie ein
+Sonderraid (`raid_type: "special"`, ein Termin) mit einem Dungeon aus
+WeintCodex. Die Antwort trägt dann – im Hauptteil wie in jedem
+`others`-Eintrag – zusätzlich:
+
+```json
+"dungeon": { "id": "the_deadmines", "name": "The Deadmines",
+             "min_level": 17, "max_level": 26, "size": 5 }
+```
+
+- `id` ist die Kennung aus `../Codex-Forever/data/dungeons.lua` bzw.
+  `dungeons_classic.lua`. Das Addon ordnet die Einladung darüber seinem
+  Dungeon zu, nicht über den Namen.
+- Fehlt das Feld, ist es ein Raid. Ein unbekannter Dungeon wird vom Bot
+  gar nicht erst gemeldet (kein leerer Block).
+- Stufen fehlen, wenn Codex sie nicht kennt – nie 0.
+
+**Während das Raid Center ruht** (`RAID_FEATURES = False`) ruft die
+Companion den Termin trotzdem ab, zeigt aber keinen Raid an: weiter
+gehen nur die Dungeon-Einladungen, über die Inbox ins Addon
+(`core/dungeon_invites.py`, Kanal `dungeons`, Nachrichtentyp
+`dungeon_invites`):
+
+```lua
+{ type = "dungeon_invites", payload = {
+    count = 1,
+    invites = {
+        { dungeon = "the_deadmines", name = "The Deadmines", title = "Todesminen",
+          raidId = 8, at = 1755279000, active = 3, tentative = 1, size = 5,
+          me = "none", open = true },
+    },
+} }
+```
+
+- **Immer der volle Stand**, auch ohne Einladung (`count = 0`): eine
+  gelöschte Einladung muss im Addon verschwinden.
+- Vergangene Termine fallen weg; eine Einladung ohne lesbaren Termin
+  bleibt (`at` fehlt) – sie existiert, nur ihr Zeitpunkt ist unbekannt.
+- Keine Namen, nur Zahlen – dieselbe Grenze wie oben.
+- Das Addon zeigt sie auf der Seite des Dungeons unter
+  „Besonderheiten“ (`modules/dungeonpages.lua`, `InvitesFor`) bis drei
+  Stunden nach Beginn.
+

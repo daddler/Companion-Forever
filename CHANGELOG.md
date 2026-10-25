@@ -2,6 +2,24 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.1.0
+
+**Dungeon-Einladungen im Spiel.** Wird im Discord eine Gruppe für einen
+Dungeon zusammengestellt, holt die Companion sie ab und gibt sie an
+WeintCodex weiter: auf der Seite des Dungeons steht dann, wann es
+losgeht, wie viele schon zugesagt haben und ob du dabei bist. Raids
+ruhen weiter.
+
+**Berufe & Twinks im Discord.** Die Companion meldet deine verfolgten
+Charaktere mit Stufe, Klasse, Berufen und Rezepten an den Bot. Im
+Discord sieht die Gilde so, wer was herstellen kann. Wer einen Twink
+unter *Meine Charaktere* ausblendet, nimmt ihn damit auch dort heraus;
+abschalten lässt sich das unter *Verbindungen* („Berufe & Twinks“).
+
+**Loot-Verteilung entfernt.** Den Loot-Channel im Discord gibt es nicht
+mehr; die Brücke ist aus der Liste verschwunden, Loot-Meldungen werden
+nicht mehr verschickt.
+
 ## 1.0.0
 
 **Umstellung auf Forever.** WeintCompanion und WeintCodex zählen ab jetzt

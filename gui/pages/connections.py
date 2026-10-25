@@ -332,6 +332,13 @@ class ConnectionsPage(Page):
             ),
         )
 
+        self.profile_bridge = _BridgeCard(
+            "Berufe & Twinks",
+            "Verfolgte Charaktere, Berufe, Rezepte → Discord",
+            real=True,
+            checked=self.manager.config.data.get("profile_sync_enabled", True),
+        )
+
         self.chat_bridge = _BridgeCard(
             "Chat-Bridge",
             "Guild-Chat ↔ Discord-Channel",
@@ -348,8 +355,17 @@ class ConnectionsPage(Page):
         self.calendar_bridge.setVisible(False)
         self.analysis_bridge.setVisible(False)
 
+        #
+        # Den Loot-Channel im Discord gibt es nicht mehr, und der Bot
+        # nimmt Loot-Meldungen nicht mehr an (410). Die Karte bleibt
+        # gebaut, steht aber nicht im Raster; Loot-Meldungen verwirft
+        # core/sync_manager.py seitdem immer.
+        #
+
+        self.loot_bridge.setVisible(False)
+
         bridge_grid.addWidget(self.roster_bridge, 0, 0)
-        bridge_grid.addWidget(self.loot_bridge, 0, 1)
+        bridge_grid.addWidget(self.profile_bridge, 0, 1)
         bridge_grid.addWidget(self.chat_bridge, 1, 0)
 
         bridge_grid.setColumnStretch(0, 1)
@@ -378,6 +394,8 @@ class ConnectionsPage(Page):
         )
 
         self.loot_bridge.toggle.toggled.connect(self.set_loot_sync_enabled)
+
+        self.profile_bridge.toggle.toggled.connect(self.set_profile_sync_enabled)
 
         self.roster_bridge.toggle.toggled.connect(
             self.set_character_roster_sync_enabled
@@ -503,6 +521,18 @@ class ConnectionsPage(Page):
 
         else:
             self.manager.logger.info("Ingame-Auswertung deaktiviert.")
+
+    def set_profile_sync_enabled(self, enabled: bool):
+
+        self.manager.config.data["profile_sync_enabled"] = enabled
+
+        self.manager.config.save()
+
+        if enabled:
+            self.manager.logger.success("Berufe & Twinks werden an Discord gemeldet.")
+
+        else:
+            self.manager.logger.info("Berufe & Twinks werden nicht mehr gemeldet.")
 
     def set_character_roster_sync_enabled(self, enabled: bool):
 

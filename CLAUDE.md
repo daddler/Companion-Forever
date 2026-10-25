@@ -67,7 +67,10 @@ WeintCodex Bot (Discord bot backend)  ←─────────────
   stops raid schedule, last pull and WeintTV/Academy delivery, but the
   code and its tests stay. Don't delete it, and don't re-enable it with
   Mists of Pandaria data. Detail: `docs/systems/raid-center.md`,
-  *Ruht seit 5.1*. The rule below applies once it is back.
+  *Ruht seit 5.1*. **Exception since 1.1.0:** the schedule is still
+  fetched so that Dungeon-Einladungen reach the addon
+  (`core/dungeon_invites.py`); no raid is shown. The rule below applies
+  once it is back.
 - **Since 1.0.0 everything raid-shaped rests, too** — Forever starts
   with levelling. Charakterzuordnung (no nav entry), the settings section
   "Module" (WeintTV/Academy), the bridges "Raid-Anmeldungen → Kalender"
@@ -147,7 +150,8 @@ Linux/Windows/AppImage build commands.
 | Zugriffsprofile (`access_profile`) | `docs/access-profile-bridge.md` |
 | Ausrüstungsstand (`character_sheet`) | `docs/character-sheet-bridge.md` |
 | Live-Brücke (`companion_live.lua`, überlebt `/reload`) | `docs/live-bridge.md` |
-| Raid-Termin, Countdown, Zusagen | `docs/raid-schedule-bridge.md` |
+| Raid-Termin, Countdown, Zusagen, Dungeon-Einladungen | `docs/raid-schedule-bridge.md` |
+| Berufe & Twinks im Discord (`/companion/profile`) | `docs/guild-profile-bridge.md` |
 | WarcraftLogs Live/Archiv/Timeline | `docs/warcraftlogs-bridge.md` |
 | WCIMPORT-Protokoll (Bot-Slash-Commands → Addon) | `docs/wcimport-protocol.md` |
 | Charakterzuordnung, raid-roster, WeintAdmin-Backup | `docs/character-links-and-admin-bridge.md` |
