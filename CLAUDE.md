@@ -152,6 +152,7 @@ Linux/Windows/AppImage build commands.
 | Live-Brücke (`companion_live.lua`, überlebt `/reload`) | `docs/live-bridge.md` |
 | Raid-Termin, Countdown, Zusagen, Dungeon-Einladungen | `docs/raid-schedule-bridge.md` |
 | Berufe & Twinks im Discord (`/companion/profile`) | `docs/guild-profile-bridge.md` |
+| Aufträge der Gilde (`/companion/orders`, `craft_orders`, `craft_order_status`) | `docs/craft-orders-bridge.md` |
 | WarcraftLogs Live/Archiv/Timeline | `docs/warcraftlogs-bridge.md` |
 | WCIMPORT-Protokoll (Bot-Slash-Commands → Addon) | `docs/wcimport-protocol.md` |
 | Charakterzuordnung, raid-roster, WeintAdmin-Backup | `docs/character-links-and-admin-bridge.md` |

@@ -2,6 +2,18 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.2.0
+
+**Aufträge aus der Gilde.** Kann einer deiner Charaktere ein Rezept,
+können andere im Discord einen Auftrag bei dir aufgeben. Die Companion
+sagt ihn sofort an und zeigt ihn auf der Seite *Berufe* unter
+*Aufträge* – dort nimmst du ihn an, markierst ihn als erledigt oder
+lehnst ab. Deine eigenen Bestellungen stehen dort auch. Im Spiel
+erscheint er beim nächsten Einloggen oder `/reload`.
+
+**Ruhiges Protokoll.** Solange es auf Forever keine Raids gibt, steht
+dort kein „Raidtermin übernommen“ mehr.
+
 ## 1.1.0
 
 **Dungeon-Einladungen im Spiel.** Wird im Discord eine Gruppe für einen
