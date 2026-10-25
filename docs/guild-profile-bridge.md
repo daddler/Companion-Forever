@@ -45,7 +45,9 @@ Authorization: Bearer <companion_token>
 
 - **Eine Meldung ist der vollständige Stand des Spielers** und ersetzt
   die vorige ganz. Ein verlernter Beruf, ein ausgeblendeter Twink
-  verschwinden damit auch aus dem Discord.
+  verschwinden damit auch aus dem Discord. **Eine leere Liste nimmt den
+  Spieler ganz heraus** – wer (noch) keinen Charakter hat, zählt nicht
+  als „gemeldet“.
 - **Gemeldet wird nur, was der Spieler verfolgt**
   (`CharacterStore.characters()`: diese Spielversion, nicht
   ausgeblendet). Dieselbe Wahl wie beim Charakter-Roster.
@@ -57,7 +59,8 @@ Authorization: Bearer <companion_token>
   wird keiner.
 - **„ok“ erst, wenn die Dauernachricht samt Sicherung geschrieben ist.**
   Der Bot hat keinen dauerhaften Speicher; die Nachricht trägt den
-  ganzen Stand als Anhang (`berufe_state.json`) und wird beim Start
+  ganzen Stand als Anhang (`berufe_sicherung.dat`; bis Bot-Stand
+  1.1.0 `berufe_state.json`, wird noch gelesen) und wird beim Start
   zurückgelesen. Ein „ok“ davor wäre beim nächsten Deploy verloren.
 - **Gesendet wird nur bei Änderung** (Fingerabdruck der Meldung);
   gelesen wird nur, wenn sich eine SavedVariables-Datei oder die
@@ -76,9 +79,12 @@ Authorization: Bearer <companion_token>
 
 ## Was im Discord steht
 
-Öffentlich im Channel: je Spieler (Discord-Anzeigename) eine Zeile je
-Charakter – „Weintmage (34 Magier) – Schneiderei 215/225,
-Verzauberkunst (Stufe ?)“. Rezepte stehen nur in der Sicherung und in
-den Antworten der Knöpfe (nur für den Fragenden sichtbar). Discord
-erlaubt je Nachricht 6000 Zeichen; der Bot verteilt die Spieler auf so
-viele Seitennachrichten wie nötig.
+**Genau eine Nachricht** im Channel: Erklärung, die Sicherung als kleine
+Dateizeile und drei Knöpfe – **„N Spieler gemeldet“**, *Rezept suchen*,
+*Spieler ansehen*. Neue Meldungen ändern nur die Zahl im Knopf; der
+Channel wächst nicht. Die Liste je Spieler (Discord-Anzeigename, eine
+Zeile je Charakter: „Weintmage (34 Magier) – Schneiderei 215/225,
+Verzauberkunst (Stufe ?)“) und alle Suchergebnisse sieht nur, wer
+klickt – bei vielen Spielern mit Blättern. Bis Bot-Stand 1.1.0 standen
+die Spieler als Seitennachrichten darunter; der Bot räumt sie beim
+nächsten Schreiben weg.
