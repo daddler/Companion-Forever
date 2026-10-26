@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root {
+    --ink: #1d1530;
+    --ink2: #4a3f66;
+    --violet: #7c4dff;
+    --violet2: #a47bff;
+    --deep: #2b1a6b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0b0820; }
+  body { font-family: 'Outfit', sans-serif; color: var(--ink); }
+
+  #stage { position: absolute; inset: 0; overflow: hidden; }
+  .scene { position: absolute; inset: 0; opacity: 0; transform-origin: 50% 50%; }
+
+  /* ---------- Hintergruende ---------- */
+  .bg-light {
+    position: absolute; inset: -60px;
+    background:
+      radial-gradient(1100px 700px at 30% 40%, rgba(255,255,255,.85), rgba(255,255,255,0) 60%),
+      radial-gradient(900px 700px at 80% 70%, rgba(196,170,255,.55), rgba(196,170,255,0) 70%),
+      linear-gradient(160deg, #f6efff 0%, #e6d7ff 45%, #d4bfff 100%);
+  }
+  .bg-light .floor {
+    position: absolute; left: -20%; right: -20%; bottom: -10%; height: 55%;
+    background-image:
+      linear-gradient(rgba(124,77,255,.10) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(124,77,255,.10) 2px, transparent 2px);
+    background-size: 120px 120px;
+    transform: perspective(900px) rotateX(70deg);
+    transform-origin: 50% 0;
+    mask-image: linear-gradient(to bottom, transparent, black 35%, black);
+  }
+  .bg-dark {
+    position: absolute; inset: -60px;
+    background:
+      radial-gradient(900px 600px at 50% 45%, rgba(124,77,255,.45), rgba(124,77,255,0) 70%),
+      linear-gradient(180deg, #0c0824 0%, #160d3d 60%, #1d1150 100%);
+  }
+  .bg-dark .floor {
+    position: absolute; left: -30%; right: -30%; bottom: -12%; height: 58%;
+    background-image:
+      linear-gradient(rgba(168,123,255,.55) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(168,123,255,.55) 2px, transparent 2px);
+    background-size: 110px 110px;
+    transform: perspective(700px) rotateX(72deg);
+    transform-origin: 50% 0;
+    mask-image: linear-gradient(to bottom, transparent, black 30%, black);
+    box-shadow: 0 -40px 120px rgba(124,77,255,.6) inset;
+  }
+
+  /* ---------- Bausteine ---------- */
+  .a { position: absolute; will-change: transform, opacity; }
+  .title { font-weight: 700; font-size: 104px; letter-spacing: -2px; color: var(--ink); line-height: 1; }
+  .title.small { font-size: 78px; }
+  .title .hl { background: linear-gradient(90deg, #6a35ff, #b06bff); -webkit-background-clip: text; color: transparent; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: #17112b; color: #fff; font-weight: 600; font-size: 26px;
+    padding: 10px 22px; border-radius: 999px; box-shadow: 0 10px 30px rgba(40,20,90,.25);
+  }
+  .pill .dot { width: 12px; height: 12px; border-radius: 50%; background: #a47bff; box-shadow: 0 0 12px #a47bff; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,.92); color: var(--ink); font-weight: 600; font-size: 30px;
+    padding: 16px 26px; border-radius: 18px;
+    box-shadow: 0 14px 40px rgba(70,40,150,.18), 0 0 0 1px rgba(124,77,255,.12);
+    white-space: nowrap;
+  }
+  .chip .ck {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(140deg, #8b5cff, #5a2ee6); color: #fff;
+    display: grid; place-items: center; font-size: 20px; font-weight: 800;
+  }
+  .card {
+    background: rgba(255,255,255,.94); border-radius: 26px;
+    box-shadow: 0 30px 80px rgba(60,30,140,.22), 0 0 0 1px rgba(124,77,255,.10);
+    overflow: hidden;
+  }
+  .hand { font-family: 'Caveat', cursive; font-weight: 600; color: #6a35ff; font-size: 54px; white-space: nowrap; }
+  .hand.light { color: #d9c6ff; }
+
+  /* Glaenzendes 3D-Symbol */
+  .icon3d {
+    width: 260px; height: 260px; border-radius: 64px; position: relative;
+    background: radial-gradient(120% 120% at 25% 15%, #b99bff 0%, #6c3cff 35%, #3a16b8 75%, #220a7a 100%);
+    box-shadow:
+      0 40px 80px rgba(60,20,170,.45),
+      0 0 0 3px rgba(255,255,255,.25) inset,
+      0 -20px 40px rgba(20,0,80,.5) inset,
+      0 0 120px rgba(140,90,255,.55);
+  }
+  .icon3d::before {
+    content: ""; position: absolute; left: 14%; top: 7%; width: 72%; height: 38%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,0));
+    filter: blur(2px);
+  }
+  .icon3d svg { position: absolute; inset: 0; margin: auto; width: 56%; height: 56%; filter: drop-shadow(0 6px 10px rgba(20,0,80,.5)); }
+  .icon3d.img { background: none; box-shadow: none; }
+  .icon3d.img::before { display: none; }
+  .icon3d.img img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 30px 50px rgba(60,20,170,.55)); }
+  .glow { position: absolute; border-radius: 50%; filter: blur(60px); background: rgba(140,90,255,.55); }
+
+  /* Chat-Blasen (Intro) */
+  .bubble {
+    display: inline-flex; align-items: center; gap: 16px;
+    background: rgba(40,26,90,.72); border: 1px solid rgba(190,160,255,.35);
+    color: #efe6ff; font-size: 34px; font-weight: 500; padding: 18px 28px; border-radius: 22px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.45), 0 0 40px rgba(124,77,255,.25);
+    backdrop-filter: blur(6px); white-space: nowrap;
+  }
+  .bubble .av { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(140deg,#ff7ab6,#8b5cff); flex: none; }
+  .bubble .av.b { background: linear-gradient(140deg,#5ce1ff,#6a35ff); }
+  .bubble .av.c { background: linear-gradient(140deg,#ffcf5c,#ff6a3d); }
+
+  /* Schritt-Anzeige */
+  .steps {
+    display: flex; align-items: center; gap: 16px;
+    background: rgba(255,255,255,.9); padding: 12px 20px 12px 12px; border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(70,40,150,.15); font-weight: 600; font-size: 24px;
+  }
+  .steps .n { width: 44px; height: 44px; border-radius: 12px; background: #6a35ff; color: #fff; display: grid; place-items: center; font-weight: 800; }
+  .steps .bars { display: flex; gap: 6px; margin-top: 6px; }
+  .steps .bars i { width: 38px; height: 6px; border-radius: 3px; background: #e2d6ff; display: block; }
+  .steps .bars i.on { background: #6a35ff; }
+
+  /* Discord-Embed */
+  .embed { width: 760px; background: #2b2d31; border-radius: 16px; overflow: hidden; color: #dbdee1; box-shadow: 0 40px 90px rgba(30,10,80,.45); }
+  .embed .head { display: flex; align-items: center; gap: 16px; padding: 22px 26px 8px; }
+  .embed .head .av { width: 54px; height: 54px; border-radius: 50%; background: url(assets/companion.png) center/cover, #3a2a7a; }
+  .embed .head b { color: #c9a8ff; font-size: 26px; }
+  .embed .head span { background: #5865f2; color: #fff; font-size: 16px; padding: 2px 7px; border-radius: 4px; font-weight: 700; }
+  .embed .box { margin: 10px 26px 22px; border-left: 6px solid #f0b232; background: #232428; border-radius: 8px; padding: 20px 24px; }
+  .embed .box h3 { color: #fff; font-size: 30px; letter-spacing: 6px; margin-bottom: 14px; }
+  .embed .box .f { font-size: 22px; margin: 8px 0; }
+  .embed .box .f b { color: #fff; }
+  .embed .box img { width: 100%; border-radius: 8px; margin-top: 14px; display: block; }
+  .embed .btns { display: flex; gap: 12px; padding: 0 26px 24px; }
+  .embed .btns div { background: #248046; color: #fff; padding: 12px 22px; border-radius: 8px; font-size: 22px; font-weight: 600; }
+  .embed .btns div.g { background: #4e5058; }
+
+  /* Fenster im Spiel */
+  .wow { width: 820px; background: rgba(22,16,44,.96); border: 1px solid #6b55b0; border-radius: 10px; color: #e9e2ff; box-shadow: 0 40px 90px rgba(20,10,60,.55); padding: 26px; }
+  .wow .t { font-size: 32px; font-weight: 700; color: #fff; }
+  .wow .h { font-size: 18px; color: #a99bd0; margin: 6px 0 18px; }
+  .wow .row { background: #2a2150; border-radius: 8px; padding: 18px 20px; position: relative; }
+  .wow .row .r1 { font-size: 26px; font-weight: 600; color: #fff; }
+  .wow .row .r2 { font-size: 19px; color: #b9addf; margin-top: 6px; }
+  .wow .row .r3 { font-size: 16px; color: #8f84b5; margin-top: 10px; font-family: 'JetBrains Mono', monospace; }
+  .wow .bt { position: absolute; right: 18px; bottom: 14px; display: flex; gap: 10px; }
+  .wow .bt div { padding: 8px 18px; border-radius: 6px; font-size: 18px; font-weight: 700; }
+  .wow .bt .p { background: linear-gradient(180deg,#9a73ff,#6a35ff); color: #fff; }
+  .wow .bt .s { background: #3a3166; color: #ddd; }
+  .wow .bt .d { background: rgba(255,80,90,.18); color: #ff8b92; }
+
+  /* Companion-Fenster */
+  .app { width: 820px; }
+  .app .bar { display: flex; align-items: center; gap: 10px; padding: 16px 22px; background: #f3edff; border-bottom: 1px solid #e6dcff; }
+  .app .bar i { width: 14px; height: 14px; border-radius: 50%; background: #d4c5ff; display: block; }
+  .app .bar b { margin-left: 12px; font-size: 22px; color: var(--ink2); }
+  .app .ln { display: flex; align-items: center; justify-content: space-between; padding: 22px 30px; border-bottom: 1px solid #f0eaff; font-size: 28px; font-weight: 600; }
+  .app .ln small { color: #7a6aa8; font-weight: 500; font-size: 22px; }
+  .app .ln .ok { color: #1fa463; font-weight: 800; }
+
+  /* Ablauf-Knoten */
+  .node { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 300px; }
+  .node .ic { width: 150px; height: 150px; border-radius: 40px; display: grid; place-items: center; font-size: 72px;
+    background: radial-gradient(120% 120% at 25% 15%, #c6adff 0%, #7a4cff 40%, #3d18b8 100%);
+    box-shadow: 0 30px 60px rgba(60,20,170,.35), 0 0 0 3px rgba(255,255,255,.25) inset; }
+  .node .lb { font-weight: 700; font-size: 30px; text-align: center; color: var(--ink); }
+  .node .sb { font-size: 22px; color: var(--ink2); text-align: center; }
+
+  .bigcta { font-weight: 800; font-size: 120px; letter-spacing: -3px; color: #fff; text-align: center; line-height: 1.02; }
+  .bigcta .hl { background: linear-gradient(90deg, #c7a6ff, #8b5cff 60%, #ff7ad9); -webkit-background-clip: text; color: transparent; }
+  .url {
+    display: inline-flex; align-items: center; gap: 18px;
+    background: #fff; color: #17112b; font-weight: 700; font-size: 40px; padding: 18px 34px; border-radius: 18px;
+    box-shadow: 6px 6px 0 #7c4dff, -6px -6px 0 #ff7ad9, 0 30px 80px rgba(124,77,255,.6);
+  }
+  .rays { position: absolute; inset: -50%; background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.22) 0deg 4deg, rgba(255,255,255,0) 4deg 12deg); }
+  .flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, #c8a8ff, #7c4dff 60%, #3b1a9e); }
+  #sub { position: absolute; left: 0; right: 0; bottom: 22px; text-align: center; z-index: 50; pointer-events: none; }
+  #sub span { display: inline-block; max-width: 1500px; background: rgba(16,10,40,.78); color: #fff; font-weight: 600; font-size: 31px;
+    line-height: 1.3; padding: 9px 26px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.35); backdrop-filter: blur(4px); }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- ================= SZENE 0: Frage (dunkel) ================= -->
+  <section class="scene" data-start="0" data-end="4.9">
+    <div class="bg-dark"><div class="floor"></div></div>
+    <div class="glow a" style="left:760px;top:330px;width:400px;height:400px" data-in="0.6" data-anim="fade"></div>
+    <div class="a" style="left:830px;top:390px" data-in="0.7" data-anim="pop">
+      <div class="bob"><div class="icon3d img" style="width:260px;height:260px"><img src="assets/companion.png"></div></div>
+    </div>
+    <div class="a" style="left:360px;top:200px" data-in="0.3" data-anim="slideup">
+      <div class="bubble"><div class="av"></div><span class="type" data-in="0.45" data-cps="38">Hey, was ist eigentlich dieses Weint-Ökosystem?</span></div>
+    </div>
+    <div class="a" style="left:1120px;top:520px" data-in="1.9" data-anim="slideup">
+      <div class="bubble"><div class="av b"></div><span class="type" data-in="2.05" data-cps="38">Wieso hat jeder in der Gilde das?</span></div>
+    </div>
+    <div class="a" style="left:470px;top:760px" data-in="3.2" data-anim="slideup">
+      <div class="bubble"><div class="av c"></div><span class="type" data-in="3.35" data-cps="30">Zeig mal! 👀</span></div>
+    </div>
+  </section>
+
+  <!-- Uebergang: Lichtkranz -->
+  <section class="scene" data-start="4.5" data-end="5.6" data-flash="1">
+    <div class="flash"></div>
+    <div class="rays a" data-in="4.5" data-anim="spin"></div>
+  </section>
+
+  <!-- ================= SZENE 1: Drei Teile ================= -->
+  <section class="scene" data-start="5.2" data-end="12.6">
+    <div class="bg-light"><div class="floor"></div></div>
+    <div class="a" style="left:0;right:0;top:120px;text-align:center" data-in="5.5" data-anim="rise">
+      <div class="title">Drei Teile. <span class="hl">Ein System.</span></div>
+    </div>
+
+    <svg class="a" style="left:0;top:0" width="1920" height="1080" data-in="7.6" data-anim="none">
+      <path class="draw" data-in="7.6" data-dur="1.3" d="M 560 560 C 760 470, 820 470, 960 540 S 1180 640, 1370 560" fill="none" stroke="#7c4dff" stroke-width="6" stroke-linecap="round" stroke-dasharray="14 14"/>
+    </svg>
+
+    <div class="a" style="left:330px;top:420px;width:460px;text-align:center" data-in="6.2" data-anim="pop">
+      <div class="bob" data-phase="0"><div class="icon3d" style="margin:0 auto;width:230px;height:230px">
+        <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2 2 7l10 5 10-5-10-5Zm-8 9.2v5.3L12 21l8-4.5v-5.3L12 15l-8-3.8Z"/></svg></div></div>
+      <div style="font-weight:700;font-size:40px;margin-top:34px">WeintCodex</div>
+      <div style="font-size:28px;color:#4a3f66">das Addon im Spiel</div>
+    </div>
+    <div class="a" style="left:730px;top:400px;width:460px;text-align:center" data-in="6.6" data-anim="pop">
+      <div class="bob" data-phase="1"><div class="icon3d img" style="margin:0 auto;width:270px;height:270px"><img src="assets/companion.png"></div></div>
+      <div style="font-weight:700;font-size:40px;margin-top:4px">WeintCompanion</div>
+      <div style="font-size:28px;color:#4a3f66">die App auf deinem PC</div>
+    </div>
+    <div class="a" style="left:1130px;top:420px;width:460px;text-align:center" data-in="7.0" data-anim="pop">
+      <div class="bob" data-phase="2"><div class="icon3d" style="margin:0 auto;width:230px;height:230px;background:radial-gradient(120% 120% at 25% 15%,#9fb2ff 0%,#5a6cff 35%,#2d2fb8 75%,#18157a 100%)">
+        <svg viewBox="0 0 24 24"><path fill="#fff" d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm4 6.5a1.5 1.5 0 1 0 0 .01Zm4 0a1.5 1.5 0 1 0 0 .01Zm4 0a1.5 1.5 0 1 0 0 .01Z"/></svg></div></div>
+      <div style="font-weight:700;font-size:40px;margin-top:34px">WeintCodex Bot</div>
+      <div style="font-size:28px;color:#4a3f66">dein Discord</div>
+    </div>
+    <div class="a hand" style="left:780px;top:880px;transform:rotate(-3deg)" data-in="9.0" data-anim="write">arbeiten Hand in Hand ✦</div>
+  </section>
+
+  <!-- ================= SZENE 2: WeintCodex ================= -->
+  <section class="scene" data-start="12.2" data-end="21.4">
+    <div class="bg-light"><div class="floor"></div></div>
+    <div class="a" style="left:110px;top:70px" data-in="12.5" data-anim="slidedown">
+      <div class="steps"><div class="n">1</div><div>Teil 1 von 3<div class="bars"><i class="on"></i><i></i><i></i></div></div></div>
+    </div>
+    <div class="a" style="left:150px;top:260px;width:600px" data-in="12.5" data-anim="pop">
+      <div class="bob"><div class="icon3d img" style="width:560px;height:200px"><img src="assets/codex.png"></div></div>
+    </div>
+    <svg class="a" style="left:0;top:0" width="1920" height="1080" data-in="13.4" data-anim="none">
+      <path class="draw" data-in="13.4" data-dur="1.0" d="M 330 520 C 300 640, 330 760, 470 840" fill="none" stroke="#7c4dff" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+    <div class="a hand" style="left:430px;top:830px;transform:rotate(-4deg)" data-in="14.2" data-anim="write">alles direkt im Spiel</div>
+
+    <div class="a" style="left:860px;top:150px" data-in="12.9" data-anim="rise">
+      <div class="title">WeintCodex</div>
+    </div>
+    <div class="a" style="left:866px;top:280px" data-in="13.3" data-anim="pop"><div class="pill"><span class="dot"></span>Addon für WoW Forever</div></div>
+    <div class="a" style="left:866px;top:380px" data-in="14.0" data-anim="pop"><div class="chip"><span class="ck">✓</span>Dungeons, Bosse &amp; Beute</div></div>
+    <div class="a" style="left:866px;top:470px" data-in="14.6" data-anim="pop"><div class="chip"><span class="ck">✓</span>Questhelfer mit Pfeil</div></div>
+    <div class="a" style="left:866px;top:560px" data-in="15.2" data-anim="pop"><div class="chip"><span class="ck">✓</span>Berufe &amp; Rezepte</div></div>
+    <div class="a" style="left:866px;top:650px" data-in="15.8" data-anim="pop"><div class="chip"><span class="ck">✓</span>Komfort-Oberfläche – alles optional</div></div>
+
+    <div class="a card" style="left:1500px;top:380px;width:340px;transform:rotate(3deg)" data-in="16.6" data-anim="slideleft">
+      <img src="assets/the_deadmines.jpg" style="width:100%;display:block">
+      <div style="padding:16px 22px"><div style="font-weight:700;font-size:28px">The Deadmines</div><div style="font-size:20px;color:#6b5f8d">Stufe 17–26 · 5 Spieler</div></div>
+    </div>
+    <div class="a card" style="left:1515px;top:650px;width:320px;transform:rotate(-4deg)" data-in="17.3" data-anim="slideleft">
+      <img src="assets/stratholme.jpg" style="width:100%;display:block">
+      <div style="padding:14px 20px"><div style="font-weight:700;font-size:26px">Stratholme</div><div style="font-size:19px;color:#6b5f8d">Stufe 58–60</div></div>
+    </div>
+  </section>
+
+  <!-- ================= SZENE 3: WeintCompanion ================= -->
+  <section class="scene" data-start="21.0" data-end="30.4">
+    <div class="bg-light"><div class="floor"></div></div>
+    <div class="a" style="left:110px;top:70px" data-in="21.3" data-anim="slidedown">
+      <div class="steps"><div class="n">2</div><div>Teil 2 von 3<div class="bars"><i class="on"></i><i class="on"></i><i></i></div></div></div>
+    </div>
+    <div class="a" style="left:200px;top:250px" data-in="21.3" data-anim="pop">
+      <div class="bob"><div class="icon3d img" style="width:420px;height:420px"><img src="assets/companion.png"></div></div>
+    </div>
+    <svg class="a" style="left:0;top:0" width="1920" height="1080" data-in="22.6" data-anim="none">
+      <path class="draw" data-in="22.6" data-dur="1.0" d="M 300 690 C 250 770, 290 830, 400 855" fill="none" stroke="#7c4dff" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+    <div class="a hand" style="left:390px;top:825px;transform:rotate(-3deg)" data-in="23.3" data-anim="write">der Kopf von allem</div>
+
+    <div class="a" style="left:780px;top:140px" data-in="21.7" data-anim="rise"><div class="title">WeintCompanion</div></div>
+    <div class="a" style="left:786px;top:270px" data-in="22.1" data-anim="pop"><div class="pill"><span class="dot"></span>die Zentrale auf deinem PC</div></div>
+
+    <div class="a card app" style="left:786px;top:370px" data-in="22.8" data-anim="rise">
+      <div class="bar"><i></i><i></i><i></i><b>WeintCompanion</b></div>
+      <div class="ln a2" data-in="23.4"><span>Installiert &amp; aktualisiert WeintCodex</span><span class="ok">✓</span></div>
+      <div class="ln a2" data-in="24.0"><span>Backup vor jedem Update</span><span class="ok">✓</span></div>
+      <div class="ln a2" data-in="24.6"><span>Alle Twinks, Gold &amp; Bestand <small>auf einen Blick</small></span><span class="ok">✓</span></div>
+      <div class="ln a2" data-in="25.2"><span>Berufe aller Charaktere</span><span class="ok">✓</span></div>
+      <div class="ln a2" data-in="25.8" style="border:0"><span>Verbindet Spiel &amp; Discord</span><span class="ok">✓</span></div>
+    </div>
+  </section>
+
+  <!-- ================= SZENE 4: Bot ================= -->
+  <section class="scene" data-start="30.0" data-end="39.4">
+    <div class="bg-light"><div class="floor"></div></div>
+    <div class="a" style="left:110px;top:70px" data-in="30.3" data-anim="slidedown">
+      <div class="steps"><div class="n">3</div><div>Teil 3 von 3<div class="bars"><i class="on"></i><i class="on"></i><i class="on"></i></div></div></div>
+    </div>
+    <div class="a" style="left:150px;top:190px" data-in="30.5" data-anim="rise"><div class="title">WeintCodex <span class="hl">Bot</span></div></div>
+    <div class="a" style="left:156px;top:320px" data-in="30.9" data-anim="pop"><div class="pill"><span class="dot"></span>direkt in eurem Discord</div></div>
+    <div class="a" style="left:156px;top:430px" data-in="31.6" data-anim="pop"><div class="chip"><span class="ck">✓</span>Raid- &amp; Dungeon-Einladungen</div></div>
+    <div class="a" style="left:156px;top:520px" data-in="32.2" data-anim="pop"><div class="chip"><span class="ck">✓</span>Erinnerung vor dem Termin</div></div>
+    <div class="a" style="left:156px;top:610px" data-in="32.8" data-anim="pop"><div class="chip"><span class="ck">✓</span>Berufe &amp; Twinks der ganzen Gilde</div></div>
+    <div class="a" style="left:156px;top:700px" data-in="33.4" data-anim="pop"><div class="chip"><span class="ck">✓</span>Material-Tracker</div></div>
+
+    <div class="a" style="left:1010px;top:150px;transform:rotate(1.5deg)" data-in="31.4" data-anim="slideleft">
+      <div class="embed">
+        <div class="head"><div class="av"></div><b>WeintCodex</b><span>APP</span></div>
+        <div class="box">
+          <h3>T O D E S M I N E N</h3>
+          <div class="f">🟢 <b>Anmeldung geöffnet</b></div>
+          <div class="f">🏰 <b>The Deadmines</b> · Stufe 17–26 · 5 Spieler</div>
+          <div class="f">📅 <b>Samstag, 20:00</b> · 3 / 5 Spieler</div>
+          <img src="assets/the_deadmines.jpg">
+        </div>
+        <div class="btns"><div>✅ Anmelden</div><div class="g">❓ Vielleicht</div><div class="g">❌ Absagen</div></div>
+      </div>
+    </div>
+    <div class="a hand" style="left:1240px;top:850px;transform:rotate(-3deg)" data-in="35.0" data-anim="write">Gruppe in 10 Sekunden geplant</div>
+  </section>
+
+  <!-- ================= SZENE: Berufe der Gilde ================= -->
+  <section class="scene" data-start="0" data-end="10" data-key="guild">
+    <div class="bg-light"><div class="floor"></div></div>
+    <div class="a" style="left:120px;top:150px" data-in="0.3" data-anim="rise"><div class="title small">Wer kann <span class="hl">was?</span></div></div>
+    <div class="a" style="left:126px;top:270px" data-in="0.8" data-anim="pop"><div class="pill"><span class="dot"></span>die Berufe der ganzen Gilde</div></div>
+    <div class="a" style="left:126px;top:380px" data-in="1.4" data-anim="pop"><div class="chip"><span class="ck">✓</span>meldet sich von selbst – über die Companion</div></div>
+    <div class="a" style="left:126px;top:470px" data-in="2.0" data-anim="pop"><div class="chip"><span class="ck">✓</span>Stufe, Fertigkeit &amp; alle Rezepte</div></div>
+    <div class="a" style="left:126px;top:560px" data-in="2.6" data-anim="pop"><div class="chip"><span class="ck">✓</span>auch eure Twinks</div></div>
+    <div class="a" style="left:1000px;top:130px;transform:rotate(-1.5deg)" data-in="1.0" data-anim="slideleft">
+      <div class="embed" style="width:800px">
+        <div class="head"><div class="av"></div><b>WeintCodex</b><span>APP</span></div>
+        <div class="box" style="border-left-color:#1abc9c">
+          <h3 style="letter-spacing:2px;font-size:30px">⚒️ Berufe der Gilde</h3>
+          <div class="f">Wer hat welchen Beruf auf welcher Stufe – und wer kann was herstellen?</div>
+          <div class="f">Die Liste füllt sich von selbst.</div>
+        </div>
+        <div class="btns"><div>👥 14 Spieler gemeldet</div><div style="background:#5865f2">🔎 Rezept suchen</div><div class="g">👤 Spieler ansehen</div></div>
+      </div>
+    </div>
+    <div class="a" style="left:1060px;top:560px;transform:rotate(1deg)" data-in="5.4" data-anim="rise">
+      <div class="embed" style="width:720px">
+        <div class="box" style="border-left-color:#5865f2;margin-top:22px">
+          <h3 style="letter-spacing:1px;font-size:28px">🔎 Runenstoffbeutel</h3>
+          <div class="f">🧵 <b>Weintmage</b> · Schneiderei 285 / 300</div>
+          <div class="f">🧵 <b>Lyrabell</b> · Schneiderei 300 / 300</div>
+        </div>
+        <div class="btns"><div style="background:#5865f2">🛠️ Auftrag erstellen</div></div>
+      </div>
+    </div>
+    <div class="a hand" style="left:150px;top:690px;transform:rotate(-4deg)" data-in="6.2" data-anim="write">nie wieder „Kann das wer?“ im Gildenchat</div>
+  </section>
+
+  <!-- ================= SZENE 5: Auftraege ================= -->
+  <section class="scene" data-start="39.0" data-end="49.4">
+    <div class="bg-light"><div class="floor"></div></div>
+    <div class="a" style="left:0;right:0;top:90px;text-align:center" data-in="39.3" data-anim="rise">
+      <div class="title small">Neu: <span class="hl">Aufträge in der Gilde</span></div>
+    </div>
+    <div class="a" style="left:0;right:0;top:200px;text-align:center" data-in="39.8" data-anim="fade">
+      <div style="font-size:32px;color:#4a3f66;font-weight:500">Du brauchst etwas, das jemand anderes herstellen kann?</div>
+    </div>
+
+    <svg class="a" style="left:0;top:0" width="1920" height="1080" data-in="40.4" data-anim="none">
+      <path class="draw" data-in="40.4" data-dur="3.2" d="M 330 380 L 1590 380" fill="none" stroke="#7c4dff" stroke-width="6" stroke-linecap="round" stroke-dasharray="16 14"/>
+    </svg>
+    <div class="a" style="left:180px;top:300px" data-in="40.4" data-anim="pop"><div class="node"><div class="ic">🔎</div><div class="lb">Rezept suchen</div><div class="sb">„Wer kann das?“</div></div></div>
+    <div class="a" style="left:600px;top:300px" data-in="41.4" data-anim="pop"><div class="node"><div class="ic">🛠️</div><div class="lb">Auftrag erstellen</div><div class="sb">Menge · Notiz · Material</div></div></div>
+    <div class="a" style="left:1020px;top:300px" data-in="42.4" data-anim="pop"><div class="node"><div class="ic">💬</div><div class="lb">Sofort Bescheid</div><div class="sb">Discord &amp; Companion</div></div></div>
+    <div class="a" style="left:1440px;top:300px" data-in="43.4" data-anim="pop"><div class="node"><div class="ic">🎮</div><div class="lb">Fenster im Spiel</div><div class="sb">Annehmen · Erledigt</div></div></div>
+
+    <div class="a" style="left:550px;top:610px" data-in="44.6" data-anim="rise">
+      <div class="wow">
+        <div class="t">Aufträge aus der Gilde</div>
+        <div class="h">Status geht beim Ausloggen oder /reload an die Gilde.</div>
+        <div class="row">
+          <div class="r1">4× Runenstoffbeutel</div>
+          <div class="r2">für Weintmage · von Fabi · Material gestellt</div>
+          <div class="r3">offen</div>
+          <div class="bt"><div class="p">Annehmen</div><div class="s">Erledigt</div><div class="d">Ablehnen</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="a hand" style="left:1410px;top:740px;transform:rotate(-5deg)" data-in="46.2" data-anim="write">ganz ohne Flüstern</div>
+  </section>
+
+  <!-- ================= SZENE 6: So legst du los ================= -->
+  <section class="scene" data-start="49.0" data-end="57.0">
+    <div class="bg-light"><div class="floor"></div></div>
+    <div class="a" style="left:0;right:0;top:110px;text-align:center" data-in="49.3" data-anim="rise">
+      <div class="title">So legst du <span class="hl">los</span></div>
+    </div>
+    <div class="a" style="left:420px;top:320px" data-in="50.2" data-anim="slideright">
+      <div class="chip" style="font-size:40px;padding:26px 36px;gap:24px"><span class="ck" style="width:56px;height:56px;font-size:30px">1</span>WeintCompanion herunterladen<span class="ck tick" data-in="52.6" style="background:linear-gradient(140deg,#3ddc84,#1fa463)">✓</span></div>
+    </div>
+    <div class="a" style="left:420px;top:480px" data-in="50.9" data-anim="slideright">
+      <div class="chip" style="font-size:40px;padding:26px 36px;gap:24px"><span class="ck" style="width:56px;height:56px;font-size:30px">2</span>Mit Discord anmelden<span class="ck tick" data-in="53.2" style="background:linear-gradient(140deg,#3ddc84,#1fa463)">✓</span></div>
+    </div>
+    <div class="a" style="left:420px;top:640px" data-in="51.6" data-anim="slideright">
+      <div class="chip" style="font-size:40px;padding:26px 36px;gap:24px"><span class="ck" style="width:56px;height:56px;font-size:30px">3</span>WeintCodex wird automatisch installiert<span class="ck tick" data-in="53.8" style="background:linear-gradient(140deg,#3ddc84,#1fa463)">✓</span></div>
+    </div>
+    <div class="a hand" style="left:1250px;top:820px;transform:rotate(-4deg)" data-in="54.4" data-anim="write">fertig in 2 Minuten</div>
+  </section>
+
+  <!-- ================= SZENE 7: Abschluss (dunkel) ================= -->
+  <section class="scene" data-start="56.6" data-end="64">
+    <div class="bg-dark"><div class="floor"></div></div>
+    <div class="glow a" style="left:760px;top:60px;width:400px;height:400px" data-in="56.8" data-anim="fade"></div>
+    <div class="a" style="left:810px;top:80px" data-in="56.9" data-anim="pop">
+      <div class="bob"><div class="icon3d img" style="width:300px;height:300px"><img src="assets/companion.png"></div></div>
+    </div>
+    <div class="a" style="left:0;right:0;top:420px" data-in="57.4" data-anim="rise">
+      <div class="bigcta">Hol dir <span class="hl">WeintCompanion</span></div>
+    </div>
+    <div class="a" style="left:0;right:0;top:600px;text-align:center" data-in="58.2" data-anim="pop">
+      <div class="url"><svg width="38" height="38" viewBox="0 0 24 24"><path fill="#7c4dff" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3 1.4 1.4L12 17.4l-5.7-5.7 1.4-1.4 3.3 3.3V4a1 1 0 0 1 1-1ZM5 19h14v2H5z"/></svg>daddler.github.io/Companion-Forever</div>
+    </div>
+    <div class="a" style="left:0;right:0;top:760px;text-align:center" data-in="59.2" data-anim="fade">
+      <div style="color:#d9c6ff;font-size:36px;font-weight:600">Forever startet am 05.11. – sei bereit.</div>
+    </div>
+    <div class="a hand light" style="left:0;right:0;top:850px;text-align:center;font-size:70px" data-in="60.2" data-anim="write">Bis einer weint.</div>
+  </section>
+  <div id="sub"><span></span></div>
+</div>
+<script src="timeline.js"></script>
+
+<script>
+const TL = window.TL;
+const DURATION = TL.duration;
+// Szenen auf die gesprochene Zeitleiste legen: Reihenfolge im Markup = TL.scenes,
+// der Blitz sitzt kurz vor der zweiten Szene. Alles mit data-in wird mitgezogen.
+{
+  const secs = [...document.querySelectorAll('.scene')];
+  let k = 0;
+  for (const s of secs) {
+    if (s.dataset.flash) continue;
+    const cur = TL.scenes[k++];
+    const os = +s.dataset.start, oe = +s.dataset.end;
+    const ns = cur.start, ne = cur.end;
+    const f = Math.min(cur.stretch || 1.5, (ne - ns) / (oe - os));
+    for (const el of s.querySelectorAll('[data-in]')) {
+      el.dataset.in = ns + 0.25 + (+el.dataset.in - os) * f;
+    }
+    s.dataset.start = ns - 0.35; s.dataset.end = ne + 0.35;
+  }
+  const fl = document.querySelector('[data-flash]');
+  const t2 = TL.scenes[1].start;
+  fl.dataset.start = t2 - 0.7; fl.dataset.end = t2 + 0.4;
+  fl.querySelector('[data-in]').dataset.in = t2 - 0.7;
+}
+const subEl = document.querySelector('#sub span');
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const prog = (t, t0, d) => clamp((t - t0) / d);
+const easeOut = p => 1 - Math.pow(1 - p, 3);
+const easeInOut = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const easeBack = p => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+
+const scenes = [...document.querySelectorAll('.scene')];
+const items = [...document.querySelectorAll('.a')];
+const drawPaths = [...document.querySelectorAll('path.draw')];
+drawPaths.forEach(p => { p._len = p.getTotalLength(); });
+const types = [...document.querySelectorAll('.type')];
+types.forEach(el => { el._full = el.textContent; });
+const lines = [...document.querySelectorAll('.a2')];
+const ticks = [...document.querySelectorAll('.tick')];
+const bobs = [...document.querySelectorAll('.bob')];
+
+// Grundtransformation je Element merken (rotate aus dem style)
+items.forEach(el => { el._base = el.style.transform || ''; });
+
+function setTime(t) {
+  for (const s of scenes) {
+    const a = +s.dataset.start, b = +s.dataset.end;
+    let o;
+    if (s.dataset.flash) {
+      // kurzer Lichtblitz: rein, Hoehepunkt, raus
+      const p = prog(t, a, b - a);
+      o = t < a || t > b ? 0 : Math.sin(Math.PI * p);
+      s.style.transform = `scale(${1 + .25 * p})`;
+    } else {
+      const fin = prog(t, a, .45), fout = 1 - prog(t, b - .45, .45);
+      o = t < a || t > b ? 0 : Math.min(fin, fout);
+      // langsamer Kameraschub wie im Vorbild
+      const k = prog(t, a, b - a);
+      s.style.transform = `scale(${1 + .045 * easeInOut(k)}) translateY(${-10 * k}px)`;
+    }
+    s.style.opacity = o;
+    s.style.visibility = o > 0.001 ? 'visible' : 'hidden';
+  }
+
+  for (const el of items) {
+    const t0 = +(el.dataset.in || 0);
+    const kind = el.dataset.anim || 'fade';
+    let p = prog(t, t0, kind === 'write' ? .9 : .6);
+    let tr = '', op = 1, clip = '';
+    switch (kind) {
+      case 'pop': { const e = easeBack(p); op = clamp(p * 2.5); tr = `scale(${.6 + .4 * e})`; break; }
+      case 'rise': { const e = easeOut(p); op = p; tr = `translateY(${50 * (1 - e)}px)`; break; }
+      case 'slideup': { const e = easeOut(p); op = p; tr = `translateY(${40 * (1 - e)}px) scale(${.96 + .04 * e})`; break; }
+      case 'slidedown': { const e = easeOut(p); op = p; tr = `translateY(${-40 * (1 - e)}px)`; break; }
+      case 'slideleft': { const e = easeOut(p); op = p; tr = `translateX(${160 * (1 - e)}px)`; break; }
+      case 'slideright': { const e = easeOut(p); op = p; tr = `translateX(${-160 * (1 - e)}px)`; break; }
+      case 'write': { op = clamp(p * 4); { const e = easeInOut(p); clip = e >= 1 ? '' : `inset(-30% ${(1 - e) * 115 - 15}% -30% -8%)`; }; break; }
+      case 'spin': { tr = `rotate(${(t - t0) * 40}deg)`; break; }
+      case 'none': { op = t >= t0 ? 1 : 0; break; }
+      default: { op = easeOut(p); }
+    }
+    el.style.opacity = op;
+    el.style.transform = tr + ' ' + el._base;
+    el.style.clipPath = clip;
+  }
+
+  for (const p of drawPaths) {
+    const q = easeInOut(prog(t, +p.dataset.in, +p.dataset.dur));
+    p.style.strokeDashoffset = 0;
+    if (p.getAttribute('stroke-dasharray')) {
+      // gestrichelt: ueber eine Maske-Laenge einblenden
+      p.style.clipPath = '';
+      p.setAttribute('pathLength', 1000);
+      p.style.opacity = q > 0 ? 1 : 0;
+      p.parentNode.style.clipPath = `inset(0 ${100 - 100 * q}% 0 0)`;
+    } else {
+      p.style.strokeDasharray = p._len;
+      p.style.strokeDashoffset = p._len * (1 - q);
+    }
+  }
+
+  for (const el of types) {
+    const n = Math.floor(clamp((t - +el.dataset.in) * +el.dataset.cps, 0, el._full.length));
+    el.textContent = [...el._full].slice(0, n).join('') + (n < el._full.length && n > 0 ? '▍' : '');
+  }
+
+  for (const el of lines) {
+    const p = easeOut(prog(t, +el.dataset.in, .45));
+    el.style.opacity = p;
+    el.style.transform = `translateX(${30 * (1 - p)}px)`;
+  }
+
+  for (const el of ticks) {
+    const p = easeBack(prog(t, +el.dataset.in, .4));
+    el.style.opacity = clamp(p * 3);
+    el.style.transform = `scale(${p})`;
+  }
+
+  const cue = TL.subs.find(c => t >= c.t0 && t < c.t1);
+  subEl.textContent = cue ? cue.text : '';
+  subEl.style.opacity = cue ? clamp(Math.min((t - cue.t0) / .15, (cue.t1 - t) / .15)) : 0;
+  subEl.parentNode.style.display = cue ? 'block' : 'none';
+
+  bobs.forEach((el, i) => {
+    const ph = +(el.dataset.phase || i);
+    el.style.transform = `translateY(${Math.sin(t * 1.7 + ph * 1.3) * 9}px) rotate(${Math.sin(t * 1.1 + ph) * 1.5}deg)`;
+  });
+}
+
+window.setTime = setTime;
+window.DURATION = DURATION;
+setTime(0);
+</script>
+</body>
+</html>

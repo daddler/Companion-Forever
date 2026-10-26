@@ -1,0 +1,48 @@
+[
+  {"scene": "intro", "lines": [
+    "Was ist eigentlich dieses Weint-Ökosystem?",
+    "Und warum hat es plötzlich jeder in der Gilde?",
+    "Ich zeig's dir."
+  ]},
+  {"scene": "three", "lines": [
+    "Drei Teile. Ein einziges System.",
+    "WeintCodex im Spiel. WeintCompanion auf deinem PC. Und der Bot in eurem Discord.",
+    "Alle drei arbeiten Hand in Hand."
+  ]},
+  {"scene": "codex", "lines": [
+    "Teil eins: WeintCodex, dein Addon für WoW Forever.",
+    "Dungeons mit Bossen und Beute, ein Questhelfer mit Pfeil, deine Berufe mit allen Rezepten.",
+    "Und eine Komfort-Oberfläche, die du nur einschaltest, wenn du sie willst."
+  ]},
+  {"scene": "companion", "lines": [
+    "Teil zwei: WeintCompanion, der Kopf von allem.",
+    "Die App installiert und aktualisiert WeintCodex für dich, und macht vor jedem Update ein Backup.",
+    "Du siehst alle Twinks, ihr Gold und ihre Berufe auf einen Blick.",
+    "Und sie verbindet dein Spiel mit eurem Discord."
+  ]},
+  {"scene": "bot", "lines": [
+    "Teil drei: der Bot in eurem Discord.",
+    "Einladungen für Raids und Dungeons mit Banner, Anmeldung per Klick, und eine Erinnerung vor dem Termin.",
+    "Dazu der Material-Tracker für die ganze Gilde."
+  ]},
+  {"scene": "guild", "lines": [
+    "Weil die Companion deine Berufe meldet, sieht die ganze Gilde, wer was herstellen kann.",
+    "Rezept suchen, Treffer finden. Fertig."
+  ]},
+  {"scene": "orders", "lines": [
+    "Und jetzt neu: Aufträge in der Gilde.",
+    "Du wählst den Hersteller, gibst Menge und Notiz an, und sagst, ob du das Material stellst.",
+    "Er bekommt sofort Bescheid: im Discord, in der Companion, und beim nächsten Einloggen direkt im Spiel.",
+    "Annehmen, herstellen, erledigt. Ganz ohne Flüstern."
+  ]},
+  {"scene": "start", "lines": [
+    "So legst du jetzt los.",
+    "WeintCompanion herunterladen. Mit Discord anmelden.",
+    "WeintCodex installiert sich von selbst. In zwei Minuten bist du fertig."
+  ]},
+  {"scene": "outro", "lines": [
+    "Hol dir jetzt die WeintCompanion.",
+    "Forever startet am fünften November. Sei bereit.",
+    "Bis einer weint."
+  ]}
+]
