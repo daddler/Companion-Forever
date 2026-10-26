@@ -34,11 +34,12 @@ ffmpeg -i video_noaudio.mp4 -i mix.wav -filter_complex "[1:a]atrim=0:$D,afade=t=
   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 256k -movflags +faststart WeintCompanion_Werbevideo.mp4
 ```
 
-## Stand und nächster Schritt
+## Stand
 
-- v3 ist fertig und vom Besitzer abgenommen. Einziger offener Punkt: Die Stimme klingt zu sehr nach Computer.
-- Als Nächstes wird die Stimme durch **ElevenLabs** ersetzt (Gratis-Plan, „Multilingual v2“, deutsche Stimme). Der Gratis-Plan verlangt die Nennung „Stimme: ElevenLabs“ im Abspann oder in der Beschreibung.
-  - Dafür ersetzt `say()` in `tts/voice.py` die Piper-Ausgabe durch einen Aufruf von `POST https://api.elevenlabs.io/v1/text-to-speech/{voice_id}`. Der Header ist `xi-api-key`, nicht `Authorization`. Der Schlüssel kommt aus der Umgebungsvariablen `ELEVENLABS_API_KEY`.
-  - Die Lautschrift-Korrekturen (`SAY`, `IPA_FIX`) sind auf Piper zugeschnitten und bei ElevenLabs vermutlich unnötig. Ob sie gebraucht werden, entscheidet die Whisper-Prüfung.
-  - Text, Zeitleiste, Szenen, Musik und Mix bleiben unverändert.
+- **v4 (aktuell):** Die Stimme ist eine ElevenLabs-Aufnahme, „Roger – Laid-Back Casual“, vom Besitzer im Browser erzeugt. Sie liegt als eine Datei in `voice/elevenlabs_roger.mp3`.
+  - `tts/split_el.py` schneidet sie an den Sprechpausen und ordnet die Stücke per Whisper den 28 Sätzen zu. Ergebnis: `voice/segments.json`.
+  - `tts/build_voice_el.py` legt daraus die Zeitleiste.
+  - Bau: `python3 tts/split_el.py` (aus `tts/`), dann `python3 tts/build_voice_el.py "$PWD"` statt `build_voice.py`. Danach weiter wie oben ab `music2.py`.
+- Die Piper-Pipeline (`build_voice.py`, `voice.py`) bleibt als Ersatz ohne ElevenLabs erhalten.
+- ElevenLabs-Gratis-Plan: Die Nennung „Stimme: ElevenLabs“ gehört in die Beschreibung oder den Abspann. Aus der Cloud-Sitzung heraus ist der Gratis-Plan gesperrt (Proxy).
 - Das Bildmaterial ist nachgebaut, es sind keine Screenshots aus dem Spiel. Die Beispieldaten (Spielernamen, „14 Spieler gemeldet“) sind erfunden. Taktiken oder Inhalte aus Mists of Pandaria kommen nicht vor.

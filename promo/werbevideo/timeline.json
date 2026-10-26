@@ -1,7 +1,7 @@
 {
  "bpm": 110,
- "bars": 57,
- "duration": 121.5,
+ "bars": 58,
+ "duration": 123.682,
  "scenes": [
   {
    "key": "intro",
@@ -24,62 +24,62 @@
   {
    "key": "codex",
    "start": 21.818,
-   "end": 37.091,
+   "end": 39.273,
    "bar": 10,
-   "bars": 7,
+   "bars": 8,
    "music": "main",
    "drop": false
   },
   {
    "key": "companion",
-   "start": 37.091,
-   "end": 54.545,
-   "bar": 17,
+   "start": 39.273,
+   "end": 56.727,
+   "bar": 18,
    "bars": 8,
    "music": "main",
    "drop": false
   },
   {
    "key": "bot",
-   "start": 54.545,
-   "end": 67.636,
-   "bar": 25,
+   "start": 56.727,
+   "end": 69.818,
+   "bar": 26,
    "bars": 6,
    "music": "main",
    "drop": false
   },
   {
    "key": "guild",
-   "start": 67.636,
-   "end": 78.545,
-   "bar": 31,
+   "start": 69.818,
+   "end": 80.727,
+   "bar": 32,
    "bars": 5,
    "music": "soft",
    "drop": false
   },
   {
    "key": "orders",
-   "start": 78.545,
-   "end": 98.182,
-   "bar": 36,
+   "start": 80.727,
+   "end": 100.364,
+   "bar": 37,
    "bars": 9,
    "music": "big",
    "drop": true
   },
   {
    "key": "start",
-   "start": 98.182,
-   "end": 109.091,
-   "bar": 45,
+   "start": 100.364,
+   "end": 111.273,
+   "bar": 46,
    "bars": 5,
    "music": "main",
    "drop": false
   },
   {
    "key": "outro",
-   "start": 109.091,
-   "end": 120.0,
-   "bar": 50,
+   "start": 111.273,
+   "end": 122.182,
+   "bar": 51,
    "bars": 5,
    "music": "outro",
    "drop": true
@@ -88,142 +88,142 @@
  "subs": [
   {
    "t0": 0.5,
-   "t1": 2.67,
+   "t1": 3.454,
    "text": "Was ist eigentlich dieses Weint-Ökosystem?"
   },
   {
-   "t0": 2.79,
-   "t1": 5.078,
+   "t0": 3.434,
+   "t1": 6.016,
    "text": "Und warum hat es plötzlich jeder in der Gilde?"
   },
   {
-   "t0": 5.198,
-   "t1": 6.206,
+   "t0": 5.996,
+   "t1": 7.027,
    "text": "Ich zeig's dir."
   },
   {
    "t0": 9.827,
-   "t1": 12.249,
+   "t1": 12.49,
    "text": "Drei Teile. Ein einziges System."
   },
   {
-   "t0": 12.369,
-   "t1": 17.874,
+   "t0": 12.47,
+   "t1": 18.09,
    "text": "WeintCodex im Spiel. WeintCompanion auf deinem PC. Und der Bot in eurem Discord."
   },
   {
-   "t0": 17.994,
-   "t1": 19.906,
+   "t0": 18.07,
+   "t1": 20.262,
    "text": "Alle drei arbeiten Hand in Hand."
   },
   {
    "t0": 22.318,
-   "t1": 25.736,
-   "text": "Teil eins: WeintCodex, dein Addon für WoW Forever."
+   "t1": 27.165,
+   "text": "Teil eins: WeintCodex, dein Addon für World of Warcraft Forever."
   },
   {
-   "t0": 25.856,
-   "t1": 31.383,
+   "t0": 27.145,
+   "t1": 32.93,
    "text": "Dungeons mit Bossen und Beute, ein Questhelfer mit Pfeil, deine Berufe mit allen Rezepten."
   },
   {
-   "t0": 31.503,
-   "t1": 35.316,
+   "t0": 32.91,
+   "t1": 36.892,
    "text": "Und eine Komfort-Oberfläche, die du nur einschaltest, wenn du sie willst."
   },
   {
-   "t0": 37.591,
-   "t1": 40.754,
+   "t0": 39.773,
+   "t1": 43.487,
    "text": "Teil zwei: WeintCompanion, der Kopf von allem."
   },
   {
-   "t0": 40.874,
-   "t1": 45.978,
+   "t0": 43.467,
+   "t1": 48.989,
    "text": "Die App installiert und aktualisiert WeintCodex für dich, und macht vor jedem Update ein Backup."
   },
   {
-   "t0": 46.098,
-   "t1": 49.517,
+   "t0": 48.969,
+   "t1": 53.004,
    "text": "Du siehst alle Twinks, ihr Gold und ihre Berufe auf einen Blick."
   },
   {
-   "t0": 49.637,
-   "t1": 51.945,
+   "t0": 52.984,
+   "t1": 55.716,
    "text": "Und sie verbindet dein Spiel mit eurem Discord."
   },
   {
-   "t0": 55.045,
-   "t1": 57.28,
+   "t0": 57.227,
+   "t1": 60.068,
    "text": "Teil drei: der Bot in eurem Discord."
   },
   {
-   "t0": 57.4,
-   "t1": 63.111,
+   "t0": 60.048,
+   "t1": 66.189,
    "text": "Einladungen für Raids und Dungeons mit Banner, Anmeldung per Klick, und eine Erinnerung vor dem Termin."
   },
   {
-   "t0": 63.231,
-   "t1": 65.754,
+   "t0": 66.169,
+   "t1": 69.095,
    "text": "Dazu der Material-Tracker für die ganze Gilde."
   },
   {
-   "t0": 68.136,
-   "t1": 73.134,
+   "t0": 70.318,
+   "t1": 75.188,
    "text": "Weil die Companion deine Berufe meldet, sieht die ganze Gilde, wer was herstellen kann."
   },
   {
-   "t0": 73.254,
-   "t1": 76.156,
+   "t0": 75.168,
+   "t1": 78.151,
    "text": "Rezept suchen, Treffer finden. Fertig."
   },
   {
-   "t0": 79.645,
-   "t1": 81.936,
+   "t0": 81.827,
+   "t1": 84.604,
    "text": "Und jetzt neu: Aufträge in der Gilde."
   },
   {
-   "t0": 82.056,
-   "t1": 87.228,
+   "t0": 84.584,
+   "t1": 89.799,
    "text": "Du wählst den Hersteller, gibst Menge und Notiz an, und sagst, ob du das Material stellst."
   },
   {
-   "t0": 87.348,
-   "t1": 92.931,
+   "t0": 89.779,
+   "t1": 95.848,
    "text": "Er bekommt sofort Bescheid: im Discord, in der Companion, und beim nächsten Einloggen direkt im Spiel."
   },
   {
-   "t0": 93.051,
-   "t1": 96.284,
+   "t0": 95.828,
+   "t1": 99.511,
    "text": "Annehmen, herstellen, erledigt. Ganz ohne Flüstern."
   },
   {
-   "t0": 98.682,
-   "t1": 99.962,
+   "t0": 100.864,
+   "t1": 102.606,
    "text": "So legst du jetzt los."
   },
   {
-   "t0": 100.082,
-   "t1": 103.289,
+   "t0": 102.586,
+   "t1": 105.96,
    "text": "WeintCompanion herunterladen. Mit Discord anmelden."
   },
   {
-   "t0": 103.409,
-   "t1": 107.456,
+   "t0": 105.94,
+   "t1": 110.202,
    "text": "WeintCodex installiert sich von selbst. In zwei Minuten bist du fertig."
   },
   {
-   "t0": 110.191,
-   "t1": 111.92,
+   "t0": 112.373,
+   "t1": 114.517,
    "text": "Hol dir jetzt die WeintCompanion."
   },
   {
-   "t0": 112.04,
-   "t1": 115.083,
+   "t0": 114.497,
+   "t1": 117.817,
    "text": "Forever startet am fünften November. Sei bereit."
   },
   {
-   "t0": 115.203,
-   "t1": 116.215,
+   "t0": 117.797,
+   "t1": 119.208,
    "text": "Bis einer weint."
   }
  ]
