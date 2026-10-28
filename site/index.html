@@ -71,25 +71,22 @@ h1,h2,h3,p { margin-top:0; }
 .btn svg { width:17px; height:17px; flex:none; }
 
 /* Hero */
-.hero { position:relative; text-align:center; padding:86px 0 40px; isolation:isolate; }
-.hero-art { position:absolute; inset:0 calc(50% - 50vw); z-index:-1; overflow:hidden; pointer-events:none; }
-.hero-art img { position:absolute; top:0; width:44%; height:100%; object-fit:cover; opacity:.30; filter:saturate(.8); }
-.hero-art .l { left:0; -webkit-mask-image:linear-gradient(90deg,#000 10%,transparent 92%); mask-image:linear-gradient(90deg,#000 10%,transparent 92%); }
-.hero-art .r { right:0; -webkit-mask-image:linear-gradient(270deg,#000 10%,transparent 92%); mask-image:linear-gradient(270deg,#000 10%,transparent 92%); }
-.hero-art::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(11,13,15,.2),var(--bg) 96%); }
-.kicker { display:inline-flex; align-items:center; gap:14px; color:var(--gold); font-size:11px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; margin:0 0 26px; }
+.hero { position:relative; text-align:center; padding:72px 0 40px; }
+.kicker { display:inline-flex; align-items:center; gap:14px; color:var(--gold); font-size:11px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; margin:0 0 22px; }
 .kicker::before,.kicker::after { content:""; width:34px; height:1px; background:currentColor; opacity:.6; }
-.hero-logo { display:block; width:min(420px,78vw); height:auto; margin:0 auto 26px; filter:drop-shadow(0 10px 40px rgba(215,183,107,.18)); }
-.hero h1 { font:600 clamp(36px,6.2vw,76px)/1.04 var(--serif); letter-spacing:-.03em; margin:0 auto 22px; max-width:980px; }
+.hero-logo { display:block; width:min(360px,72vw); height:auto; margin:0 auto 22px; filter:drop-shadow(0 10px 40px rgba(215,183,107,.18)); }
+.hero h1 { font:600 clamp(34px,5.6vw,68px)/1.06 var(--serif); letter-spacing:-.03em; margin:0 auto 20px; max-width:980px; }
 .hero h1 .accent { background:linear-gradient(100deg,#f6e3a8,#cf9f4a 60%,#a68be8); -webkit-background-clip:text; background-clip:text; color:transparent; }
 .hero .lead { color:#b7bab4; font-size:clamp(15px,1.6vw,18px); max-width:640px; margin:0 auto; line-height:1.7; }
-.hero .cta-row { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-top:32px; }
-.checks { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 22px; margin:22px 0 0; padding:0; list-style:none; color:var(--muted); font-size:12px; letter-spacing:.04em; }
+.hero .cta-row { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-top:30px; }
+.checks { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 22px; margin:20px 0 0; padding:0; list-style:none; color:var(--muted); font-size:12px; letter-spacing:.04em; }
 .checks li::before { content:"✓"; color:var(--green); margin-right:7px; font-weight:700; }
+.hero-shot { margin:48px auto 0; max-width:1100px; }
+.hero-shot img { display:block; width:100%; height:auto; border-radius:16px; border:1px solid var(--line); box-shadow:0 30px 100px rgba(0,0,0,.55), 0 0 0 6px rgba(215,183,107,.04); }
+.hero-shot figcaption { color:var(--muted-2); font-size:12px; margin-top:12px; }
 
 /* Videokarte unter dem Hero */
-.video-teaser { position:relative; margin:46px auto 0; max-width:420px; }
-.video-teaser::before { content:""; position:absolute; left:50%; top:-46px; height:40px; width:1px; background:linear-gradient(180deg,transparent,var(--gold)); }
+.video-teaser { margin:30px auto 0; max-width:420px; }
 .teaser-btn { display:flex; align-items:center; gap:16px; width:100%; text-align:left; padding:8px 18px 8px 8px; border-radius:14px; border:1px solid var(--line); background:rgba(21,25,27,.82); cursor:pointer; transition:border-color .18s, transform .18s; }
 .teaser-btn:hover { border-color:rgba(215,183,107,.5); transform:translateY(-2px); }
 .teaser-thumb { position:relative; width:104px; height:60px; flex:none; border-radius:9px; overflow:hidden; background:#000; }
@@ -108,29 +105,36 @@ h1,h2,h3,p { margin-top:0; }
 .section-title em { font-style:normal; color:var(--gold-hi); }
 .section-desc { color:var(--muted); margin:0; }
 
-/* Module als Bento */
-.group-label { display:flex; align-items:center; gap:14px; margin:44px 0 16px; color:var(--gold); font-size:11px; font-weight:700; letter-spacing:.26em; text-transform:uppercase; }
-.group-label b { color:var(--muted-2); font-weight:600; letter-spacing:0; }
-.group-label::after { content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--line),transparent); }
-.bento { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; }
-.mod { grid-column:span 2; display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:18px; overflow:hidden; background:linear-gradient(180deg,var(--panel-2),var(--panel)); transition:border-color .2s, transform .2s; }
-.mod:hover { border-color:rgba(215,183,107,.3); transform:translateY(-3px); }
-.mod.wide { grid-column:span 3; }
-.mod.xl { grid-column:span 4; }
-.mod figure { margin:0; aspect-ratio:2/1; overflow:hidden; background:#0d0f10; border-bottom:1px solid var(--line-soft); }
-.mod figure img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .5s; }
-.mod:hover figure img { transform:scale(1.03); }
-.mod.xl figure { aspect-ratio:auto; flex:1; min-height:200px; }
-.mod-body { padding:18px 20px 20px; display:flex; flex-direction:column; flex:1; }
-.mod h3 { font-size:16px; font-weight:600; margin-bottom:6px; }
-.mod p { color:var(--muted); font-size:13.5px; line-height:1.6; margin:0 0 14px; }
+/* Highlights */
+.highlights { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.hl { display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:20px; overflow:hidden; background:linear-gradient(180deg,var(--panel-2),var(--panel)); transition:border-color .2s, transform .2s; }
+.hl:hover { border-color:rgba(215,183,107,.32); transform:translateY(-3px); }
+.hl figure { margin:0; aspect-ratio:2/1; overflow:hidden; background:#0d0f10; border-bottom:1px solid var(--line-soft); }
+.hl figure img { width:100%; height:100%; object-fit:cover; display:block; }
+.hl-body { padding:22px 24px 24px; display:flex; flex-direction:column; flex:1; }
+.hl .tag { font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--green); font-weight:700; margin-bottom:8px; }
+.hl h3 { font:600 22px/1.2 var(--serif); margin-bottom:10px; }
+.hl p { color:var(--muted); font-size:14px; margin:0 0 16px; }
+.hl.noimg { background:radial-gradient(500px 260px at 0% 0%,rgba(215,183,107,.08),transparent 70%),var(--panel); border-color:var(--line); }
+.hl.noimg .hl-body { justify-content:center; }
 .seek { margin-top:auto; align-self:flex-start; display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--gold); background:none; border:0; padding:0; cursor:pointer; }
 .seek:hover { color:var(--gold-hi); }
 .seek::before { content:""; border-left:7px solid currentColor; border-top:4.5px solid transparent; border-bottom:4.5px solid transparent; }
 
+/* Kompaktes Raster */
+.group-label { display:flex; align-items:center; gap:14px; margin:40px 0 14px; color:var(--gold); font-size:11px; font-weight:700; letter-spacing:.26em; text-transform:uppercase; }
+.group-label b { color:var(--muted-2); font-weight:600; letter-spacing:0; }
+.group-label::after { content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--line),transparent); }
+.compact { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+.cm { display:flex; flex-direction:column; gap:12px; padding:10px 10px 14px; border:1px solid var(--line-soft); border-radius:14px; background:var(--panel); min-width:0; }
+.cm img { width:100%; height:auto; aspect-ratio:2/1; object-fit:cover; flex:none; border-radius:8px; border:1px solid var(--line-soft); display:block; }
+.cm div { min-width:0; padding:0 6px; display:flex; flex-direction:column; flex:1; }
+.cm h4 { margin:0 0 4px; font-size:14px; font-weight:600; }
+.cm p { margin:0; color:var(--muted); font-size:12.5px; line-height:1.55; }
+.cm .seek { margin-top:8px; font-size:11px; }
+
 /* Ehrliche Daten */
-.honest { display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; border:1px solid var(--line); border-radius:22px; padding:34px; background:radial-gradient(600px 300px at 0% 0%,rgba(215,183,107,.07),transparent 70%),var(--panel); }
-.honest img { border-radius:14px; border:1px solid var(--line-soft); display:block; }
+.honest { display:grid; grid-template-columns:1fr; gap:40px; align-items:center; border:1px solid var(--line); border-radius:22px; padding:34px; background:radial-gradient(600px 300px at 0% 0%,rgba(215,183,107,.07),transparent 70%),var(--panel); }
 .honest h2 { font:600 clamp(24px,2.6vw,34px)/1.2 var(--serif); margin-bottom:14px; }
 .honest p { color:var(--muted); }
 .honest ul { list-style:none; padding:0; margin:18px 0 0; display:grid; gap:10px; font-size:14px; }
@@ -153,6 +157,33 @@ h1,h2,h3,p { margin-top:0; }
 .chapters button { width:100%; display:flex; gap:12px; text-align:left; padding:6px 10px; border-radius:9px; background:none; border:0; cursor:pointer; font-size:13px; color:#d4d2ca; }
 .chapters button:hover, .chapters button.on { background:rgba(215,183,107,.09); color:var(--gold-hi); }
 .chapters time { font-variant-numeric:tabular-nums; color:var(--muted-2); min-width:38px; }
+
+/* Was bleibt, was wird geteilt */
+.share-grid { display:grid; grid-template-columns:1fr 1.3fr 1fr; gap:16px; }
+.share-card { border:1px solid var(--line-soft); border-radius:18px; padding:24px; background:var(--panel); }
+.share-card h3 { font:600 19px/1.25 var(--serif); margin:6px 0 10px; }
+.share-card .tag { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted-2); }
+.share-card p { color:var(--muted); font-size:13.5px; margin:0 0 10px; }
+.share-card ul { margin:0; padding:0; list-style:none; display:grid; gap:9px; font-size:13.5px; color:#d4d2ca; }
+.share-card li { padding-left:14px; border-left:2px solid var(--line); }
+.share-card li small { display:block; color:var(--muted-2); font-size:12px; }
+.share-card.local { border-color:rgba(128,200,155,.35); }
+
+/* Download-Schritte */
+.dl-steps { list-style:none; margin:0 0 18px; padding:0; display:grid; gap:12px; counter-reset:dl; }
+.dl-steps li { display:flex; gap:14px; align-items:flex-start; font-size:14px; color:#d4d2ca; counter-increment:dl; }
+.dl-steps li::before { content:counter(dl); flex:none; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font:700 13px/1 var(--sans); color:#17170f; background:linear-gradient(135deg,#f0d995,#c7a14d); }
+.dl-steps strong { display:block; color:var(--text); }
+.version-line { font-size:12px; color:var(--green); margin:10px 0 0; min-height:1em; }
+
+/* FAQ */
+.faq { max-width:820px; margin:0 auto; display:grid; gap:10px; }
+.faq details { border:1px solid var(--line-soft); border-radius:14px; background:var(--panel); padding:0 20px; }
+.faq summary { cursor:pointer; padding:16px 0; font-weight:600; font-size:15px; list-style:none; display:flex; justify-content:space-between; gap:16px; }
+.faq summary::-webkit-details-marker { display:none; }
+.faq summary::after { content:"+"; color:var(--gold); font-size:20px; line-height:1; }
+.faq details[open] summary::after { content:"–"; }
+.faq details p { color:var(--muted); font-size:14px; margin:0 0 16px; }
 
 /* Ökosystem */
 .ecosystem { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
@@ -212,19 +243,19 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
 
 @media (max-width: 980px) {
   .navlinks a:not(.nav-cta) { display:none; }
-  .bento { grid-template-columns:1fr 1fr; }
-  .mod, .mod.wide, .mod.xl { grid-column:span 1; }
-  .mod.xl { grid-column:span 2; }
+  .share-grid { grid-template-columns:1fr; }
   .honest, .player-wrap, .download-grid, .guide-layout, .ecosystem { grid-template-columns:1fr; }
   .chapters { max-height:none; }
-  .mod.xl figure { aspect-ratio:2/1; flex:none; }
   .banner-img { height:auto; }
 }
 @media (max-width: 620px) {
-  .bento { grid-template-columns:1fr; }
-  .mod.xl { grid-column:span 1; }
-  .hero { padding-top:56px; }
-  .hero-art img { width:70%; opacity:.18; }
+  .highlights { grid-template-columns:1fr; }
+  .hero { padding-top:44px; }
+  .hero-shot { margin-top:32px; }
+  .faq details { padding:0 16px; }
+  .cm { flex-direction:row; align-items:flex-start; padding:10px; }
+  .cm img { width:112px; }
+  .cm div { padding:0; }
   .honest { padding:20px; }
   .brand-sub { display:none; }
 }
@@ -241,7 +272,8 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
     <nav class="navlinks" aria-label="Hauptnavigation">
       <a href="#module">Module</a>
       <a href="#video">Video</a>
-      <a href="#oekosystem">Ökosystem</a>
+      <a href="#daten">Deine Daten</a>
+      <a href="#faq">FAQ</a>
       <a href="#download">Installation</a>
       <a class="nav-cta" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg>Download</a>
     </nav>
@@ -250,7 +282,6 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
 
 <main id="start" class="wrap">
   <section class="hero" aria-labelledby="main-title">
-    <div class="hero-art" aria-hidden="true"><img class="l" src="media/header_shadowfang_keep.jpg" alt=""><img class="r" src="media/header_stratholme.jpg" alt=""></div>
     <p class="kicker">Das Addon für World of Warcraft: Forever</p>
     <img class="hero-logo" src="media/logo.png" alt="WeintCodex" width="720" height="221">
     <h1 id="main-title">Vom ersten Level <span class="accent">bis in den Schlachtzug.</span></h1>
@@ -259,54 +290,57 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
       <a class="btn btn-primary" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg>Kostenlos herunterladen</a>
       <a class="btn btn-ghost" href="#module">Was alles drin ist →</a>
     </div>
-    <ul class="checks"><li>Kostenlos</li><li>Open Source</li><li>Nur für Forever gebaut</li><li>Geht nie ins Internet</li></ul>
+    <ul class="checks"><li>Kostenlos</li><li>Open Source</li><li>Nur für Forever gebaut</li><li>Das Addon geht nie ins Internet</li></ul>
+    <figure class="hero-shot"><img src="media/shots/hauptfenster.jpg" alt="Das Hauptfenster von WeintCodex im Spiel: Übersicht mit „11 Zauber warten beim Lehrer“, Shadowfang Keep, Bücher und Dein Weg" width="1600" height="900"><figcaption>Das Hauptfenster im Spiel, geöffnet mit <code>/wc</code>.</figcaption></figure>
     <div class="video-teaser">
       <button class="teaser-btn" type="button" data-seek="0">
-        <span class="teaser-thumb"><img src="media/overview.jpg" alt=""><span class="play"><i></i></span></span>
+        <span class="teaser-thumb"><img src="media/shots/hauptfenster.jpg" alt=""><span class="play"><i></i></span></span>
         <span><strong>Das Erklärvideo ansehen</strong><small>Alles in 11 Minuten · 15 Kapitel · YouTube</small></span>
       </button>
     </div>
   </section>
 
   <section class="section" id="module" aria-labelledby="mod-title">
-    <div class="section-head"><p class="section-kicker">Alles inklusive</p><h2 class="section-title" id="mod-title">Ein Addon. <em>Ein Kopf.</em></h2><p class="section-desc">Jedes Modul kennt die anderen: der Questpfeil die Bücher, die Berufe die Auktionspreise, die Dungeons deine Gilde. Ein Klick auf „Im Video“ springt an die passende Stelle.</p></div>
+    <div class="section-head"><p class="section-kicker">Alles inklusive</p><h2 class="section-title" id="mod-title">Alles drin. <em>Alles verbunden.</em></h2><p class="section-desc">Jedes Modul kennt die anderen: der Questpfeil die Bücher, die Berufe die Auktionspreise, die Dungeons deine Gilde. Ein Klick auf „Im Video“ springt an die passende Stelle.</p></div>
+    <div class="highlights">
+      <article class="hl"><figure><img src="media/shots/dungeons.jpg" alt="Dungeon-Seite The Deadmines mit sieben Bosskarten" width="1024" height="512" loading="lazy"></figure><div class="hl-body"><p class="tag">Leveln</p><h3>Dungeons</h3><p>Neue und klassische Dungeons in einer Liste, nach Stufe sortiert. Bosskarten mit Beute und Dropchance, Aufstellung der Gruppe, Quests und Eingang auf der Karte.</p><button class="seek" data-seek="157">Im Video · 2:37</button></div></article>
+      <article class="hl"><figure><img src="media/shots/berufe.jpg" alt="Berufe: Rezepte der Lederverarbeitung mit Fertigkeitsstufen und Lehrern" width="1024" height="512" loading="lazy"></figure><div class="hl-body"><p class="tag">Leveln</p><h3>Berufe & Gewinn</h3><p>Alle Rezepte mit ihren Lehrern, wer in der Gilde was kann, und ob sich das Herstellen lohnt. Fehlt eine Zahl, rät WeintCodex nicht.</p><button class="seek" data-seek="288">Im Video · 4:48</button></div></article>
+      <article class="hl"><figure><img src="media/shots/questpfeil.jpg" alt="Karte und Questlog mit Questpfeil zu einem Ziel in Darnassus" width="1024" height="512" loading="lazy"></figure><div class="hl-body"><p class="tag">Unterwegs</p><h3>Questpfeil & Karte</h3><p>Klick auf der Karte setzt den Pfeil, mit Entfernung und Ankunftszeit. Instanzeingänge, Questgeber und Bücher lassen sich direkt aus dem Codex anpeilen.</p><button class="seek" data-seek="367">Im Video · 6:07</button></div></article>
+      <article class="hl noimg"><div class="hl-body"><p class="tag">Gilde</p><h3>Aufträge aus der Gilde</h3><p>Jemand im Discord sieht, dass du ein Rezept kannst, und bestellt. Du nimmst im Spiel an, meldest erledigt oder lehnst ab, auch in der Companion oder im Discord.</p><button class="seek" data-seek="565">Im Video · 9:25</button></div></article>
+    </div>
 
     <div class="group-label">Leveln <b>4</b></div>
-    <div class="bento">
-      <article class="mod xl"><figure><img src="media/header_shadowfang_keep.jpg" alt="Dungeon-Kopfbild Burg Schattenfang" loading="lazy"></figure><div class="mod-body"><h3>Dungeons</h3><p>Neue und klassische Dungeons in einer Liste, nach Stufe sortiert. Bosskarten mit Beute und Dropchance, Fähigkeiten direkt aus dem Spiel, Quests und Eingang auf der Karte.</p><button class="seek" data-seek="157">Im Video · 2:37</button></div></article>
-      <article class="mod"><figure><img src="media/overview.jpg" alt="Übersicht des Addons" loading="lazy"></figure><div class="mod-body"><h3>Übersicht & Dein Weg</h3><p>Was als Nächstes ansteht und deine nächsten Stufen auf einen Blick.</p><button class="seek" data-seek="105">Im Video · 1:45</button></div></article>
-      <article class="mod wide"><figure><img src="media/gewinn.jpg" alt="Werkzeug Gewinn bei den Berufen" loading="lazy"></figure><div class="mod-body"><h3>Berufe & Gewinn</h3><p>Alle Rezepte mit ihren Lehrern, wer in der Gilde was kann, und ob sich das Herstellen lohnt. Fehlt eine Zahl, rät WeintCodex nicht.</p><button class="seek" data-seek="288">Im Video · 4:48</button></div></article>
-      <article class="mod wide"><figure><img src="media/schlafsack.jpg" alt="Gemütlicher Schlafsack unter Entdecken" loading="lazy"></figure><div class="mod-body"><h3>Entdecken</h3><p>Die Bücher der Bibliothek und Questreihen wie der Gemütliche Schlafsack, mit einem Klick auf den Questpfeil.</p><button class="seek" data-seek="469">Im Video · 7:49</button></div></article>
+    <div class="compact">
+      <article class="cm"><img src="media/shots/uebersicht.jpg" alt="Startseite des Addons mit nächstem Schritt" width="1024" height="512" loading="lazy"><div><h4>Übersicht & Dein Weg</h4><p>Was als Nächstes ansteht und deine nächsten Stufen auf einen Blick.</p><button class="seek" data-seek="105">Im Video · 1:45</button></div></article>
+      <article class="cm"><img src="media/shots/beute.jpg" alt="Beute eines Dungeons mit Dropchancen" width="1024" height="512" loading="lazy"><div><h4>Beute & Wunschliste</h4><p>Was in Dungeons, Schlachtzügen, beim Ruf und im PvP zu holen ist, mit Dropchance.</p><button class="seek" data-seek="223">Im Video · 3:43</button></div></article>
+      <article class="cm"><img src="media/shots/entdecken.jpg" alt="Bücher der Bibliothek mit Pfeil-Knopf" width="1024" height="512" loading="lazy"><div><h4>Entdecken</h4><p>Die Bücher der Bibliothek und Questreihen wie der Gemütliche Schlafsack, mit einem Klick auf den Questpfeil.</p><button class="seek" data-seek="469">Im Video · 7:49</button></div></article>
+      <article class="cm"><div><h4>Auktionspreise</h4><p>Einmal scannen, dann steht der Preis in jedem Tooltip. Auf Wunsch geteilt mit der Gilde.</p><button class="seek" data-seek="338">Im Video · 5:38</button></div></article>
     </div>
 
-    <div class="group-label">Unterwegs <b>5</b></div>
-    <div class="bento">
-      <article class="mod"><figure><img src="media/arrow.jpg" alt="Questpfeil mit Entfernung" loading="lazy"></figure><div class="mod-body"><h3>Questpfeil & Karte</h3><p>Entfernung und Ankunftszeit, Instanzeingänge, Geistheiler und eine aufgedeckte Karte.</p><button class="seek" data-seek="367">Im Video · 6:07</button></div></article>
-      <article class="mod"><figure><img src="media/atlas.jpg" alt="Sammel-Atlas" loading="lazy"></figure><div class="mod-body"><h3>Sammel-Atlas</h3><p>Merkt sich, wo du gesammelt hast. Jeder Punkt stammt aus deinem eigenen Spiel.</p><button class="seek" data-seek="395">Im Video · 6:35</button></div></article>
-      <article class="mod"><figure><img src="media/angeln.jpg" alt="Angeln mit einer Taste" loading="lazy"></figure><div class="mod-body"><h3>Angeln mit einer Taste</h3><p>Auswerfen, einholen, Beute nehmen. Jeder Druck kommt von dir.</p><button class="seek" data-seek="395">Im Video · 6:35</button></div></article>
-      <article class="mod wide"><figure><img src="media/flugzeit.jpg" alt="Flugzeit mit Zwischenstopp" loading="lazy"></figure><div class="mod-body"><h3>Flugzeit</h3><p>Wann du landest, jeder Zwischenstopp mit Ankunftszeit, und „Landen“ am nächsten Halt. Unbekannte Strecken werden gemessen, nicht geschätzt.</p><button class="seek" data-seek="439">Im Video · 7:19</button></div></article>
-      <article class="mod wide"><figure><img src="media/ahScan.jpg" alt="Auktionspreise scannen" loading="lazy"></figure><div class="mod-body"><h3>Auktionspreise</h3><p>Einmal scannen, dann steht der Preis in jedem Tooltip. Auf Wunsch geteilt mit der Gilde, dann reicht ein Scan für alle.</p><button class="seek" data-seek="338">Im Video · 5:38</button></div></article>
+    <div class="group-label">Unterwegs & Karte <b>4</b></div>
+    <div class="compact">
+      <article class="cm"><img src="media/shots/sammelatlas.jpg" alt="Weltkarte mit Sammelpunkten und Tooltip Kupfervorkommen" width="1024" height="512" loading="lazy"><div><h4>Sammel-Atlas</h4><p>Merkt sich, wo du gesammelt hast. Jeder Punkt stammt aus deinem eigenen Spiel.</p><button class="seek" data-seek="395">Im Video · 6:35</button></div></article>
+      <article class="cm"><img src="media/shots/karte-aufdecken.jpg" alt="Stadtkarte von Sturmwind im Karten-Fenster" width="1024" height="512" loading="lazy"><div><h4>Karte aufdecken & Instanzeingänge</h4><p>Auch dort, wo du noch nicht warst, abgedunkelt bis du dort bist. Dazu die Eingänge der Instanzen.</p><button class="seek" data-seek="367">Im Video · 6:07</button></div></article>
+      <article class="cm"><div><h4>Angeln mit einer Taste</h4><p>Auswerfen, einholen, Beute nehmen. Jeder Druck kommt von dir.</p><button class="seek" data-seek="395">Im Video · 6:35</button></div></article>
+      <article class="cm"><img src="media/shots/flugzeit.jpg" alt="Flugleiste: Flug nach Ironforge, Landung in 3:28" width="1024" height="512" loading="lazy"><div><h4>Flugzeit</h4><p>Wann du landest, jeder Zwischenstopp mit Ankunftszeit. Unbekannte Strecken werden gemessen, nicht geschätzt.</p><button class="seek" data-seek="439">Im Video · 7:19</button></div></article>
     </div>
 
-    <div class="group-label">Komfort-Oberfläche <b>5</b></div>
-    <div class="bento">
-      <article class="mod wide"><figure><img src="media/plates.jpg" alt="Namensplaketten mit Bedrohung" loading="lazy"></figure><div class="mod-body"><h3>Namensplaketten</h3><p>Bedrohung und Markierungen auf einen Blick. Die ganze Oberfläche hat einen Hauptschalter, Profile je Charakter und vier Looks.</p><button class="seek" data-seek="508">Im Video · 8:28</button></div></article>
-      <article class="mod wide"><figure><img src="media/damage.jpg" alt="Schadensanzeige" loading="lazy"></figure><div class="mod-body"><h3>Schadensanzeige</h3><p>Misst deinen Schaden und den der Gruppe, Kampf für Kampf.</p><button class="seek" data-seek="508">Im Video · 8:28</button></div></article>
-      <article class="mod"><figure><img src="media/reminders.jpg" alt="Erinnerungen vor dem Kampf" loading="lazy"></figure><div class="mod-body"><h3>Erinnerungen</h3><p>Fehlende Buffs, Waffenöl und Begleiter, bevor der Kampf beginnt.</p><button class="seek" data-seek="508">Im Video · 8:28</button></div></article>
-      <article class="mod"><figure><img src="media/suche.jpg" alt="Suche in den Einstellungen" loading="lazy"></figure><div class="mod-body"><h3>Suche</h3><p>Nicht wissen, wo etwas steht? Einfach eintippen.</p><button class="seek" data-seek="508">Im Video · 8:28</button></div></article>
-      <article class="mod"><figure><img src="media/mapReveal.jpg" alt="Aufgedeckte Weltkarte" loading="lazy"></figure><div class="mod-body"><h3>Karte aufdecken</h3><p>Auch dort, wo du noch nicht warst, abgedunkelt bis du dort bist.</p><button class="seek" data-seek="367">Im Video · 6:07</button></div></article>
+    <div class="group-label">Gruppe <b>1</b></div>
+    <div class="compact">
+      <article class="cm"><img src="media/shots/raidplanung.jpg" alt="Raidanmeldung mit Tanks, Heilern und Schadensausteilern, Namen unkenntlich" width="1024" height="512" loading="lazy"><div><h4>Gruppencheck & Raidplanung</h4><p>Die Ausrüstung der ganzen Gruppe auf einen Blick: Er bewertet nicht, er zählt. Dazu Termine und Anmeldungen aus dem Discord.</p><button class="seek" data-seek="565">Im Video · 9:25</button></div></article>
     </div>
 
-    <div class="group-label">Gruppe & Gilde <b>2</b></div>
-    <div class="bento">
-      <article class="mod wide"><figure><img src="media/group.jpg" alt="Gruppenrahmen und Klickzauber" loading="lazy"></figure><div class="mod-body"><h3>Gruppencheck & Raidplanung</h3><p>Die Ausrüstung der ganzen Gruppe auf einen Blick: Er bewertet nicht, er zählt. Dazu Termine und Anmeldungen aus dem Discord.</p><button class="seek" data-seek="565">Im Video · 9:25</button></div></article>
-      <article class="mod wide"><figure><img src="media/auftrag.jpg" alt="Aufträge aus der Gilde" loading="lazy"></figure><div class="mod-body"><h3>Aufträge aus der Gilde</h3><p>Jemand im Discord sieht, dass du ein Rezept kannst, und bestellt. Du nimmst im Spiel an, meldest erledigt oder lehnst ab.</p><button class="seek" data-seek="565">Im Video · 9:25</button></div></article>
+    <div class="group-label">System · Oberfläche <b>4</b></div>
+    <div class="compact">
+      <article class="cm"><img src="media/shots/namensplaketten.jpg" alt="Einstellungen der Namensplaketten mit Vorschau" width="1024" height="512" loading="lazy"><div><h4>Namensplaketten</h4><p>Bedrohung und Markierungen auf einen Blick. Die ganze Oberfläche hat einen Hauptschalter und Profile je Charakter.</p><button class="seek" data-seek="508">Im Video · 8:28</button></div></article>
+      <article class="cm"><img src="media/shots/schadensanzeige.jpg" alt="Schadensanzeige mit Balken je Zauber" width="1024" height="512" loading="lazy"><div><h4>Schadensanzeige</h4><p>Misst deinen Schaden und den der Gruppe, Kampf für Kampf.</p><button class="seek" data-seek="508">Im Video · 8:28</button></div></article>
+      <article class="cm"><img src="media/shots/erinnerungen.jpg" alt="Regeln der Erinnerungen, etwa „Munition knapp“" width="1024" height="512" loading="lazy"><div><h4>Erinnerungen</h4><p>Fehlende Buffs, Waffenöl und Begleiter, bevor der Kampf beginnt.</p><button class="seek" data-seek="508">Im Video · 8:28</button></div></article>
+      <article class="cm"><div><h4>Suche in den Einstellungen</h4><p>Nicht wissen, wo etwas steht? Einfach eintippen.</p><button class="seek" data-seek="508">Im Video · 8:28</button></div></article>
     </div>
   </section>
 
   <section class="section" aria-labelledby="honest-title">
     <div class="honest">
-      <img src="media/herkunft.jpg" alt="Herkunft einer Angabe: Unbestätigt, aus Classic, vorläufig" loading="lazy">
       <div>
         <p class="section-kicker">Ehrlich bei den Daten</p>
         <h2 id="honest-title">Lieber keine Zahl als eine falsche.</h2>
@@ -326,7 +360,7 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
       <div>
         <div class="player" id="player">
           <button class="poster" type="button" data-seek="0" aria-label="Erklärvideo abspielen">
-            <img src="media/overview.jpg" alt="" loading="lazy">
+            <img src="media/shots/hauptfenster.jpg" alt="" loading="lazy">
             <span class="play"><i></i><span>Video abspielen · 11 Min.</span></span>
           </button>
         </div>
@@ -336,6 +370,26 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
         <h3>Kapitel</h3>
         <ol id="chapter-list"></ol>
       </nav>
+    </div>
+  </section>
+
+  <section class="section" id="daten" aria-labelledby="share-title">
+    <div class="section-head"><p class="section-kicker">Deine Daten</p><h2 class="section-title" id="share-title">Was bleibt bei dir, <em>was wird geteilt.</em></h2><p class="section-desc">Das Addon selbst geht nie ins Internet. Was es teilt, geht als Nachricht im Spiel an deine Gilde, und jedes davon hat einen eigenen Schalter.</p></div>
+    <div class="share-grid">
+      <article class="share-card local"><span class="tag">Bleibt bei dir</span><h3>Das Addon im Spiel</h3><p>WeintCodex hat keine Verbindung ins Internet. Was es weiß, speichert es in deinem WoW-Ordner.</p><p>Die Companion liest diese Datei auf deinem Rechner. Das Addon schickt ihr nichts übers Netz.</p></article>
+      <article class="share-card"><span class="tag">Im Spiel, an die Gilde · je ein Schalter</span><h3>Optional geteilt</h3><ul>
+        <li>Auktionspreise<small>Gesendet und empfangen über die Gilde.</small></li>
+        <li>Abfahrtszeiten von Booten, Zeppelinen und Tram<small>An Gilde und Gruppe, nur der gemessene Fahrplan, nie Position oder Name.</small></li>
+        <li>Layer wechseln<small>Nur auf deinen Klick „Um anderen Layer bitten“, dann eine Anfrage im öffentlichen Kanal „layer“.</small></li>
+        <li>Sammel-Atlas<small>Nur Karte, Objekt und Koordinaten der Fundorte.</small></li>
+        <li>Bestenlisten der Flugspiele<small>Spiel, Punkte, Flugstrecke und Dauer.</small></li>
+        <li>Berufe und Rezepte<small>Fertigkeit und gelernte Rezepte, dazu gesehene Händler für Reagenzien.</small></li>
+      </ul></article>
+      <article class="share-card"><span class="tag">Über die Companion · zum Discord-Bot</span><h3>Für den Gilden-Discord</h3><ul>
+        <li>Charaktere<small>Name, Realm, Klasse und Stufe.</small></li>
+        <li>Berufe und Rezepte<small>Für „Berufe &amp; Twinks“ im Discord, abschaltbar in der Companion.</small></li>
+        <li>Antworten auf Aufträge<small>Annehmen, Erledigt, Ablehnen. Sichtbar nur für Besteller und Hersteller.</small></li>
+      </ul></article>
     </div>
   </section>
 
@@ -362,13 +416,19 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
     <div class="download-grid">
       <img class="banner-img" src="banner.jpg" alt="WeintCompanion — World of Warcraft: Forever — Das Gilden-Ökosystem" width="1776" height="896" loading="lazy">
       <aside class="download-card" aria-labelledby="download-title">
-      <div class="card-top"><div><h2 id="download-title">Dein Abenteuer beginnt hier.</h2><p>Wähle dein Betriebssystem für den passenden Download.</p></div><span class="latest-pill">Latest Release</span></div>
+      <div class="card-top"><div><h2 id="download-title">In drei Schritten im Spiel.</h2><p>Für Windows, macOS (Apple Silicon) und Linux (AppImage).</p></div><span class="latest-pill">Neueste Version</span></div>
+      <ol class="dl-steps">
+        <li><span><strong>Companion für dein System laden</strong>Der Knopf unten wählt dein Betriebssystem.</span></li>
+        <li><span><strong>Starten</strong>Sie findet deinen WoW-Ordner und installiert WeintCodex.</span></li>
+        <li><span><strong>Im Spiel <code>/wc</code> tippen</strong>Dann öffnet sich das Hauptfenster.</span></li>
+      </ol>
       <a id="main-download" class="btn btn-primary main-download" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-x86_64.AppImage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg><span id="main-download-label">Für Linux herunterladen</span></a>
       <div class="platform-list" aria-label="Weitere Plattformen">
         <a class="platform" data-os="win" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-Setup.exe"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.1 10.7 4v7.1H3V5.1Zm8.7-1.3L21 2.5v8.6h-9.3V3.8ZM3 12.3h7.7v7.1L3 18.3v-6Zm8.7 0H21v8.7l-9.3-1.3v-7.4Z"/></svg><strong>Windows</strong><small>Setup.exe</small></a>
         <a class="platform" data-os="mac" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-macOS.dmg"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.2c.02 2.16 1.9 2.88 1.92 2.9-.02.05-.3 1.05-.99 2.08-.6.9-1.23 1.8-2.22 1.82-.97.02-1.28-.58-2.4-.58-1.1 0-1.45.56-2.36.6-.95.04-1.67-.98-2.28-1.88-1.24-1.8-2.18-5.08-.91-7.3.63-1.1 1.75-1.8 2.97-1.82.93-.02 1.8.63 2.38.63.57 0 1.63-.78 2.75-.67.47.02 1.8.19 2.66 1.43-.07.04-1.59.92-1.57 2.8ZM14.6 5.76c.5-.6.85-1.42.75-2.24-.73.03-1.62.49-2.14 1.09-.47.53-.88 1.36-.77 2.16.81.06 1.66-.41 2.16-1.01Z"/></svg><strong>macOS</strong><small>Apple Silicon</small></a>
         <a class="platform" data-os="linux" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-x86_64.AppImage"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v2.2c-1.2.8-2 2.15-2 3.8 0 2.5 1.5 4.8 3.5 5.6L8 21h8l-.5-2.4c2-.8 3.5-3.1 3.5-5.6 0-1.65-.8-3-2-3.8V7a5 5 0 0 0-5-5Zm-2 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm4 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2ZM9 12h6v2H9v-2Z"/></svg><strong>Linux</strong><small>AppImage</small></a>
       </div>
+      <p class="version-line" id="version-line"></p>
       <p class="hero-footnote" style="margin-bottom:0">Der Download führt immer zur neuesten veröffentlichten Version.</p>
     </aside>
     </div>
@@ -388,6 +448,17 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
     </div>
   </section>
 
+  <section class="section" id="faq" aria-labelledby="faq-title">
+    <div class="section-head"><p class="section-kicker">Häufige Fragen</p><h2 class="section-title" id="faq-title">Kurz <em>beantwortet.</em></h2></div>
+    <div class="faq">
+      <details><summary>Windows oder macOS warnt beim ersten Start. Ist das normal?</summary><p>Ja. WeintCompanion ist ein Gildenprojekt und nicht mit einem kostenpflichtigen Publisher-Zertifikat signiert. Unter Windows wählst du nach „Der Computer wurde durch Windows geschützt“ <strong>Weitere Informationen</strong> und <strong>Trotzdem ausführen</strong>. Unter macOS erlaubst du den Start in <strong>Systemeinstellungen → Datenschutz &amp; Sicherheit</strong>. Lade die Datei nur über die offiziellen Releases und schalte deinen Virenscanner nicht aus.</p></details>
+      <details><summary>Die AppImage startet unter Linux nicht.</summary><p>Mach die Datei zuerst ausführbar (<code>chmod +x WeintCompanion-x86_64.AppImage</code>). Startet sie dann immer noch nicht, fehlen meist die FUSE-Bibliotheken deiner Distribution. Installiere sie über den Paketmanager.</p></details>
+      <details><summary>Wie öffne ich das Addon im Spiel?</summary><p>Mit <code>/wc</code> öffnet sich das Hauptfenster. Die Einstellungen der Komfort-Oberfläche erreichst du mit <code>/wcui</code> oder <code>/wc ui</code>.</p></details>
+      <details><summary>Warum fehlen bei manchen Angaben Zahlen?</summary><p>Forever ist neu, vieles ist noch nicht bekannt. WeintCodex zeigt bei jeder Angabe, woher sie stammt, etwa „Aus Classic“ oder „Unbestätigt“. Was niemand weiß, bleibt leer: Unbekannt ist nie dasselbe wie null.</p></details>
+      <details><summary>Wo melde ich einen Fehler?</summary><p>Fehler im Addon meldest du in den <a href="https://github.com/daddler/Codex-Forever/issues" target="_blank" rel="noreferrer">GitHub-Issues von WeintCodex ↗</a>. Fragen beantwortet auch euer Gilden-Discord.</p></details>
+    </div>
+  </section>
+
   <section class="final-cta" aria-label="Herunterladen"><p class="kicker">Bereit, wenn du es bist</p><h2>Deine Gilde. Verbunden.</h2><p>Companion installieren, WoW starten, <code>/wc</code> tippen.</p><a class="btn btn-primary" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg>Kostenlos herunterladen</a></section>
 </main>
 <footer><div class="wrap footer-inner"><div><strong style="color:#d4d2ca;letter-spacing:.12em">WEINTCODEX · FOREVER EDITION</strong><p style="margin:8px 0 0">Ein Community-Projekt für World of Warcraft: Forever.</p></div><div class="footer-links"><a href="https://github.com/daddler/Codex-Forever" target="_blank" rel="noreferrer">WeintCodex</a><a href="https://github.com/daddler/Companion-Forever" target="_blank" rel="noreferrer">WeintCompanion</a><a href="https://github.com/daddler/Companion-Forever/releases" target="_blank" rel="noreferrer">Alle Releases</a><a href="https://youtu.be/ClNPqmZNR8s" target="_blank" rel="noreferrer">YouTube</a></div><div>Mit Hingabe für die Gilde gebaut.</div></div></footer>
@@ -402,6 +473,20 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
   function show(id){tabs.forEach(t=>{const on=t.getAttribute('aria-controls')==='panel-'+id;t.setAttribute('aria-selected',on?'true':'false');const p=document.getElementById(t.getAttribute('aria-controls'));if(p)p.hidden=!on;});}
   tabs.forEach(t=>t.addEventListener('click',()=>show(t.id==='tab-win'?'win':t.id==='tab-mac'?'mac':'linux')));
   if(detected){main.href=base+map[detected].file;label.textContent=map[detected].label;document.querySelectorAll('.platform').forEach(a=>a.classList.toggle('is-detected',a.dataset.os===detected));show(detected);} else {show('linux');}
+})();
+(function(){
+  const line=document.getElementById('version-line');
+  if(!line||!window.fetch) return;
+  fetch('https://api.github.com/repos/daddler/Companion-Forever/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
+    .then(r=>r.ok?r.json():null)
+    .then(d=>{
+      if(!d||typeof d.tag_name!=='string'||!d.tag_name) return;
+      let txt='Aktuell: '+d.tag_name;
+      const t=d.published_at?new Date(d.published_at):null;
+      if(t&&!isNaN(t)) txt+=' · veröffentlicht am '+t.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
+      line.textContent=txt;
+    })
+    .catch(()=>{});
 })();
 (function(){
   const VIDEO='ClNPqmZNR8s';
