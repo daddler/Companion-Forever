@@ -214,7 +214,13 @@ h1,h2,h3,p { margin-top:0; }
 .platform { display:flex; flex-direction:column; align-items:center; gap:3px; padding:12px 6px; border-radius:11px; border:1px solid var(--line-soft); text-decoration:none; font-size:12px; }
 .platform svg { width:18px; height:18px; color:var(--muted); }
 .platform small { color:var(--muted-2); font-size:10px; }
-.platform.is-detected { border-color:rgba(128,200,155,.45); background:rgba(128,200,155,.06); }
+.platform { cursor:pointer; transition:border-color .18s, background .18s; }
+.platform:hover { border-color:var(--line); }
+.platform.is-selected { border-color:rgba(215,183,107,.6); background:rgba(215,183,107,.08); }
+.platform.is-selected strong { color:var(--gold-hi); }
+.platform-hint { font-size:11px; color:var(--muted-2); margin:14px 0 0; text-align:center; }
+.version-line a { color:var(--gold); margin-left:8px; }
+.version-line a:hover { color:var(--gold-hi); }
 .hero-footnote { margin-top:13px; font-size:11px; color:var(--muted-2); }
 .guide-layout { display:grid; grid-template-columns:.8fr 1.2fr; gap:22px; margin-top:22px; }
 .guide-aside, .guide { border:1px solid var(--line-soft); border-radius:18px; padding:24px; background:var(--panel); }
@@ -423,7 +429,8 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
         <li><span><strong>Im Spiel <code>/wc</code> tippen</strong>Dann öffnet sich das Hauptfenster.</span></li>
       </ol>
       <a id="main-download" class="btn btn-primary main-download" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-x86_64.AppImage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg><span id="main-download-label">Für Linux herunterladen</span></a>
-      <div class="platform-list" aria-label="Weitere Plattformen">
+      <p class="platform-hint" id="platform-hint">Anderes System? Hier wählen, Knopf und Anleitung passen sich an.</p>
+      <div class="platform-list" role="group" aria-label="Betriebssystem wählen">
         <a class="platform" data-os="win" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-Setup.exe"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.1 10.7 4v7.1H3V5.1Zm8.7-1.3L21 2.5v8.6h-9.3V3.8ZM3 12.3h7.7v7.1L3 18.3v-6Zm8.7 0H21v8.7l-9.3-1.3v-7.4Z"/></svg><strong>Windows</strong><small>Setup.exe</small></a>
         <a class="platform" data-os="mac" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-macOS.dmg"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.2c.02 2.16 1.9 2.88 1.92 2.9-.02.05-.3 1.05-.99 2.08-.6.9-1.23 1.8-2.22 1.82-.97.02-1.28-.58-2.4-.58-1.1 0-1.45.56-2.36.6-.95.04-1.67-.98-2.28-1.88-1.24-1.8-2.18-5.08-.91-7.3.63-1.1 1.75-1.8 2.97-1.82.93-.02 1.8.63 2.38.63.57 0 1.63-.78 2.75-.67.47.02 1.8.19 2.66 1.43-.07.04-1.59.92-1.57 2.8ZM14.6 5.76c.5-.6.85-1.42.75-2.24-.73.03-1.62.49-2.14 1.09-.47.53-.88 1.36-.77 2.16.81.06 1.66-.41 2.16-1.01Z"/></svg><strong>macOS</strong><small>Apple Silicon</small></a>
         <a class="platform" data-os="linux" href="https://github.com/daddler/Companion-Forever/releases/latest/download/WeintCompanion-x86_64.AppImage"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v2.2c-1.2.8-2 2.15-2 3.8 0 2.5 1.5 4.8 3.5 5.6L8 21h8l-.5-2.4c2-.8 3.5-3.1 3.5-5.6 0-1.65-.8-3-2-3.8V7a5 5 0 0 0-5-5Zm-2 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm4 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2ZM9 12h6v2H9v-2Z"/></svg><strong>Linux</strong><small>AppImage</small></a>
@@ -470,9 +477,10 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
   const detected=/Windows/i.test(ua)?'win':(/Macintosh|Mac OS X/i.test(ua)&&!/iPhone|iPad/i.test(ua))?'mac':(/Linux/i.test(ua)&&!/Android/i.test(ua))?'linux':null;
   const main=document.getElementById('main-download'); const label=document.getElementById('main-download-label');
   const tabs=[...document.querySelectorAll('.tab[role="tab"]')];
-  function show(id){tabs.forEach(t=>{const on=t.getAttribute('aria-controls')==='panel-'+id;t.setAttribute('aria-selected',on?'true':'false');const p=document.getElementById(t.getAttribute('aria-controls'));if(p)p.hidden=!on;});}
+  function show(id){document.querySelectorAll('.platform').forEach(a=>{const on=a.dataset.os===id;a.classList.toggle('is-selected',on);a.setAttribute('aria-pressed',on?'true':'false');});main.href=base+map[id].file;label.textContent=map[id].label;tabs.forEach(t=>{const on=t.getAttribute('aria-controls')==='panel-'+id;t.setAttribute('aria-selected',on?'true':'false');const p=document.getElementById(t.getAttribute('aria-controls'));if(p)p.hidden=!on;});}
   tabs.forEach(t=>t.addEventListener('click',()=>show(t.id==='tab-win'?'win':t.id==='tab-mac'?'mac':'linux')));
-  if(detected){main.href=base+map[detected].file;label.textContent=map[detected].label;document.querySelectorAll('.platform').forEach(a=>a.classList.toggle('is-detected',a.dataset.os===detected));show(detected);} else {show('linux');}
+  document.querySelectorAll('.platform').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.os);}));
+  show(detected||'linux');
 })();
 (function(){
   const line=document.getElementById('version-line');
@@ -485,6 +493,7 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
       const t=d.published_at?new Date(d.published_at):null;
       if(t&&!isNaN(t)) txt+=' · veröffentlicht am '+t.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
       line.textContent=txt;
+      if(typeof d.html_url==='string'&&d.html_url.startsWith('https://github.com/')){const a=document.createElement('a');a.href=d.html_url;a.target='_blank';a.rel='noreferrer';a.textContent='Was ist neu? ↗';line.appendChild(a);}
     })
     .catch(()=>{});
 })();
