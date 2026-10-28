@@ -192,6 +192,9 @@ h1,h2,h3,p { margin-top:0; }
 .eco-card h3 { font:600 20px/1.2 var(--serif); margin:8px 0 10px; }
 .eco-card p { color:var(--muted); font-size:14px; margin:0; }
 .eco-card.companion { border-color:var(--line); background:linear-gradient(180deg,rgba(215,183,107,.07),transparent 60%),var(--panel); }
+.eco-card .version-line { margin-top:14px; color:var(--green); font-size:12px; }
+.eco-links { font-size:12px; margin:6px 0 0!important; }
+.eco-links a { color:var(--gold); } .eco-links a:hover { color:var(--gold-hi); }
 .eco-note { text-align:center; color:var(--muted-2); font-size:12px; margin:18px 0 0; }
 
 /* Haltung */
@@ -402,7 +405,7 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
   <section class="section" id="oekosystem" aria-labelledby="eco-title">
     <div class="section-head"><p class="section-kicker">Drei Teile. Eine Gilde.</p><h2 class="section-title" id="eco-title">Das <em>Weint-Ökosystem.</em></h2><p class="section-desc">Das Addon geht selbst nie ins Internet. Was von außen kommt, bringt die Companion mit.</p></div>
     <div class="ecosystem">
-      <article class="eco-card"><span class="tag">Im Spiel</span><h3>WeintCodex</h3><p>Das Addon: alles, was du auf dieser Seite gesehen hast.</p></article>
+      <article class="eco-card"><span class="tag">Im Spiel</span><h3>WeintCodex</h3><p>Das Addon: alles, was du auf dieser Seite gesehen hast.</p><p class="version-line" id="codex-version"></p><p class="eco-links"><a href="https://github.com/daddler/Codex-Forever/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">Ganzer Changelog ↗</a></p></article>
       <article class="eco-card companion"><span class="tag">Auf deinem Rechner</span><h3>WeintCompanion</h3><p>Installiert WeintCodex, hält es aktuell, sichert vor jedem Update und verbindet Addon und Discord.</p></article>
       <article class="eco-card"><span class="tag">In eurem Discord</span><h3>WeintCodex Bot</h3><p>Raidtermine, Dungeon-Einladungen, Berufe der Gilde, Aufträge und Taktiken mit <code>/weintboss</code>.</p></article>
     </div>
@@ -483,19 +486,23 @@ footer { margin-top:80px; border-top:1px solid rgba(255,255,255,.06); padding:34
   show(detected||'linux');
 })();
 (function(){
-  const line=document.getElementById('version-line');
-  if(!line||!window.fetch) return;
-  fetch('https://api.github.com/repos/daddler/Companion-Forever/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
-    .then(r=>r.ok?r.json():null)
-    .then(d=>{
-      if(!d||typeof d.tag_name!=='string'||!d.tag_name) return;
-      let txt='Aktuell: '+d.tag_name;
-      const t=d.published_at?new Date(d.published_at):null;
-      if(t&&!isNaN(t)) txt+=' · veröffentlicht am '+t.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
-      line.textContent=txt;
-      if(typeof d.html_url==='string'&&d.html_url.startsWith('https://github.com/')){const a=document.createElement('a');a.href=d.html_url;a.target='_blank';a.rel='noreferrer';a.textContent='Was ist neu? ↗';line.appendChild(a);}
-    })
-    .catch(()=>{});
+  if(!window.fetch) return;
+  function release(repo,id,prefix){
+    const line=document.getElementById(id); if(!line) return;
+    fetch('https://api.github.com/repos/daddler/'+repo+'/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{
+        if(!d||typeof d.tag_name!=='string'||!d.tag_name) return;
+        let txt=prefix+d.tag_name;
+        const t=d.published_at?new Date(d.published_at):null;
+        if(t&&!isNaN(t)) txt+=' · veröffentlicht am '+t.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
+        line.textContent=txt;
+        if(typeof d.html_url==='string'&&d.html_url.startsWith('https://github.com/')){const a=document.createElement('a');a.href=d.html_url;a.target='_blank';a.rel='noreferrer';a.textContent='Was ist neu? ↗';line.appendChild(a);}
+      })
+      .catch(()=>{});
+  }
+  release('Companion-Forever','version-line','Aktuell: ');
+  release('Codex-Forever','codex-version','Aktuell: ');
 })();
 (function(){
   const VIDEO='ClNPqmZNR8s';
