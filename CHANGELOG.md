@@ -2,6 +2,17 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.3.0
+
+**Preisverläufe vom Auktionshaus.** Auf der Seite *Berufe* gibt es
+jetzt den Reiter *Preise*: Was du im Spiel mit WeintCodex am
+Auktionshaus gescannt hast, sammelt die Companion über Wochen und
+Monate. Ohne Suche siehst du, was sich gegenüber der Woche davor am
+meisten bewegt hat – „Kupfererz −25 %“ heißt: heute ein guter Tag zum
+Kaufen. Aufgeklappt steht der Verlauf Tag für Tag. Gezählt werden nur
+deine eigenen Scans, Preise von anderen Spielern nicht. Namen der
+Gegenstände braucht WeintCodex 1.8.1.0.
+
 ## 1.2.0
 
 **Aufträge aus der Gilde.** Kann einer deiner Charaktere ein Rezept,

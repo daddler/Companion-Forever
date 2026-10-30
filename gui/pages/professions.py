@@ -19,6 +19,12 @@ Erledigt, Ablehnen und Stornieren. Der Abschnitt steht außerhalb des
 Stapels, damit er auch ohne gemeldete Berufe sichtbar ist. Die Knöpfe
 senden in einem eigenen Thread (`set_status_async`), nie aus
 `refresh()`.
+
+Seit 1.3.0 ein zweiter Reiter, **Preise** (`core/auction_history.py`):
+die Auktionspreise aus den Scans von WeintCodex über Wochen und Monate,
+was sich gegenüber der Woche bewegt hat und der Verlauf je Gegenstand.
+Eigener Lader, der Archiv liest und schreibt - im Thread, nie in
+`refresh()`.
 """
 
 from __future__ import annotations
@@ -29,13 +35,16 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLineEdit,
+    QComboBox,
     QPushButton,
     QStackedWidget,
     QTreeWidget,
     QTreeWidgetItem,
+    QVBoxLayout,
     QWidget,
 )
 
+from core import auction_history as core_auction
 from core import professions as core_professions
 from core.professions import Professions
 from gui.controllers.saved_loader import SavedDataLoader
@@ -115,6 +124,34 @@ def _loader(manager) -> SavedDataLoader:
     return loader
 
 
+def _auction_loader(manager) -> SavedDataLoader:
+
+    loader = getattr(manager, "_auction_loader", None)
+
+    if loader is None:
+
+        loader = SavedDataLoader(manager, core_auction.load, core_auction.AuctionHistory, "AuctionLoad")
+
+        try:
+            manager._auction_loader = loader
+
+        except AttributeError:
+            pass
+
+    return loader
+
+
+def change_text(change) -> str:
+    """"−12 %" / "+40 %"; ohne Schnitt kein Trend, nie "0 %"."""
+
+    if change is None:
+        return "zu wenig Verlauf"
+
+    sign = "+" if change > 0 else ("−" if change < 0 else "±")
+
+    return f"{sign}{abs(change):.0f} %"
+
+
 class ProfessionsPage(Page):
 
     def __init__(self, manager, parent=None):
@@ -138,6 +175,52 @@ class ProfessionsPage(Page):
         self.loader.changed.connect(self._on_loaded)
 
         self.loader.busy.connect(self.reload_button.setDisabled)
+
+        self.auction_loader = _auction_loader(manager)
+
+        self.auction = self.auction_loader.result
+
+        self.auction_loader.changed.connect(self._on_auction_loaded)
+
+        #
+        # Zwei Reiter: Berufe (mit Aufträgen) und Preise.
+        #
+
+        tabs = QHBoxLayout()
+
+        tabs.setSpacing(8)
+
+        self.tab_buttons = []
+
+        for index, text in enumerate(("Berufe & Aufträge", "Preise")):
+
+            button = QPushButton(text)
+
+            button.setObjectName("secondary")
+
+            button.setCheckable(True)
+
+            button.setCursor(Qt.PointingHandCursor)
+
+            button.clicked.connect(lambda _=False, i=index: self._show_tab(i))
+
+            tabs.addWidget(button)
+
+            self.tab_buttons.append(button)
+
+        tabs.addStretch(1)
+
+        self.addLayout(tabs)
+
+        self.tabs = QStackedWidget()
+
+        crafting = QWidget()
+
+        self._crafting = QVBoxLayout(crafting)
+
+        self._crafting.setContentsMargins(0, 0, 0, 0)
+
+        self._crafting.setSpacing(20)
 
         self.stack = QStackedWidget()
 
@@ -221,11 +304,170 @@ class ProfessionsPage(Page):
 
         self.stack.addWidget(content)
 
-        self.addWidget(self.stack, 1)
+        self._crafting.addWidget(self.stack, 1)
 
-        self.addWidget(self._build_orders())
+        self._crafting.addWidget(self._build_orders())
+
+        self.tabs.addWidget(crafting)
+
+        self.tabs.addWidget(self._build_prices())
+
+        self.addWidget(self.tabs, 1)
+
+        self._show_tab(0)
 
         self._show_empty()
+
+    def _show_tab(self, index: int):
+
+        self.tabs.setCurrentIndex(index)
+
+        for i, button in enumerate(self.tab_buttons):
+            button.setChecked(i == index)
+
+    # --------------------------------------------------
+    # Preise
+    # --------------------------------------------------
+
+    def _build_prices(self) -> QWidget:
+
+        card = Card()
+
+        card.addWidget(eyebrow_label("AUKTIONSPREISE"))
+
+        row = QHBoxLayout()
+
+        row.setSpacing(8)
+
+        self.market_box = QComboBox()
+
+        self.market_box.currentIndexChanged.connect(lambda _=0: self._draw_prices())
+
+        row.addWidget(self.market_box)
+
+        self.price_search = QLineEdit()
+
+        self.price_search.setPlaceholderText("Gegenstand oder Nummer – leer: was sich diese Woche bewegt hat")
+
+        self.price_search.setClearButtonEnabled(True)
+
+        self.price_search.textChanged.connect(lambda _="": self._draw_prices())
+
+        row.addWidget(self.price_search, 1)
+
+        card.addLayout(row)
+
+        self.prices = QTreeWidget()
+
+        self.prices.setColumnCount(4)
+
+        self.prices.setHeaderLabels(["Gegenstand", "Zuletzt", "Schnitt der Woche davor", "Änderung"])
+
+        self.prices.setMinimumHeight(360)
+
+        style_tree(self.prices)
+
+        head = self.prices.header()
+
+        head.setSectionResizeMode(0, QHeaderView.Stretch)
+
+        for column in (1, 2, 3):
+            head.setSectionResizeMode(column, QHeaderView.ResizeToContents)
+
+        card.addWidget(self.prices, 1)
+
+        self.prices_note = muted_label()
+
+        card.addWidget(self.prices_note)
+
+        return card
+
+    def _on_auction_loaded(self, data):
+
+        self.auction = data
+
+        current = self.market_box.currentData()
+
+        self.market_box.blockSignals(True)
+
+        self.market_box.clear()
+
+        for market in data.markets:
+            self.market_box.addItem(market.label, market.key)
+
+        index = self.market_box.findData(current)
+
+        self.market_box.setCurrentIndex(index if index >= 0 else 0)
+
+        self.market_box.blockSignals(False)
+
+        self.refresh()
+
+    def _draw_prices(self):
+
+        self.prices.clear()
+
+        data = self.auction
+
+        self.market_box.setVisible(len(data.markets) > 1)
+
+        market = data.market(self.market_box.currentData()) if data.markets else None
+
+        if market is None:
+
+            if data.error:
+                text = f"Spielstand nicht lesbar ({data.error})."
+
+            else:
+                text = (
+                    "Noch keine Preise. Schalte im Spiel Komfort → Auktionspreise ein und "
+                    "scanne am Auktionshaus; beim Ausloggen schreibt das Spiel die Datei, "
+                    "danach sammelt die Companion jeden Tag dazu."
+                )
+
+            self.prices_note.setText(text)
+
+            return
+
+        query = self.price_search.text()
+
+        rows = market.search(query) if query.strip() else market.movers()
+
+        for trend in rows:
+
+            average = core_auction.money_text(trend.average) if trend.average is not None else "–"
+
+            top = QTreeWidgetItem([
+                trend.label,
+                core_auction.money_text(trend.price),
+                average,
+                change_text(trend.change),
+            ])
+
+            for day, price in reversed(trend.history[-30:]):
+
+                when = core_auction.day_date(day).strftime("%d.%m.%Y")
+
+                top.addChild(QTreeWidgetItem([when, core_auction.money_text(price), "", ""]))
+
+            self.prices.addTopLevelItem(top)
+
+        if not rows:
+
+            text = (
+                "Nichts gefunden." if query.strip()
+                else "Noch kein Gegenstand mit genug Verlauf – dafür braucht es Scans an mindestens drei Tagen."
+            )
+
+            self.prices.addTopLevelItem(QTreeWidgetItem([text, "", "", ""]))
+
+        days = len({d for per in market.days.values() for d in per})
+
+        self.prices_note.setText(
+            f"{len(market.days):,} Gegenstände an {days} Scan-Tagen. ".replace(",", ".")
+            + "Je Tag das günstigste Angebot je Stück aus deinen eigenen Scans – "
+            "Preise anderer Spieler zählen nicht. Aufklappen zeigt den Verlauf."
+        )
 
     # --------------------------------------------------
     # Aufträge
@@ -380,9 +622,13 @@ class ProfessionsPage(Page):
 
         self.loader.request()
 
+        self.auction_loader.request()
+
     def _reload(self):
 
         self.loader.request(force=True)
+
+        self.auction_loader.request(force=True)
 
     def _on_loaded(self, data):
 
@@ -428,6 +674,8 @@ class ProfessionsPage(Page):
     def refresh(self):
 
         self._draw_orders()
+
+        self._draw_prices()
 
         data = self.data
 
