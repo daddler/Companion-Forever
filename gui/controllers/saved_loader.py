@@ -107,3 +107,29 @@ class SavedDataLoader(QObject):
                 logger.warning(f"Spielstand nicht vollständig lesbar: {result.error}")
 
         self.changed.emit(result)
+
+
+def auction_loader(manager) -> SavedDataLoader:
+    """
+    Der Lader der Preisverläufe (`core/auction_history.py`), einer je Manager.
+
+    Das Fenster stößt ihn einmal beim Start an, sobald der Spielordner
+    bekannt ist - WeintCodex behält nur 7 Tage, und wer die Seite
+    *Berufe* länger nicht öffnet, verlöre sonst die Tage dazwischen.
+    """
+
+    loader = getattr(manager, "_auction_loader", None)
+
+    if loader is None:
+
+        from core import auction_history
+
+        loader = SavedDataLoader(manager, auction_history.load, auction_history.AuctionHistory, "AuctionLoad")
+
+        try:
+            manager._auction_loader = loader
+
+        except AttributeError:
+            pass
+
+    return loader

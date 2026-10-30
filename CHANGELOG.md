@@ -10,8 +10,10 @@ Auktionshaus gescannt hast, sammelt die Companion über Wochen und
 Monate. Ohne Suche siehst du, was sich gegenüber der Woche davor am
 meisten bewegt hat – „Kupfererz −25 %“ heißt: heute ein guter Tag zum
 Kaufen. Aufgeklappt steht der Verlauf Tag für Tag. Gezählt werden nur
-deine eigenen Scans, Preise von anderen Spielern nicht. Namen der
-Gegenstände braucht WeintCodex 1.8.1.0.
+deine eigenen Scans, Preise von anderen Spielern nicht. Eingesammelt
+wird beim Start der Companion und danach alle paar Stunden – auch wenn
+du die Seite nicht öffnest. Namen der Gegenstände braucht WeintCodex
+1.8.1.0.
 
 ## 1.2.0
 

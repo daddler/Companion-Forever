@@ -122,3 +122,36 @@ def test_prices_tab_draws_without_reading_files():
     assert page.prices.topLevelItem(0).text(2) == "–"
 
     assert app is not None
+
+
+def test_window_collects_prices_without_the_page_at_most_every_six_hours():
+
+    import types
+
+    from gui.main_window import MainWindow
+
+    calls = []
+
+    fake = types.SimpleNamespace(request=lambda: calls.append(1))
+
+    manager = types.SimpleNamespace(state=types.SimpleNamespace(wow_path=None), _auction_loader=fake)
+
+    window = types.SimpleNamespace(manager=manager)
+
+    MainWindow._collect_auction_prices(window)
+
+    assert calls == []  # ohne Spielordner nichts
+
+    manager.state.wow_path = "/wow"
+
+    MainWindow._collect_auction_prices(window)
+
+    MainWindow._collect_auction_prices(window)
+
+    assert calls == [1]
+
+    window._auction_collected_at -= 6 * 3600 + 1
+
+    MainWindow._collect_auction_prices(window)
+
+    assert calls == [1, 1]

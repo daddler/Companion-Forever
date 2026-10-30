@@ -47,7 +47,7 @@ from PySide6.QtWidgets import (
 from core import auction_history as core_auction
 from core import professions as core_professions
 from core.professions import Professions
-from gui.controllers.saved_loader import SavedDataLoader
+from gui.controllers.saved_loader import SavedDataLoader, auction_loader
 from gui.pages._page import Page
 from gui.theme import tokens
 from gui.theme.fonts import font
@@ -124,23 +124,6 @@ def _loader(manager) -> SavedDataLoader:
     return loader
 
 
-def _auction_loader(manager) -> SavedDataLoader:
-
-    loader = getattr(manager, "_auction_loader", None)
-
-    if loader is None:
-
-        loader = SavedDataLoader(manager, core_auction.load, core_auction.AuctionHistory, "AuctionLoad")
-
-        try:
-            manager._auction_loader = loader
-
-        except AttributeError:
-            pass
-
-    return loader
-
-
 def change_text(change) -> str:
     """"−12 %" / "+40 %"; ohne Schnitt kein Trend, nie "0 %"."""
 
@@ -176,7 +159,7 @@ class ProfessionsPage(Page):
 
         self.loader.busy.connect(self.reload_button.setDisabled)
 
-        self.auction_loader = _auction_loader(manager)
+        self.auction_loader = auction_loader(manager)
 
         self.auction = self.auction_loader.result
 

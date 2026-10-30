@@ -407,6 +407,8 @@ class MainWindow(QMainWindow):
 
         self.change_page(PageId.OVERVIEW)
 
+        self._collect_auction_prices()
+
         #
         # Die Start-Popups werden hier NICHT angestoßen, sondern erst
         # aus showEvent() heraus - siehe _queue_startup_popups().
@@ -644,6 +646,33 @@ class MainWindow(QMainWindow):
 
         self.nav.refresh()
 
+    def _collect_auction_prices(self):
+        """
+        Die Preisverläufe einsammeln (Thread des Laders), sobald der
+        Spielordner bekannt ist - unabhängig davon, ob jemand die Seite
+        *Berufe* öffnet. Beim Start und danach höchstens alle sechs
+        Stunden (die Companion läuft oft tagelang im Hintergrund); hat
+        sich der Spielstand nicht geändert, liest der Lader nichts.
+        """
+
+        import time
+
+        if not getattr(self.manager.state, "wow_path", None):
+            return
+
+        now = time.monotonic()
+
+        last = getattr(self, "_auction_collected_at", None)
+
+        if last is not None and now - last < 6 * 3600:
+            return
+
+        self._auction_collected_at = now
+
+        from gui.controllers.saved_loader import auction_loader
+
+        auction_loader(self.manager).request()
+
     def _on_state_changed(self):
         """
         Eine Prüfung ist durch - die Anzeige nachziehen.
@@ -683,6 +712,8 @@ class MainWindow(QMainWindow):
             self._refreshing_state = False
 
     def _refresh_after_state_change(self):
+
+        self._collect_auction_prices()
 
         page = self._current_page
 
