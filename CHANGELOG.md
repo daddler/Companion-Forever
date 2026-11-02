@@ -10,6 +10,12 @@ Doppelpfeil zum Verschieben dieser Kante, im markierten Bereich eine
 Hand – damit schiebst du den ganzen Ausschnitt, die Länge bleibt –, und
 daneben ein Fadenkreuz für eine neue Auswahl.
 
+**Bis zu 6 Sekunden.** Ein eigener Ton darf jetzt 6 statt 4 Sekunden
+lang sein – genug für den ganzen Spruch eines Memes. Damit ein langer Ton
+im Spiel nicht bei jedem Treffer neu anfängt, sagt die Companion
+WeintCodex, wie lang er ist; „Raus da!“ wartet dann, bis er zu Ende ist
+(braucht WeintCodex 1.10.2.0).
+
 ## 1.4.0
 
 **Töne für „Raus da!“ selbst zuschneiden.** Wählst du auf der Seite

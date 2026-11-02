@@ -47,7 +47,13 @@ SLOTS = 5
 # ffmpeg; ohne ffmpeg gilt die Größe als Grenze.
 #
 
-MAX_SECONDS = 4.0
+#
+# 1.4.1: 6 statt 4 s (Wunsch des Besitzers - ein Meme braucht seinen ganzen
+# Spruch). Damit ein langer Ton im Spiel nicht jede Sekunde neu startet,
+# steht seine Länge als `len` in sounds.lua (Vertrag, FA.Gap im Addon).
+#
+
+MAX_SECONDS = 6.0
 
 MAX_BYTES = 2 * 1024 * 1024
 
@@ -98,6 +104,8 @@ class CustomSound:
     file: str
     name: str
     source: str = ""
+    # Länge in Sekunden, `None` = unbekannt (eine kopierte .ogg ohne ffmpeg).
+    length: float | None = None
 
 
 def folder(addons_path) -> Path | None:
@@ -181,9 +189,19 @@ def load(addons_path) -> list[CustomSound]:
             file=file,
             name=clean_name(entry.get("name"), key),
             source=str(entry.get("source") or ""),
+            length=_length(entry.get("length")),
         ))
 
     return sorted(out, key=lambda s: s.key)
+
+
+def _length(value) -> float | None:
+    """Eine Länge aus der Ablage - nur eine echte Zahl über 0, sonst unbekannt."""
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+
+    return round(float(value), 2) if 0 < value <= 60 else None
 
 
 def free_slot(sounds: list[CustomSound]) -> str | None:
@@ -218,9 +236,11 @@ def render_lua(sounds: list[CustomSound]) -> str:
 
     for s in sounds:
 
+        length = f", len = {s.length:.2f}" if s.length else ""
+
         lines.append(
             f"    {{ key = {_lua_string(s.key)}, file = {_lua_string(s.file)}, "
-            f"text = {_lua_string(s.name)} }},"
+            f"text = {_lua_string(s.name)}{length} }},"
         )
 
     lines.append("}")
@@ -285,7 +305,8 @@ def save(addons_path, sounds: list[CustomSound]) -> None:
     _write(base / MANIFEST, json.dumps({
         "version": 1,
         "sounds": [
-            {"key": s.key, "file": s.file, "name": s.name, "source": s.source}
+            {"key": s.key, "file": s.file, "name": s.name, "source": s.source,
+             "length": s.length}
             for s in sounds
         ],
     }, indent=2, ensure_ascii=False))
@@ -523,6 +544,8 @@ def add(addons_path, source, name: str = "", key: str | None = None,
 
     temp = base / f"{slot}.neu.ogg"
 
+    length = None
+
     if ffmpeg is None:
         ffmpeg = ffmpeg_path()
 
@@ -533,6 +556,9 @@ def add(addons_path, source, name: str = "", key: str | None = None,
             clip_start, clip_length = clip_window(start, end)
 
             convert(source, temp, ffmpeg, clip_start, clip_length)
+
+            # Die echte Länge: eine kurze Datei endet vor clip_length.
+            length = probe_duration(temp, ffmpeg) or clip_length
 
         elif start or end is not None:
 
@@ -579,6 +605,7 @@ def add(addons_path, source, name: str = "", key: str | None = None,
         file=f"{slot}.ogg",
         name=clean_name(name or source.stem, slot),
         source=source.name,
+        length=round(length, 2) if length else None,
     )
 
     save(addons_path, [s for s in sounds if s.key != slot] + [sound])
@@ -591,7 +618,7 @@ def rename(addons_path, key: str, name: str) -> None:
     sounds = load(addons_path)
 
     save(addons_path, [
-        CustomSound(s.key, s.file, clean_name(name, s.key), s.source)
+        CustomSound(s.key, s.file, clean_name(name, s.key), s.source, s.length)
         if s.key == key else s
         for s in sounds
     ])

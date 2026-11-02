@@ -29,7 +29,7 @@ ohne dass es jemand merkt. Fehlt `WeintCodex.toc`, bleibt die
 
 ```lua
 WeintCodex_CustomSounds = {
-    { key = "eigen1", file = "eigen1.ogg", text = "Gong der Gilde" },
+    { key = "eigen1", file = "eigen1.ogg", text = "Gong der Gilde", len = 2.35 },
 }
 ```
 
@@ -42,6 +42,11 @@ WeintCodex_CustomSounds = {
   `Interface\AddOns\WeintCodex_Sounds\`.
 - `text` ist der Name, wie ihn der Spieler vergeben hat (≤ 40 Zeichen,
   ohne Anführungszeichen und Backslash).
+- `len` (seit Companion 1.4.1 / WeintCodex 1.10.2.0, optional) ist die
+  Länge in Sekunden, gemessen nach dem Umwandeln. Das Addon nimmt nur eine
+  Zahl über 0 bis 60 und wartet mit dem nächsten Alarm, bis ein Ton zu Ende
+  ist (`FA.Gap`). Unbekannt (kopierte .ogg ohne ffmpeg) heißt: kein Feld,
+  nie 0. Ältere Fassungen übergehen das Feld.
 
 ## Regeln
 
@@ -54,7 +59,7 @@ WeintCodex_CustomSounds = {
   (requirements.txt) bringt ein statisches ffmpeg je Plattform mit, der
   PyInstaller-Hook `hook-imageio_ffmpeg` packt es ein; `ffmpeg_path()`
   nimmt es vor einem System-ffmpeg. Jede Eingabe wird zu mono Ogg
-  Vorbis (libvorbis), gekürzt auf 4 s mit 0,15 s Ausblenden – seit
+  Vorbis (libvorbis), gekürzt auf 4 s (seit 1.4.1: 6 s) mit 0,15 s Ausblenden – seit
   Companion 1.4.0 der Ausschnitt, den der Spieler im Schneide-Dialog
   wählt (`gui/dialogs/sound_trim.py`; `probe_duration`, `waveform`,
   `clip_window`, `convert(start, length)`, beim Start mitten in der Datei

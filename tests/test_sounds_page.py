@@ -102,8 +102,8 @@ def test_trim_selection_never_breaks_the_rules():
 
     from gui.dialogs.sound_trim import selection
 
-    # Ende über 4 s hinaus gezogen: der Start rückt nach.
-    assert selection(1.0, 9.0, 20.0, "end") == (5.0, 9.0)
+    # Ende über die Höchstlänge hinaus gezogen: der Start rückt nach.
+    assert selection(1.0, 9.0, 20.0, "end") == (9.0 - cs.MAX_SECONDS, 9.0)
     # Start hinter das Ende gezogen: das Ende rückt mit.
     assert selection(6.0, 5.0, 20.0, "start") == (6.0, 6.2)
     # Nie über die Datei hinaus.

@@ -243,3 +243,27 @@ def test_unknown_duration_is_unknown_not_zero(tmp_path):
     junk = tmp_path / "kaputt.mp3"
     junk.write_bytes(b"nichts")
     assert cs.probe_duration(junk, FFMPEG or "/nicht/da") is None
+
+
+def test_length_goes_to_the_addon_so_a_long_sound_is_not_restarted(addons, tmp_path):
+
+    sound = cs.CustomSound("eigen1", "eigen1.ogg", "Meme", "x.mp3", 5.39)
+    lua = cs.render_lua([sound])
+    assert "len = 5.39" in lua
+    # Unbekannte Länge: kein Feld, nicht 0.
+    assert "len" not in cs.render_lua([cs.CustomSound("eigen1", "eigen1.ogg", "Gong")])
+    assert cs._length(True) is None and cs._length(0) is None and cs._length("5") is None
+    assert cs._length(5.391) == 5.39
+
+
+@pytest.mark.skipif(not FFMPEG, reason="ffmpeg fehlt")
+def test_cut_length_is_measured_and_kept_through_rename(addons, tmp_path):
+
+    src = _tone_in_silence(tmp_path / "ton.wav")
+    cs.add(addons, src, ffmpeg=FFMPEG, start=1.94, end=7.33)
+    sound = cs.load(addons)[0]
+    assert abs(sound.length - 5.39) < 0.1
+    cs.rename(addons, "eigen1", "Rose")
+    assert cs.load(addons)[0].length == sound.length
+    lua = (addons / cs.FOLDER_NAME / cs.LUA_FILE).read_text(encoding="utf-8")
+    assert "len = " in lua
