@@ -54,7 +54,12 @@ WeintCodex_CustomSounds = {
   (requirements.txt) bringt ein statisches ffmpeg je Plattform mit, der
   PyInstaller-Hook `hook-imageio_ffmpeg` packt es ein; `ffmpeg_path()`
   nimmt es vor einem System-ffmpeg. Jede Eingabe wird zu mono Ogg
-  Vorbis (libvorbis), gekürzt auf 4 s mit 0,15 s Ausblenden; fehlt
+  Vorbis (libvorbis), gekürzt auf 4 s mit 0,15 s Ausblenden – seit
+  Companion 1.4.0 der Ausschnitt, den der Spieler im Schneide-Dialog
+  wählt (`gui/dialogs/sound_trim.py`; `probe_duration`, `waveform`,
+  `clip_window`, `convert(start, length)`, beim Start mitten in der Datei
+  0,02 s Einblenden; ohne ffmpeg kein Schneiden). Das Addon merkt davon
+  nichts – Format und Ablage bleiben gleich; fehlt
   libvorbis im Bau, nimmt ein zweiter Versuch den eingebauten
   Vorbis-Kodierer (Stereo, `-strict experimental`). Lizenz: die
   ffmpeg-Bauten sind GPL; `imageio-ffmpeg` selbst ist BSD. Ohne ffmpeg wird

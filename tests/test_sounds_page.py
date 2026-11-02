@@ -96,3 +96,42 @@ def test_without_wow_nothing_can_be_added(page):
 
     assert not page.add_button.isEnabled()
     assert "WoW-Ordner" in page.header.title.text()
+
+
+def test_trim_selection_never_breaks_the_rules():
+
+    from gui.dialogs.sound_trim import selection
+
+    # Ende über 4 s hinaus gezogen: der Start rückt nach.
+    assert selection(1.0, 9.0, 20.0, "end") == (5.0, 9.0)
+    # Start hinter das Ende gezogen: das Ende rückt mit.
+    assert selection(6.0, 5.0, 20.0, "start") == (6.0, 6.2)
+    # Nie über die Datei hinaus.
+    assert selection(19.0, 25.0, 20.0, "start") == (19.0, 20.0)
+
+
+@pytest.mark.skipif(not cs.ffmpeg_path(), reason="ffmpeg fehlt")
+def test_trim_dialog_shows_the_file_and_saves_the_choice(tmp_path):
+
+    from PySide6.QtWidgets import QApplication
+
+    app = QApplication.instance() or QApplication([])
+
+    from tests.test_custom_sounds import _tone_in_silence
+    from gui.dialogs.sound_trim import SoundTrimDialog
+
+    src = _tone_in_silence(tmp_path / "ton.wav")
+
+    dialog = SoundTrimDialog(str(src), cs.ffmpeg_path())
+
+    assert abs(dialog.duration - 8.0) < 0.1 and dialog.peaks
+    assert (dialog.start, dialog.end) == (0.0, cs.MAX_SECONDS)
+
+    dialog.start_box.setValue(3.0)
+    dialog.end_box.setValue(5.0)
+
+    assert (dialog.start, dialog.end) == (3.0, 5.0)
+    assert "2,0" in dialog.length.text()
+
+    dialog.done(0)
+    assert app is not None

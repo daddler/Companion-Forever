@@ -409,11 +409,40 @@ class SoundsPage(Page):
 
     def add_file(self, path: str, key: str | None = None):
 
+        #
+        # Mit ffmpeg erst schneiden (1.4.0): Start und Ende wählt der
+        # Spieler, übernommen wird erst mit „Speichern". Ohne ffmpeg geht
+        # nur eine fertige .ogg - dann wie bisher ohne Dialog.
+        #
+
+        start, end = 0.0, None
+
+        ffmpeg = cs.ffmpeg_path()
+
+        if ffmpeg and Path(path).suffix.lower() in cs.ACCEPTED:
+
+            from gui.dialogs.sound_trim import SoundTrimDialog
+
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+
+            try:
+                dialog = SoundTrimDialog(path, ffmpeg, self)
+            finally:
+                QApplication.restoreOverrideCursor()
+
+            if dialog.exec() != SoundTrimDialog.Accepted:
+
+                self._say("Nichts übernommen.", "warn")
+
+                return
+
+            start, end = dialog.start, dialog.end
+
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
         try:
 
-            sound = cs.add(self._addons(), path, key=key)
+            sound = cs.add(self._addons(), path, key=key, ffmpeg=ffmpeg, start=start, end=end)
 
         except cs.SoundError as exc:
 

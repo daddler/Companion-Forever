@@ -2,6 +2,17 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.4.0
+
+**Töne für „Raus da!“ selbst zuschneiden.** Wählst du auf der Seite
+*Töne* eine Datei, öffnet sich jetzt ein Schneide-Fenster: Du siehst
+den Ton als Welle, ziehst mit der Maus, von wo bis wo der Alarm klingen
+soll, oder gibst Start und Ende auf die Zehntelsekunde ein. *Probe
+hören* spielt genau den Ausschnitt, der gespeichert wird; mit
+*Speichern* geht er ans Addon. Höchstens 4 Sekunden – ein Alarm ist
+ein Signal, kein Lied. Bisher wurden einfach die ersten 4 Sekunden
+genommen.
+
 ## 1.3.0
 
 **Preisverläufe vom Auktionshaus.** Auf der Seite *Berufe* gibt es
