@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.4.2
+
+**Eigene Töne aus einer mp3 mit Titelbild sind im Spiel zu hören.** Trug
+eine mp3 ein Titelbild, schrieb die Companion es als Video mit in die
+Ton-Datei – und das Spiel spielte sie dann stumm ab. Jetzt kommt nur der
+Ton hinein. Einen so gespeicherten Ton einfach neu hinzufügen.
+
 ## 1.4.1
 
 **Schneiden mit der Maus, sichtbar.** Fährst du im Schneide-Fenster über

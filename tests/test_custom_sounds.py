@@ -238,6 +238,31 @@ def test_saving_takes_exactly_the_chosen_cut(addons, tmp_path):
     assert max(cs.waveform(out, FFMPEG, buckets=8)) > 0
 
 
+@pytest.mark.skipif(not FFMPEG, reason="ffmpeg fehlt")
+def test_cover_art_of_an_mp3_does_not_end_up_as_video(addons, tmp_path):
+    """
+    Eine mp3 mit Titelbild wurde bis 1.4.1 zu einer .ogg mit Theora-Video -
+    und die spielt das Spiel stumm ab. Nur die Tonspur darf hinein.
+    """
+
+    import subprocess
+
+    wav = _tone_in_silence(tmp_path / "ton.wav")
+    cover = tmp_path / "cover.png"
+    mp3 = tmp_path / "meme.mp3"
+    run = lambda *a: subprocess.run([FFMPEG, "-v", "error", "-y", *a], check=True)
+    run("-f", "lavfi", "-i", "color=red:s=64x64:d=1", "-frames:v", "1", str(cover))
+    run("-i", str(wav), "-i", str(cover), "-map", "0", "-map", "1",
+        "-c:a", "libmp3lame", "-c:v", "mjpeg", "-disposition:v", "attached_pic", str(mp3))
+
+    sound = cs.add(addons, mp3, ffmpeg=FFMPEG, start=3.0, end=5.0)
+
+    probe = subprocess.run([FFMPEG, "-hide_banner", "-i", str(addons / cs.FOLDER_NAME / sound.file)],
+                           capture_output=True, text=True).stderr
+    assert "Audio: vorbis" in probe
+    assert "Video:" not in probe
+
+
 def test_unknown_duration_is_unknown_not_zero(tmp_path):
 
     junk = tmp_path / "kaputt.mp3"

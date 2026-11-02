@@ -459,6 +459,10 @@ def convert(source: Path, target: Path, ffmpeg: str, start: float = 0.0,
             "-ss", f"{start:.3f}",
             "-i", str(source),
             "-t", f"{length:.3f}",
+            # Nur die Tonspur: das Titelbild einer mp3 würde sonst als
+            # Theora-Video mit in die .ogg geschrieben - und eine .ogg mit
+            # Videospur spielt das Spiel stumm ab (gemessen 1.4.1).
+            "-map", "0:a:0", "-vn", "-sn", "-dn", "-map_metadata", "-1",
             "-af", ",".join(filters),
             "-ar", "44100",
             *codec,
