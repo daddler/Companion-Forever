@@ -135,3 +135,40 @@ def test_trim_dialog_shows_the_file_and_saves_the_choice(tmp_path):
 
     dialog.done(0)
     assert app is not None
+
+
+def test_trim_cursor_tells_what_a_drag_does():
+
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication
+
+    app = QApplication.instance() or QApplication([])
+
+    from gui.dialogs.sound_trim import Waveform
+
+    wave = Waveform([0.5] * 100, 10.0)
+    wave.resize(1000, 110)
+    wave.set_range(2.0, 6.0)   # Kanten bei x = 200 und x = 600
+
+    assert wave.hasMouseTracking()
+    assert wave.zone(200) == "start" and wave.zone(604) == "end"
+    assert wave.zone(400) == "inside" and wave.zone(800) == "outside"
+    assert wave.CURSORS["end"] == Qt.SizeHorCursor
+    assert wave.CURSORS["inside"] == Qt.OpenHandCursor
+
+    # Verschieben behält die Länge und bleibt in der Datei.
+    moved = []
+    wave.dragged.connect(lambda a, b, _m: moved.append((round(a, 2), round(b, 2))))
+    wave._anchor = ("move", 2.0)
+
+    class _Ev:
+        def __init__(self, x):
+            self._x = x
+
+        def position(self):
+            from PySide6.QtCore import QPointF
+            return QPointF(self._x, 50)
+
+    wave.mouseMoveEvent(_Ev(950))
+    assert moved[-1] == (6.0, 10.0)
+    assert app is not None

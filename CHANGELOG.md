@@ -2,6 +2,14 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.4.1
+
+**Schneiden mit der Maus, sichtbar.** Fährst du im Schneide-Fenster über
+die Tonspur, zeigt der Mauszeiger, was ein Ziehen tut: an einer Kante ein
+Doppelpfeil zum Verschieben dieser Kante, im markierten Bereich eine
+Hand – damit schiebst du den ganzen Ausschnitt, die Länge bleibt –, und
+daneben ein Fadenkreuz für eine neue Auswahl.
+
 ## 1.4.0
 
 **Töne für „Raus da!“ selbst zuschneiden.** Wählst du auf der Seite

@@ -100,7 +100,15 @@ class Waveform(QWidget):
 
         self.setMinimumHeight(110)
 
-        self.setCursor(Qt.IBeamCursor)
+        #
+        # Der Zeiger sagt, was ein Ziehen tut - schon beim Drüberfahren
+        # (Wunsch nach 1.4.0): ohne Mausverfolgung meldet Qt Bewegungen nur
+        # bei gedrückter Taste, der Zeiger hätte sich nie geändert.
+        #
+
+        self.setMouseTracking(True)
+
+        self.setCursor(Qt.CrossCursor)
 
     def set_range(self, start: float, end: float):
 
@@ -114,34 +122,78 @@ class Waveform(QWidget):
 
         return max(0.0, min(self.duration, x / width * self.duration))
 
+    GRIP = 8   # so viele Bildpunkte um eine Kante greifen sie
+
+    def zone(self, x: float) -> str:
+        """Was unter dem Zeiger liegt: "start"/"end" (Kante), "inside", "outside"."""
+
+        if self.duration <= 0:
+            return "outside"
+
+        width = max(1, self.width())
+
+        xs = self.start / self.duration * width
+
+        xe = self.end / self.duration * width
+
+        if abs(x - xe) <= self.GRIP:
+            return "end"
+
+        if abs(x - xs) <= self.GRIP:
+            return "start"
+
+        if xs < x < xe:
+            return "inside"
+
+        return "outside"
+
+    CURSORS = {
+        "start": Qt.SizeHorCursor,
+        "end": Qt.SizeHorCursor,
+        "inside": Qt.OpenHandCursor,
+        "outside": Qt.CrossCursor,
+    }
+
     def mousePressEvent(self, event):
 
         if event.button() != Qt.LeftButton:
             return
 
-        t = self._seconds(event.position().x())
+        x = event.position().x()
 
-        # Nahe am Ende: das Ende ziehen. Sonst beginnt eine neue Auswahl.
-        near = 6 / max(1, self.width()) * self.duration
+        t = self._seconds(x)
 
-        if abs(t - self.end) <= near:
+        where = self.zone(x)
+
+        if where == "end":
             self._anchor = ("end", self.start)
-        elif abs(t - self.start) <= near:
+        elif where == "start":
             self._anchor = ("start", self.end)
+        elif where == "inside":
+            # Den ganzen Ausschnitt verschieben, die Länge bleibt.
+            self._anchor = ("move", t - self.start)
+            self.setCursor(Qt.ClosedHandCursor)
         else:
             self._anchor = ("new", t)
             self.dragged.emit(t, t + cs.MAX_SECONDS, "start")
 
     def mouseMoveEvent(self, event):
 
+        x = event.position().x()
+
         if not self._anchor:
+            self.setCursor(self.CURSORS[self.zone(x)])
             return
 
-        t = self._seconds(event.position().x())
+        t = self._seconds(x)
 
         kind, fixed = self._anchor
 
-        if kind == "start":
+        if kind == "move":
+            length = self.end - self.start
+            start = min(max(0.0, t - fixed), max(0.0, self.duration - length))
+            self.dragged.emit(start, start + length, "end")
+        elif kind == "start":
             self.dragged.emit(t, fixed, "start")
         elif t >= fixed:
             self.dragged.emit(fixed, t, "end")
@@ -151,6 +203,8 @@ class Waveform(QWidget):
     def mouseReleaseEvent(self, event):
 
         self._anchor = None
+
+        self.setCursor(self.CURSORS[self.zone(event.position().x())])
 
     def paintEvent(self, event):
 
