@@ -2,6 +2,15 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.4.3
+
+**Kein aufblitzendes Fenster mehr, während du spielst.** Lag die
+Companion im Tray, ging unter Windows ab und zu für einen Augenblick ein
+leeres Fenster auf – und ein Spiel im Vollbild verlor dabei den Fokus
+oder flog aus dem Vollbild. Schuld waren Teile der Übersicht, die sich
+beim Aktualisieren kurz als eigenes Fenster zeigten, bevor sie an ihren
+Platz kamen. Das passiert nicht mehr.
+
 ## 1.4.2
 
 **Eigene Töne aus einer mp3 mit Titelbild sind im Spiel zu hören.** Trug

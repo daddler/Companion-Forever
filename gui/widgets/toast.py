@@ -109,7 +109,7 @@ class Toast(QWidget):
 
         column.addWidget(self.label)
 
-        self.action = QLabel(action.upper())
+        self.action = QLabel(action.upper(), self)
 
         self.action.setFont(font("micro"))
 

@@ -177,7 +177,7 @@ class EmptyState(QWidget):
 
         buttons.addStretch(1)
 
-        self.button = QPushButton(action)
+        self.button = QPushButton(action, self)
 
         self.button.setVisible(bool(action))
 

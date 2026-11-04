@@ -77,7 +77,8 @@ class Chip(QWidget):
         #
 
         self.dot = StatusDot(
-            variant if variant in tokens.STATE else "empty"
+            variant if variant in tokens.STATE else "empty",
+            parent=self,
         )
 
         self.dot.setVisible(dot)

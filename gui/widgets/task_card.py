@@ -162,7 +162,7 @@ class TaskRow(QFrame):
 
         column.addWidget(self.title)
 
-        self.detail = QLabel(task.detail)
+        self.detail = QLabel(task.detail, self)
 
         self.detail.setFont(font("small"))
 
