@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.1
+
+**Bereit für den Start von Forever.** Diese Fassung gehört zu WeintCodex
+1.0.0.1 und bringt alles aus den letzten Wochen mit, auch den Schutz vor
+aufblitzenden Fenstern während des Spielens.
+
 ## 1.4.3
 
 **Kein aufblitzendes Fenster mehr, während du spielst.** Lag die
