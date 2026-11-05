@@ -67,6 +67,18 @@ def _label(name: str, realm: str) -> str:
     return f"{name}-{realm}" if realm else name
 
 
+def _match_key(label: str) -> str:
+    """
+    Vergleichsschlüssel für „Name-Realm“. Das Addon merkt sich Berufe unter
+    dem Realm, wie `GetRealmName()` ihn nennt (mit Leerzeichen, „Die Silberne
+    Hand“), den Ausrüstungsstand aber ohne (`core/names.lua` dort). Ohne
+    diesen Abgleich fand die Companion bei Realms mit Leerzeichen keinen
+    Beruf - der Bot zeigte die Charaktere ohne Berufe (Bericht zum Start).
+    """
+
+    return "".join(str(label).split()).lower()
+
+
 def build_payload(sheets: list[dict], professions, wow_client: str = "") -> dict:
     """
     Die Meldung an den Bot. Rein, ohne Dateien und Netz.
@@ -82,9 +94,14 @@ def build_payload(sheets: list[dict], professions, wow_client: str = "") -> dict
             names[spell] = recipe.name
 
     by_label = {
-        entry.label.lower(): entry
+        _match_key(entry.label): entry
         for entry in getattr(professions, "characters", [])
     }
+
+    by_name: dict[str, list] = {}
+
+    for entry in getattr(professions, "characters", []):
+        by_name.setdefault(_match_key(entry.label.split("-", 1)[0]), []).append(entry)
 
     characters = []
 
@@ -97,7 +114,14 @@ def build_payload(sheets: list[dict], professions, wow_client: str = "") -> dict
 
         realm = str(sheet.get("realm") or "").strip()
 
-        entry = by_label.get(_label(name, realm).lower()) or by_label.get(name.lower())
+        entry = by_label.get(_match_key(_label(name, realm))) or by_label.get(_match_key(name))
+
+        if entry is None:
+            # Nur der Name, wenn er eindeutig ist - zwei gleichnamige
+            # Charaktere auf verschiedenen Realms werden nie vermischt.
+            same = by_name.get(_match_key(name)) or []
+            if len(same) == 1:
+                entry = same[0]
 
         rows = []
 

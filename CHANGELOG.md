@@ -2,6 +2,14 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.2
+
+**Berufe erscheinen wieder im Discord.** Auf Realms mit Leerzeichen im
+Namen fand die Companion die Berufe deiner Charaktere nicht und meldete
+sie ohne Berufe an den Bot. Jetzt werden sie richtig zugeordnet – zwei
+gleichnamige Charaktere auf verschiedenen Realms werden dabei nie
+vermischt.
+
 ## 1.0.1
 
 **Bereit für den Start von Forever.** Diese Fassung gehört zu WeintCodex

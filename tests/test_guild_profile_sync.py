@@ -143,3 +143,47 @@ def test_switched_off_sends_nothing(tmp_path, monkeypatch):
     monkeypatch.setattr(guild_profile_sync.httpx, "post", boom)
 
     assert GuildProfileSync(manager).process() is False
+
+
+def test_realm_with_spaces_still_finds_professions():
+    """
+    Das Addon merkt sich Berufe unter „Name-Die Silberne Hand“, den
+    Ausrüstungsstand unter „DieSilberneHand“. Bericht zum Start: der Bot
+    zeigte die Charaktere ohne Berufe.
+    """
+
+    profs = Professions(
+        known=True,
+        catalog=CATALOG,
+        characters=[
+            CharacterProfessions(label="Weintmage-Die Silberne Hand", professions=[
+                CharacterProfession("tailoring", "Schneiderei", 75, 150, False, []),
+            ]),
+        ],
+    )
+
+    payload = build_payload([{"name": "Weintmage", "realm": "DieSilberneHand", "class": "MAGE", "level": 12}], profs)
+
+    (mage,) = payload["characters"]
+
+    assert mage["professions"][0]["rank"] == 75
+
+
+def test_same_name_on_two_realms_is_never_mixed():
+
+    profs = Professions(
+        known=True,
+        catalog=CATALOG,
+        characters=[
+            CharacterProfessions(label="Weintmage-Everlook", professions=[
+                CharacterProfession("tailoring", "Schneiderei", 75, 150, False, []),
+            ]),
+            CharacterProfessions(label="Weintmage-Gehennas", professions=[
+                CharacterProfession("mining", "Bergbau", 10, 75, False, []),
+            ]),
+        ],
+    )
+
+    payload = build_payload([{"name": "Weintmage", "realm": "Venoxis", "class": "MAGE", "level": 12}], profs)
+
+    assert payload["characters"][0]["professions"] == []
