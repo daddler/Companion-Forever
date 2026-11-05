@@ -187,3 +187,21 @@ def test_same_name_on_two_realms_is_never_mixed():
     payload = build_payload([{"name": "Weintmage", "realm": "Venoxis", "class": "MAGE", "level": 12}], profs)
 
     assert payload["characters"][0]["professions"] == []
+
+
+def test_server_without_name_still_finds_professions():
+    """Forever hat einen Server ohne lesbaren Namen: Berufe unter „Name-“."""
+
+    profs = Professions(
+        known=True,
+        catalog=CATALOG,
+        characters=[
+            CharacterProfessions(label="Weintmage-", professions=[
+                CharacterProfession("tailoring", "Schneiderei", 20, 75, False, []),
+            ]),
+        ],
+    )
+
+    payload = build_payload([{"name": "Weintmage", "realm": "", "class": "MAGE", "level": 5}], profs)
+
+    assert payload["characters"][0]["professions"][0]["rank"] == 20
