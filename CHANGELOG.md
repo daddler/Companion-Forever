@@ -2,6 +2,14 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.3
+
+**Rezeptsuche im Discord auf Deutsch.** Die Companion meldet die Rezepte
+deiner Charaktere jetzt mit den Namen aus deinem Spiel statt den
+englischen – so findet die Suche im Discord sie auch mit deutschen
+Begriffen. Dafür braucht es WeintCodex 1.0.3.5; öffne nach dem Update
+einmal deine Berufsfenster.
+
 ## 1.0.2
 
 **Berufe erscheinen wieder im Discord.** Auf Realms mit Leerzeichen im
