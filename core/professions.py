@@ -99,9 +99,23 @@ class Professions:
 
     error: str = ""
 
+    # Rezeptname so, wie ihn der Client des Spielers nennt (deutsch im
+    # deutschen Spiel), aus `professions[Charakter].names` des Addons ab
+    # 1.0.3.5. Der Bestand kennt nur die englischen Namen.
+    local_names: dict = field(default_factory=dict)
+
     # --------------------------------------------------
 
     def recipe_name(self, spell: int) -> str:
+
+        local = self.local_names.get(spell)
+
+        if local:
+            return local
+
+        return self.english_name(spell)
+
+    def english_name(self, spell: int) -> str:
 
         for info in self.catalog.values():
 
@@ -141,7 +155,7 @@ class Professions:
                     hit = (
                         query == str(spell)
                         if query.isdigit()
-                        else query in name.lower()
+                        else query in name.lower() or query in self.english_name(spell).lower()
                     )
 
                     if hit:
@@ -258,6 +272,8 @@ def parse_professions(saved: dict, catalog: dict | None = None) -> Professions:
 
     characters = []
 
+    local_names: dict[int, str] = {}
+
     for label, data in saved["professions"].items():
 
         if not isinstance(label, str) or not isinstance(data, dict):
@@ -268,6 +284,13 @@ def parse_professions(saved: dict, catalog: dict | None = None) -> Professions:
         scanned = data.get("scanned") if isinstance(data.get("scanned"), dict) else {}
 
         skills = data.get("skills") if isinstance(data.get("skills"), dict) else {}
+
+        names = data.get("names") if isinstance(data.get("names"), dict) else {}
+
+        for spell, text in names.items():
+
+            if isinstance(spell, int) and isinstance(text, str) and text.strip():
+                local_names[spell] = text.strip()
 
         by_key: dict[str, CharacterProfession] = {}
 
@@ -318,7 +341,7 @@ def parse_professions(saved: dict, catalog: dict | None = None) -> Professions:
 
     characters.sort(key=lambda c: c.label.lower())
 
-    return Professions(known=True, characters=characters, catalog=catalog)
+    return Professions(known=True, characters=characters, catalog=catalog, local_names=local_names)
 
 
 def merge(results) -> Professions:
@@ -332,7 +355,11 @@ def merge(results) -> Professions:
 
     errors = []
 
+    local_names: dict = {}
+
     for result in results:
+
+        local_names.update(getattr(result, "local_names", {}) or {})
 
         known = known or result.known
 
@@ -353,6 +380,7 @@ def merge(results) -> Professions:
         characters=sorted(by_label.values(), key=lambda c: c.label.lower()),
         catalog=catalog,
         error="; ".join(errors),
+        local_names=local_names,
     )
 
 

@@ -93,6 +93,9 @@ def build_payload(sheets: list[dict], professions, wow_client: str = "") -> dict
         for spell, recipe in info.recipes.items():
             names[spell] = recipe.name
 
+    # Der Name aus dem Spiel des Spielers (deutsch) vor dem englischen.
+    names.update(getattr(professions, "local_names", {}) or {})
+
     by_label = {
         _match_key(entry.label): entry
         for entry in getattr(professions, "characters", [])

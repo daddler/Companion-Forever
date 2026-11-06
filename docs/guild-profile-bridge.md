@@ -53,7 +53,9 @@ Authorization: Bearer <companion_token>
   ausgeblendet). Dieselbe Wahl wie beim Charakter-Roster.
 - **`unknown ≠ 0`.** `rank: null` = Fertigkeit nie gelesen (Bot: „Stufe
   ?“), `scanned: false` = Berufsfenster nie offen, dann **kein**
-  `recipes` – nicht „0 Rezepte“. `level: null` = Stufe unbekannt.
+  `recipes` – nicht „0 Rezepte“. Rezeptnamen kommen ab Addon 1.0.3.5
+  aus dem Client des Spielers (`professions[Charakter].names`, deutsch
+  im deutschen Spiel), sonst englisch aus dem Bestand. `level: null` = Stufe unbekannt.
 - **Rezeptnamen** kommen aus dem Bestand des installierten Addons
   (`data/professions.lua`). Ohne Namen steht `#<Zauber-ID>`, geraten
   wird keiner.

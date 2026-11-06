@@ -205,3 +205,25 @@ def test_server_without_name_still_finds_professions():
     payload = build_payload([{"name": "Weintmage", "realm": "", "class": "MAGE", "level": 5}], profs)
 
     assert payload["characters"][0]["professions"][0]["rank"] == 20
+
+
+def test_payload_prefers_names_from_the_game():
+    """Rezeptsuche im Discord auf Deutsch: Name aus dem Client vor dem Bestand."""
+
+    from core.professions import parse_professions
+
+    saved = {"professions": {"Weintmage-Everlook": {
+        "known": {3914: True, 18455: True},
+        "scanned": {"tailoring": 1},
+        "names": {3914: "Leinenbeutel"},
+    }}}
+
+    profs = parse_professions(saved, CATALOG)
+
+    payload = build_payload([SHEETS[0]], profs, "forever")
+
+    assert payload["characters"][0]["professions"][0]["recipes"] == ["Leinenbeutel", "Runenstoffbeutel"]
+
+    # Die eigene Suche findet beide Sprachen.
+    assert profs.who_can("leinenbeutel")[0][0] == "Leinenbeutel"
+    assert profs.who_can("leinenstoff")[0][0] == "Leinenbeutel"
