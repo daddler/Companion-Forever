@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.4
+
+**Kein „nicht installiert“ mehr, solange noch gesucht wird.** Direkt nach
+dem Start meldete die Companion manchmal, WeintCodex müsse installiert
+werden – obwohl die Suche nach dem Spiel noch lief. Jetzt steht dort
+„Suche …“, und Installieren ist gesperrt, bis feststeht, was da ist.
+
 ## 1.0.3
 
 **Rezeptsuche im Discord auf Deutsch.** Die Companion meldet die Rezepte
