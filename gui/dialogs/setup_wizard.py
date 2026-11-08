@@ -459,7 +459,11 @@ class SetupWizard(QDialog):
 
         state = self.manager.state
 
-        if state.addon_found:
+        if not getattr(state, "addon_checked", True):
+
+            step.set_status("empty", "Suche läuft …")
+
+        elif state.addon_found:
 
             step.set_status("ok", f"Installiert: {state.addon_version}")
 
@@ -471,7 +475,7 @@ class SetupWizard(QDialog):
 
             step.set_status("empty", "Noch nicht installiert.")
 
-        self.addon_button.setEnabled(state.wow_found)
+        self.addon_button.setEnabled(state.wow_found and getattr(state, "addon_checked", True))
 
     def _install_addon(self):
 

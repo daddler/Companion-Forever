@@ -42,6 +42,16 @@ class AppState:
 
     addon_found: bool = False
 
+    #
+    # 1.0.4: ob die Suche nach WeintCodex schon EINMAL fertig ist. Bis
+    # dahin ist `addon_found = False` nicht "fehlt", sondern "unbekannt" -
+    # gemeldet: nach dem Rechnerstart sagte die App "muss installiert
+    # werden", während die Suche noch lief. Solange False: keine
+    # Installieren-/Download-Knöpfe, und `InstallerWorkflow.run()` lehnt ab.
+    #
+
+    addon_checked: bool = False
+
     addon_path: Path | None = None
 
     addon_version: str = "-"

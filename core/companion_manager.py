@@ -818,27 +818,35 @@ class CompanionManager(QObject):
 
     def detect_addon(self):
 
-        self.state.addon_found = False
-        self.state.addon_version = "-"
+        #
+        # 1.0.4: erst fertig suchen, dann in einem Zug setzen. Vorher
+        # stand zwischen "addon_found = False" und dem Ergebnis kurz
+        # "nicht installiert" im Zustand - genug, damit eine Seite
+        # zeichnet und einen Installierknopf anbietet.
+        #
 
         if not self.state.addons_path:
             self.state.addon_path = None
+            self.state.addon_found = False
+            self.state.addon_version = "-"
+            self.state.addon_checked = True
             return
 
-        self.state.addon_path = (
-            self.state.addons_path
-            / "WeintCodex"
-        )
+        addon_path = self.state.addons_path / "WeintCodex"
 
         reader = AddonReader(self.state.wow_path)
 
-        if not reader.exists():
-            return
+        found = bool(reader.exists())
 
-        self.state.addon_found = True
-        self.state.addon_version = (
-            reader.get_version() or "-"
-        )
+        version = (reader.get_version() or "-") if found else "-"
+
+        self.state.addon_path = addon_path
+        self.state.addon_found = found
+        self.state.addon_version = version
+        self.state.addon_checked = True
+
+        if not found:
+            return
 
         #
         # Companion Queue prüfen

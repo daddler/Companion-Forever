@@ -854,7 +854,17 @@ class AddonPage(Page):
         # - vor dem Download, nicht danach.
         #
 
-        if state.addon_path is None:
+        if not getattr(state, "addon_checked", True):
+
+            self.addon_card.set_status("SUCHT …", "neutral")
+
+            self.addon_card.primary_button.setText("Suche läuft …")
+
+            self.addon_card.primary_button.setEnabled(False)
+
+            self.addon_card.secondary_button.setEnabled(False)
+
+        elif state.addon_path is None:
 
             self.addon_card.set_status("KEIN SPIELORDNER", "warn")
 

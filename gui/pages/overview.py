@@ -1163,6 +1163,27 @@ class CodexCard(Card):
 
         self.notes.setVisible(True)
 
+        if not getattr(state, "addon_checked", True):
+
+            self.title.setText("Suche nach World of Warcraft und WeintCodex …")
+
+            self.chip.setText("SUCHT")
+
+            self.chip.setVariant("neutral")
+
+            self.head.setText("")
+
+            self.notes.setText(
+                "Gleich steht hier, ob WeintCodex installiert ist. Bis "
+                "dahin bietet die App nichts zum Installieren an."
+            )
+
+            self.changelog.setVisible(False)
+
+            self.action.setVisible(False)
+
+            return
+
         if not state.wow_found:
 
             self.title.setText("World of Warcraft: Forever wurde noch nicht gefunden.")
@@ -2001,7 +2022,7 @@ class OverviewPage(Page):
             headline(
                 addon_update=state.update_available,
                 app_update=state.companion_update_available,
-                wow_found=state.wow_found,
+                wow_found=state.wow_found or not getattr(state, "addon_checked", True),
             )
         )
 
@@ -2266,7 +2287,11 @@ class OverviewPage(Page):
                 icon="folder",
             ))
 
-        if not state.addon_found:
+        if not getattr(state, "addon_checked", True):
+
+            pass
+
+        elif not state.addon_found:
 
             tasks.append(Task(
                 key="addon-missing",

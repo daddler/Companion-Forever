@@ -24,6 +24,22 @@ class InstallerWorkflow:
         logger = self.manager.logger
 
         #
+        # 1.0.4: solange die erste Suche nach WeintCodex nicht fertig
+        # ist, weiss niemand, ob installiert oder aktualisiert wird -
+        # und nur beim Aktualisieren entsteht ein Backup der
+        # SavedVariables. Also gar nicht erst anfangen.
+        #
+
+        if not getattr(state, "addon_checked", True):
+
+            logger.info("Die Suche nach WeintCodex läuft noch.")
+
+            return WorkflowResult(
+                success=False,
+                message="Die Suche nach WeintCodex läuft noch – bitte einen Moment warten.",
+            )
+
+        #
         # Download-URL vorhanden?
         #
 
