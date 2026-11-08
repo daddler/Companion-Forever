@@ -37,6 +37,7 @@ from core.discord_roster_sync import DiscordRosterSync
 from core.raid_schedule_sync import RaidScheduleSync
 from core.dungeon_invites import DungeonInviteSync
 from core.guild_profile_sync import GuildProfileSync
+from core.bug_report_sync import BugReportSync
 from core.craft_orders import CraftOrderSync
 from core.storage_watch import StorageWatch
 from core.update_watch import UpdateWatch
@@ -209,6 +210,7 @@ class CompanionManager(QObject):
         self.raid_schedule_sync = RaidScheduleSync(self)
         self.dungeon_invite_sync = DungeonInviteSync(self, self.addon_inbox)
         self.guild_profile_sync = GuildProfileSync(self)
+        self.bug_report_sync = BugReportSync(self)
         self.craft_order_sync = CraftOrderSync(self, self.addon_inbox)
 
         #
@@ -566,6 +568,21 @@ class CompanionManager(QObject):
 
             self.logger.error(
                 f"Berufe-Meldung fehlgeschlagen: {exc}"
+            )
+
+        #
+        # Fehlerberichte, die der Spieler im Addon mit „Melden & neu
+        # laden“ vorgemerkt hat (docs/bug-report-bridge.md).
+        #
+
+        try:
+
+            self.bug_report_sync.process()
+
+        except Exception as exc:
+
+            self.logger.error(
+                f"Fehlerbericht fehlgeschlagen: {exc}"
             )
 
         #

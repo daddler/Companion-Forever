@@ -47,6 +47,31 @@ class AddonError:
 
     account: str = ""
 
+    #
+    # 1.0.5: "Melden & neu laden" im Addon (ab 1.0.5.28) merkt den Fehler
+    # vor und legt dazu, was nur der laufende Client weiss.
+    #
+
+    report: str = ""
+
+    report_at: int = 0
+
+    client: str = ""
+
+    locale: str = ""
+
+    wow_class: str = ""
+
+    level: str = ""
+
+    zone: str = ""
+
+    @property
+    def report_key(self) -> str:
+        """Ein Bericht = dieser Fehler zu dieser Meldung (Zeitpunkt)."""
+
+        return f"{self.account}|{self.report_at}|{self.message[:200]}"
+
     @property
     def kind_label(self) -> str:
 
@@ -104,6 +129,13 @@ def parse_errors(saved: dict, account: str = "") -> AddonErrors:
             last=_text(entry.get("last")),
             version=_text(entry.get("version")),
             account=account,
+            report=_text(entry.get("report")),
+            report_at=int(entry["reportAt"]) if isinstance(entry.get("reportAt"), (int, float)) else 0,
+            client=_text(entry.get("client")),
+            locale=_text(entry.get("locale")),
+            wow_class=_text(entry.get("class")),
+            level=str(entry.get("level")) if isinstance(entry.get("level"), (str, int, float)) else "",
+            zone=_text(entry.get("zone")),
         ))
 
     return AddonErrors(known=True, errors=errors)

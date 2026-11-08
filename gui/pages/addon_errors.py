@@ -13,7 +13,9 @@ Leeren geht im Spiel.
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+import threading
+
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -54,6 +56,9 @@ def _loader(manager) -> SavedDataLoader:
 
 
 class AddonErrorsPage(Page):
+
+    # 1.0.5: Ergebnis des Sendens, aus dem Thread in den Hauptthread.
+    sendFinished = Signal(bool, str)
 
     def __init__(self, manager, parent=None):
 
@@ -135,6 +140,30 @@ class AddonErrorsPage(Page):
         self.copy_one.clicked.connect(self._copy_selected)
 
         buttons.addWidget(self.copy_one)
+
+        #
+        # 1.0.5: ein Klick, und der Fehler landet beim Entwickler (Discord,
+        # Forum der Fehlerberichte) - docs/bug-report-bridge.md.
+        #
+
+        self.send_one = QPushButton("An Entwickler senden")
+
+        self.send_one.setCursor(Qt.PointingHandCursor)
+
+        self.send_one.setToolTip(
+            "Schickt den markierten Fehler an den Discord des Entwicklers: "
+            "Fehlertext, Fassungen, Klasse, Stufe, Zone - nichts sonst."
+        )
+
+        self.send_one.clicked.connect(self._send_selected)
+
+        buttons.addWidget(self.send_one)
+
+        self.send_state = muted_label()
+
+        buttons.addWidget(self.send_state)
+
+        self.sendFinished.connect(self._on_sent)
 
         buttons.addStretch(1)
 
@@ -233,7 +262,13 @@ class AddonErrorsPage(Page):
 
         for index, e in enumerate(errors):
 
-            top = QTreeWidgetItem([f"{e.kind_label}: {e.headline}", str(e.count), e.last or "?", e.version or "?"])
+            sync = getattr(self.manager, "bug_report_sync", None)
+
+            sent = sync is not None and e.report == "pending" and sync.is_sent(e)
+
+            mark = "✓ gemeldet · " if sent else ("⏳ wird gemeldet · " if e.report == "pending" else "")
+
+            top = QTreeWidgetItem([f"{mark}{e.kind_label}: {e.headline}", str(e.count), e.last or "?", e.version or "?"])
 
             top.setData(0, Qt.UserRole, index)
 
@@ -265,6 +300,59 @@ class AddonErrorsPage(Page):
     def _copy_all(self):
 
         self._copy(self.data.errors)
+
+    def _selected(self):
+
+        item = self.tree.currentItem()
+
+        while item is not None and item.parent() is not None:
+            item = item.parent()
+
+        if item is None:
+            return None
+
+        index = item.data(0, Qt.UserRole)
+
+        if isinstance(index, int) and 0 <= index < len(self.data.errors):
+            return self.data.errors[index]
+
+        return None
+
+    def _send_selected(self):
+
+        error = self._selected()
+
+        sync = getattr(self.manager, "bug_report_sync", None)
+
+        if error is None:
+            self.send_state.setText("Erst einen Fehler in der Liste anklicken.")
+            return
+
+        if sync is None:
+            return
+
+        if sync.is_sent(error):
+            self.send_state.setText("Dieser Fehler ist schon gemeldet.")
+            return
+
+        self.send_one.setEnabled(False)
+
+        self.send_state.setText("Wird gesendet …")
+
+        def work():
+            try:
+                ok, text = sync.send(error)
+            except Exception as exc:
+                ok, text = False, f"Senden fehlgeschlagen: {exc}"
+            self.sendFinished.emit(ok, text)
+
+        threading.Thread(target=work, daemon=True, name="BugReportSend").start()
+
+    def _on_sent(self, ok: bool, text: str):
+
+        self.send_one.setEnabled(True)
+
+        self.send_state.setText(text)
 
     def _copy_selected(self):
 
