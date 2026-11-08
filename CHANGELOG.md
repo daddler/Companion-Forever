@@ -2,6 +2,14 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.5
+
+**Fehler mit einem Klick melden.** Klickst du im Fehlerfenster von
+WeintCodex auf „Melden & neu laden“, schickt die Companion den Fehler
+automatisch an den Entwickler – du musst nichts kopieren. Auf der Seite
+„Addon-Fehler“ geht das auch direkt mit „An Entwickler senden“. Dafür
+brauchst du eine Discord-Anmeldung in der Companion.
+
 ## 1.0.4
 
 **Kein „nicht installiert“ mehr, solange noch gesucht wird.** Direkt nach
