@@ -128,3 +128,60 @@ def test_inventory_page_refresh_reads_no_file(qt_app, monkeypatch):
     page = InventoryPage(_manager("/nirgends"))
 
     page.refresh()
+
+
+def test_loader_reads_again_when_asked_while_busy(qt_app, monkeypatch):
+    """
+    Erster Start: die Übersicht fragt, bevor der Spielordner bekannt
+    ist; die Frage danach (Ordner gefunden) fiel in den laufenden
+    Lesevorgang und wurde verworfen - das Gold fehlte, bis man die
+    Seite wechselte.
+    """
+
+    import threading
+    import time
+
+    from PySide6.QtCore import QCoreApplication
+
+    import gui.controllers.inventory_loader as module
+
+    from core.inventory import Inventory
+
+    gate = threading.Event()
+
+    seen = []
+
+    def fake_load(wow_path):
+
+        seen.append(wow_path)
+
+        if wow_path is None:
+            gate.wait(5)
+
+        return Inventory()
+
+    monkeypatch.setattr(module, "load", fake_load)
+
+    monkeypatch.setattr(module, "_files_stamp", lambda wow_path: (str(wow_path),))
+
+    manager = types.SimpleNamespace(state=types.SimpleNamespace(wow_path=None))
+
+    loader = module.InventoryLoader(manager)
+
+    loader.request()
+
+    manager.state.wow_path = "/spiel"
+
+    loader.request()
+
+    gate.set()
+
+    deadline = time.monotonic() + 5
+
+    while "/spiel" not in seen and time.monotonic() < deadline:
+
+        QCoreApplication.processEvents()
+
+        time.sleep(0.01)
+
+    assert seen == [None, "/spiel"]

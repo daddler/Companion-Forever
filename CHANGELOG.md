@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.6
+
+**Gold steht gleich nach dem Start in der Übersicht.** Beim ersten Start
+fehlte der Goldbestand oft, bis man einmal die Seite „Bestand“ geöffnet
+hatte und zurückkam. Die Companion liest den Spielstand jetzt, sobald sie
+den Spielordner gefunden hat.
+
 ## 1.0.5
 
 **Fehler mit einem Klick melden.** Klickst du im Fehlerfenster von

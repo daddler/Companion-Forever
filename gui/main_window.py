@@ -715,6 +715,23 @@ class MainWindow(QMainWindow):
 
         self._collect_auction_prices()
 
+        #
+        # Der Bestand (Gold auf der Übersicht) hängt am Spielordner,
+        # und der steht beim ersten Start erst nach dieser Prüfung
+        # fest. Der Lader liest nur, wenn sich eine Datei geändert hat
+        # - oder eben zum ersten Mal eine da ist.
+        #
+
+        try:
+
+            from gui.controllers.inventory_loader import inventory_loader
+
+            inventory_loader(self.manager).request()
+
+        except Exception as exc:
+
+            self.manager.logger.error(f"Bestand konnte nicht gelesen werden: {exc}")
+
         page = self._current_page
 
         if page is not None and hasattr(page, "refresh"):

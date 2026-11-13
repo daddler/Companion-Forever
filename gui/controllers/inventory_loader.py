@@ -66,11 +66,24 @@ class InventoryLoader(QObject):
 
         self._running = False
 
+        #
+        # Eine Anfrage, die während eines laufenden Lesens kam. Ohne
+        # sie ging genau die verloren, auf die es beim Start ankommt:
+        # die erste liest noch ohne Spielordner, die zweite (Ordner
+        # gefunden) wurde verworfen - das Gold fehlte, bis man die
+        # Seite wechselte.
+        #
+
+        self._again = None
+
         self._done.connect(self._on_done)
 
     def request(self, force: bool = False):
 
         if self._running:
+
+            self._again = bool(force) or bool(self._again)
+
             return
 
         self._running = True
@@ -113,6 +126,20 @@ class InventoryLoader(QObject):
         self._running = False
 
         self.busy.emit(False)
+
+        again, self._again = self._again, None
+
+        if again is not None:
+
+            #
+            # Erst das Ergebnis dieses Laufs übernehmen (unten), dann
+            # noch einmal lesen - der Stempel entscheidet, ob es etwas
+            # zu tun gibt.
+            #
+
+            from PySide6.QtCore import QTimer
+
+            QTimer.singleShot(0, lambda: self.request(force=again))
 
         if inventory is None:
             return
