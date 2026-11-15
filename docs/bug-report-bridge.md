@@ -36,6 +36,14 @@ darauf, und der Report kommt bei mir an.“
 Der Bot setzt `reporter` selbst (verknüpfter Discord-Name). Alles außer
 `message` ist optional; Texte werden gekürzt (Titel 100, Beitrag 2000 Zeichen).
 
+Seit Addon 1.0.6.20 hängen an `stack` zwei Abschnitte: „--- Umstände ---“
+(Kampf, Instanz, Gruppe, Ziel nur als Art, Rahmen unter der Maus, offene
+Fenster, Gruppenrahmen, Profil, andere Addons) und „--- Spur ---“ (letzte
+Schritte mit Sekunden: Fenster, Kampf, Zonen, Zauber, eigene Befehle). Keine
+Namen anderer Spieler, kein Chat. Der Bot nimmt `stack` bis 12000 Zeichen an;
+passt der Bericht nicht in den Beitrag, hängt er ihn ganz als `bericht.txt`
+an. Die Companion reicht `stack` unverändert durch.
+
 ## Was nie mitgeht
 
 Chat, Gold, Inventar, andere SavedVariables. Nur, was im Fehlerbericht des
