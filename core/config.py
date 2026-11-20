@@ -113,8 +113,6 @@ class Config:
 
             "start_on_boot": False,
 
-            "minimize_to_tray": False,
-
             #
             # Battle.net-Start (Linux)
             #
@@ -255,7 +253,6 @@ class Config:
                     "characters_min_level": 0,
                     "addon_analysis_sync_enabled": True,
                     "start_on_boot": False,
-                    "minimize_to_tray": False,
                     "linux_launcher_type": "custom",
                     "linux_launcher_value": "",
                     "whats_new_enabled": True,

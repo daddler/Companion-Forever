@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from PySide6.QtCore import (
     QEasingCurve,
-    QEvent,
     QParallelAnimationGroup,
     QPoint,
     QPropertyAnimation,
@@ -125,9 +124,6 @@ class MainWindow(QMainWindow):
 
         self._init_tray()
 
-        self.manager.tray_settings_changed.connect(
-            self._on_tray_setting_changed
-        )
 
         #
         # Welche Fassung je Kanal (Addon/Companion) schon als Meldung
@@ -1440,29 +1436,16 @@ class MainWindow(QMainWindow):
 
     def _apply_tray_visibility(self):
 
+        #
+        # 1.0.8: das Tray-Symbol ist immer da - die Einstellung "In Tray
+        # minimieren" gibt es nicht mehr. Das Kreuz parkt die Companion
+        # dort, ein zweiter Start holt sie zurück (core/single_instance.py).
+        #
+
         if self.tray_icon is None:
             return
 
-        enabled = self.manager.config.data.get(
-            "minimize_to_tray",
-            False,
-        )
-
-        self.tray_icon.setVisible(enabled)
-
-    def _on_tray_setting_changed(self, enabled: bool):
-
-        self._apply_tray_visibility()
-
-        #
-        # Wird das Feature deaktiviert, während das Fenster gerade
-        # im Tray "geparkt" ist, würde es sonst unerreichbar bleiben
-        # (kein Tray-Icon mehr, kein sichtbares Fenster).
-        #
-
-        if not enabled and not self.isVisible():
-
-            self._restore_from_tray()
+        self.tray_icon.setVisible(True)
 
     def _on_tray_activated(self, reason):
 
@@ -1486,6 +1469,22 @@ class MainWindow(QMainWindow):
         self.raise_()
         self.activateWindow()
 
+    def _release_single_instance(self):
+        """
+        Den Kanal "nur eine Companion" freigeben, sobald das Beenden
+        beginnt (1.0.8) - der Selbst-Update startet die neue Version,
+        wenn diese gegangen ist, und die darf sich nicht wegschicken.
+        """
+
+        instance = getattr(self, "single_instance", None)
+
+        if instance is not None:
+
+            try:
+                instance.close()
+            except Exception:
+                pass
+
     def _open_addon_page_from_tray(self):
 
         self._restore_from_tray()
@@ -1495,6 +1494,8 @@ class MainWindow(QMainWindow):
     def _quit_from_tray(self):
 
         self._force_quit = True
+
+        self._release_single_instance()
 
         self._shutdown_services()
 
@@ -1526,43 +1527,23 @@ class MainWindow(QMainWindow):
     # Fenster minimieren/schließen -> Tray
     # --------------------------------------------------
 
-    def changeEvent(self, event):
-
-        if event.type() == QEvent.WindowStateChange:
-
-            minimize_to_tray = self.manager.config.data.get(
-                "minimize_to_tray",
-                False,
-            )
-
-            if (
-                self.isMinimized()
-                and minimize_to_tray
-                and self.tray_icon is not None
-                and self.tray_icon.isVisible()
-            ):
-
-                #
-                # Direktes hide() aus dem Minimieren-Übergang heraus
-                # verhält sich auf manchen Compositorn unzuverlässig
-                # (Taskleisten-Icon bleibt hängen) - ein Tick später
-                # im nächsten Event-Loop-Durchlauf ist der sichere Weg.
-                #
-
-                QTimer.singleShot(0, self.hide)
-
-        super().changeEvent(event)
+    #
+    # Minimieren bleibt seit 1.0.8 Minimieren (Taskleiste) - in den Tray
+    # geht die Companion über das Kreuz. Bis 1.0.7 parkte die Einstellung
+    # "In Tray minimieren" auch beim Minimieren; die gibt es nicht mehr.
+    #
 
     def closeEvent(self, event):
 
-        minimize_to_tray = self.manager.config.data.get(
-            "minimize_to_tray",
-            False,
-        )
+        #
+        # 1.0.8: das Kreuz schickt die Companion immer in den Tray (ab
+        # Werk, ohne Einstellung). Beenden geht über das Tray-Menü. Nur
+        # ohne Tray (manche Linux-Desktops haben keinen) beendet das
+        # Kreuz - sonst wäre die Companion unerreichbar.
+        #
 
         if (
             not self._force_quit
-            and minimize_to_tray
             and self.tray_icon is not None
             and self.tray_icon.isVisible()
         ):
@@ -1584,6 +1565,8 @@ class MainWindow(QMainWindow):
                 self._tray_hint_shown = True
 
             return
+
+        self._release_single_instance()
 
         self._shutdown_services()
 

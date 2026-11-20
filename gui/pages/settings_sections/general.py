@@ -102,23 +102,10 @@ class GeneralSection(SectionContent):
         )
 
         #
-        # In Tray minimieren (echt, config.minimize_to_tray)
+        # "In Tray minimieren" gibt es seit 1.0.8 nicht mehr: das Kreuz
+        # schickt die Companion immer in den Tray, und es läuft nur eine
+        # (core/single_instance.py).
         #
-
-        self.tray_toggle = ToggleSwitch()
-
-        self.tray_toggle.toggled.connect(
-            self._save_minimize_to_tray
-        )
-
-        self.addRow(
-            toggle_row(
-                "In Tray minimieren",
-                "Companion bleibt beim Schließen/Minimieren im "
-                "System-Tray aktiv, statt sich zu beenden.",
-                self.tray_toggle,
-            )
-        )
 
         #
         # "Was ist neu"-Popup (echt, config.whats_new_enabled)
@@ -285,12 +272,6 @@ class GeneralSection(SectionContent):
         )
         self.autostart_toggle.blockSignals(False)
 
-        self.tray_toggle.blockSignals(True)
-        self.tray_toggle.setChecked(
-            config.data.get("minimize_to_tray", False)
-        )
-        self.tray_toggle.blockSignals(False)
-
         self.whats_new_toggle.blockSignals(True)
         self.whats_new_toggle.setChecked(
             config.data.get("whats_new_enabled", True)
@@ -343,14 +324,6 @@ class GeneralSection(SectionContent):
         self.manager.config.data["start_on_boot"] = checked
 
         self.manager.config.save()
-
-    def _save_minimize_to_tray(self, checked: bool):
-
-        self.manager.config.data["minimize_to_tray"] = checked
-
-        self.manager.config.save()
-
-        self.manager.tray_settings_changed.emit(checked)
 
     def _save_whats_new_enabled(self, checked: bool):
 

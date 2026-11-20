@@ -94,6 +94,22 @@ rule comes from.
   minimized-to-taskbar window still counts as visible to Qt).
   `messageClicked` restores the window and opens *Addon & Updates*.
 
+**One Companion per user, and the cross parks it in the tray (1.0.8).**
+Seen on a stream: close (it kept running in the tray), start again for
+the next update, four Companions in the end. `core/single_instance.py`:
+the first process listens on a local `QLocalServer` (per-user name); a
+second start sends `show` and exits before the splash, the first restores
+its window (`_restore_from_tray`). The tray icon is always visible; the
+setting "In Tray minimieren" (`minimize_to_tray`, `tray_settings_changed`)
+is gone. The cross hides to the tray; without a system tray it still
+quits. Minimize is a plain taskbar minimize. **Self-update relies on the
+order:** the old process releases the channel *first*
+(`_release_single_instance` in `_quit_from_tray`/`closeEvent`,
+`aboutToQuit` as backstop) — the updater starts the new version once the
+old one is gone, and that one must not be sent away. A stale socket after
+a crash answers nothing and is removed (`QLocalServer.removeServer`).
+Tests: `tests/test_single_instance.py` (real second process).
+
 **Nobody asks, so the app has to.** Until 2.3.2 the check happened only
 at startup and on "Erneut prüfen" — after startup `state_changed` simply
 stopped arriving. `core/update_watch.py`'s `UpdateWatch` rides the

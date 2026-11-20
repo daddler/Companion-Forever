@@ -2,6 +2,20 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.8
+
+**Nur noch eine Companion – und das Kreuz schickt sie in den Tray.**
+Schließt du die Companion mit dem Kreuz oben rechts, läuft sie im Tray
+weiter (Symbol unten rechts neben der Uhr). Startest du sie später erneut,
+etwa per Doppelklick auf das Symbol, öffnet sich keine zweite Companion
+mehr – die laufende kommt aus dem Tray zurück. Ganz beenden geht über das
+Tray-Symbol → „Beenden“. Die Einstellung „In Tray minimieren“ fällt dafür
+weg; Minimieren legt die Companion wie gewohnt in die Taskleiste. Ohne
+Tray (manche Linux-Desktops) beendet das Kreuz die Companion wie bisher.
+
+Die Versionsnummer springt auf 1.0.8, damit sie neben WeintCodex 1.0.8
+steht.
+
 ## 1.0.6
 
 **Gold steht gleich nach dem Start in der Übersicht.** Beim ersten Start

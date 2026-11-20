@@ -216,6 +216,41 @@ def main():
 
     app = QApplication(sys.argv)
 
+    #
+    # --------------------------------------------------
+    # Nur eine Companion (1.0.8, core/single_instance.py)
+    # --------------------------------------------------
+    # Läuft schon eine (auch nur im Tray), holt diese ihr Fenster nach
+    # vorn, und dieser Start endet hier - vor Splash, Schriften und
+    # Hauptfenster. Der Kanal wird beim Beenden zuerst freigegeben,
+    # damit die neue Version nach einem Selbst-Update starten kann.
+    #
+
+    from core.single_instance import SingleInstance
+
+    instance = SingleInstance()
+
+    if instance.notify_running():
+
+        print("[WeintCompanion] Läuft schon - Fenster der laufenden Companion geholt.")
+
+        sys.exit(0)
+
+    window_holder = {}
+
+    def _show_running():
+
+        window = window_holder.get("window")
+
+        if window is not None:
+            window._restore_from_tray()
+
+    if not instance.listen(_show_running):
+
+        print("[WeintCompanion] Kanal für nur eine Companion nicht belegt - startet trotzdem.")
+
+    app.aboutToQuit.connect(instance.close)
+
     # Die Plattform-Wahl ist zu diesem Zeitpunkt bereits getroffen -
     # stderr wieder normal verbinden, damit spätere Laufzeitfehler
     # weiterhin im Terminal/Log sichtbar sind und nicht dauerhaft in
@@ -341,8 +376,6 @@ def main():
 
     _stage(0.3, "Darstellung wird vorbereitet …")
 
-    window_holder = {}
-
     def _show_main_window():
 
         _stage(0.55, "Fenster wird aufgebaut …")
@@ -350,6 +383,13 @@ def main():
         window = MainWindow()
 
         window_holder["window"] = window
+
+        #
+        # Beim Beenden (Tray "Beenden", Selbst-Update) den Kanal sofort
+        # freigeben - nicht erst, wenn die Ereignisschleife endet.
+        #
+
+        window.single_instance = instance
 
         _stage(0.85, "Übersicht wird gezeichnet …")
 
