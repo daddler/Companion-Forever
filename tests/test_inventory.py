@@ -169,8 +169,8 @@ def test_same_character_under_two_realm_spellings_counts_once(tmp_path):
 WeintCodex_SavedData = {
 	["inventory"] = {
 		["chars"] = {
-			["Forever EU|Shooty"] = { ["name"] = "Shooty", ["realm"] = "Forever EU", ["money"] = 670000, ["at"] = 200 },
-			[" |Shooty"] = { ["name"] = "Shooty", ["realm"] = " ", ["money"] = 400000, ["at"] = 100 },
+			["Forever EU|Shooty"] = { ["name"] = "Shooty", ["realm"] = "Forever EU", ["money"] = 670000, ["at"] = 200, ["bags"] = { [2589] = 7 } },
+			[" |Shooty"] = { ["name"] = "Shooty", ["realm"] = " ", ["money"] = 400000, ["at"] = 100, ["bags"] = { [2589] = 5 } },
 			["ForeverEU|Peng"] = { ["name"] = "Peng", ["realm"] = "ForeverEU", ["money"] = 10, ["at"] = 50 },
 			["forever eu|Peng"] = { ["name"] = "Peng", ["realm"] = "forever eu", ["money"] = 20, ["at"] = 60 },
 			["Forever EU|Aldora"] = { ["name"] = "Aldora", ["realm"] = "Forever EU", ["money"] = 1, ["at"] = 10 },
@@ -189,6 +189,11 @@ WeintCodex_SavedData = {
     assert keys == {"Forever EU|Shooty", "forever eu|Peng", "Forever EU|Aldora", "Anderer Realm|Aldora"}
 
     assert inventory.gold()[0] == 670000 + 20 + 1 + 2
+
+    # Taschen zählen genauso nur einmal - der jüngere Stand.
+    stock = inventory.item(2589)
+
+    assert [h.bags for h in stock.holders] == [7]
 
     # Über zwei Konten gelesen: dieselbe Regel nach dem Zusammenführen.
     merged = merge([inventory, inventory])
