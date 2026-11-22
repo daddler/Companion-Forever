@@ -37,6 +37,8 @@ Ausloggens. Während das Spiel läuft, ändert sich die Datei nicht.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
+
 from pathlib import Path
 
 from core.lua_reader import LuaReadError, read_variable
@@ -332,9 +334,104 @@ def parse_inventory(saved: dict) -> Inventory:
             money_at=_int(data.get("moneyAt")),
         ))
 
+    characters = dedupe(characters)
+
     characters.sort(key=lambda c: (c.realm.lower(), c.name.lower()))
 
     return Inventory(known=True, characters=characters, names=names)
+
+
+_INVISIBLE = re.compile("[\u00a0\u2000-\u200f\ufeff]")
+
+_SEPARATORS = re.compile("[\\s\\-'\u2019]")
+
+
+def realm_key(realm: str) -> str:
+    """
+    Realm zum Vergleichen: ohne Gross/Klein, Leerraum, Bindestrich,
+    Apostroph und unsichtbare Zeichen. Wie `IV.RealmKey` im Addon
+    (`ui/inventory.lua`). Die Datei wird als latin-1 gelesen - ein
+    UTF-8-Zeichen steht dann als mehrere Zeichen da und wird erst
+    zurückgewandelt.
+    """
+
+    if not isinstance(realm, str):
+        return ""
+
+    try:
+        realm = realm.encode("latin-1").decode("utf-8")
+
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        pass
+
+    realm = _INVISIBLE.sub("", realm)
+
+    return _SEPARATORS.sub("", realm.lower())
+
+
+def dedupe(characters: list) -> list:
+    """
+    Derselbe Charakter unter zwei Realm-Schreibweisen zählt einmal.
+
+    Bericht (Addon 1.0.8.13): seit einer Änderung am Client stand
+    „Shooty“ zweimal im Gold, einmal mit unsichtbarem Realm. Dieselben
+    Regeln wie `IV.Dedupe` im Addon:
+
+    * gleicher Name, Realms gleich nach `realm_key`;
+    * gleicher Name, ein Realm leer und genau ein anderer echter Realm.
+
+    Behalten wird der zuletzt gelesene (`at`/`money_at`). Wirklich
+    verschiedene Realms werden nie zusammengelegt.
+    """
+
+    by_name: dict = {}
+
+    for character in characters:
+        by_name.setdefault(character.name, []).append(character)
+
+    drop = set()
+
+    for group in by_name.values():
+
+        if len(group) < 2:
+            continue
+
+        real: dict = {}
+
+        blank = []
+
+        for character in group:
+
+            key = realm_key(character.realm)
+
+            if key:
+                real.setdefault(key, []).append(character)
+            else:
+                blank.append(character)
+
+        groups = list(real.values())
+
+        if blank and len(groups) == 1:
+            groups[0].extend(blank)
+            blank = []
+
+        if len(blank) > 1:
+            groups.append(blank)
+
+        for same in groups:
+
+            if len(same) < 2:
+                continue
+
+            same.sort(
+                key=lambda c: (max(c.at, c.money_at), bool(realm_key(c.realm))),
+                reverse=True,
+            )
+
+            for character in same[1:]:
+                drop.add(id(character))
+
+    return [c for c in characters if id(c) not in drop]
 
 
 def merge(inventories) -> Inventory:
@@ -370,7 +467,7 @@ def merge(inventories) -> Inventory:
                 by_key[character.key] = character
 
     characters = sorted(
-        by_key.values(),
+        dedupe(list(by_key.values())),
         key=lambda c: (c.realm.lower(), c.name.lower()),
     )
 

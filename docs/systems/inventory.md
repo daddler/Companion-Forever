@@ -50,3 +50,16 @@ inventory = {
 
 It is the state of each character's **last logout**, and the page says
 so. Mail and auctions are not part of it.
+
+## Derselbe Charakter unter zwei Realm-Schreibweisen (1.0.9)
+
+Seit einer Änderung am Forever-Client (November 2026) konnte das Addon
+einen Charakter unter einem zweiten Schlüssel speichern – Realm leer,
+unsichtbar oder anders geschrieben – und das Gold zählte doppelt.
+`core/inventory.py` `dedupe()` legt zusammen, **mit denselben Regeln wie
+`IV.Dedupe` im Addon** (`ui/inventory.lua`, ab 1.0.8.14): gleicher Name
+und Realms gleich nach `realm_key()` (ohne Gross/Klein, Leerraum,
+Bindestrich, Apostroph, unsichtbare Zeichen), oder ein Realm leer und genau
+ein anderer echter Realm. Behalten wird der zuletzt gelesene Stand. Wirklich
+verschiedene Realms werden nie zusammengelegt. Ändert sich die Regel, dann
+auf beiden Seiten.

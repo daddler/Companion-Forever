@@ -156,3 +156,41 @@ def test_money_text():
     assert money_text(123456789) == "12.345 g 67 s"
 
     assert money_text(305) == "3 s 5 k"
+
+
+def test_same_character_under_two_realm_spellings_counts_once(tmp_path):
+    """
+    Bericht (Addon 1.0.8.13): „Shooty“ zweimal im Gold, einmal mit
+    unsichtbarem Realm (geschütztes Leerzeichen, in der Datei als UTF-8).
+    Dieselben Regeln wie `IV.Dedupe` im Addon.
+    """
+
+    text = '''
+WeintCodex_SavedData = {
+	["inventory"] = {
+		["chars"] = {
+			["Forever EU|Shooty"] = { ["name"] = "Shooty", ["realm"] = "Forever EU", ["money"] = 670000, ["at"] = 200 },
+			[" |Shooty"] = { ["name"] = "Shooty", ["realm"] = " ", ["money"] = 400000, ["at"] = 100 },
+			["ForeverEU|Peng"] = { ["name"] = "Peng", ["realm"] = "ForeverEU", ["money"] = 10, ["at"] = 50 },
+			["forever eu|Peng"] = { ["name"] = "Peng", ["realm"] = "forever eu", ["money"] = 20, ["at"] = 60 },
+			["Forever EU|Aldora"] = { ["name"] = "Aldora", ["realm"] = "Forever EU", ["money"] = 1, ["at"] = 10 },
+			["Anderer Realm|Aldora"] = { ["name"] = "Aldora", ["realm"] = "Anderer Realm", ["money"] = 2, ["at"] = 20 },
+		},
+	},
+}
+'''
+    path = tmp_path / "WeintCodex.lua"
+    path.write_text(text, encoding="utf-8")
+
+    inventory = read_file(path)
+
+    keys = {c.key.encode("latin-1").decode("utf-8") for c in inventory.characters}
+
+    assert keys == {"Forever EU|Shooty", "forever eu|Peng", "Forever EU|Aldora", "Anderer Realm|Aldora"}
+
+    assert inventory.gold()[0] == 670000 + 20 + 1 + 2
+
+    # Über zwei Konten gelesen: dieselbe Regel nach dem Zusammenführen.
+    merged = merge([inventory, inventory])
+
+    assert len(merged.characters) == 4
