@@ -4,9 +4,10 @@ Alle nennenswerten Änderungen an WeintCompanion.
 
 ## 1.0.9
 
-**Gold und Taschen nicht mehr doppelt gezählt.** Seit einer Änderung am Spielclient
-konnte derselbe Charakter zweimal im Bestand stehen – einmal mit einem
-leeren oder anders geschriebenen Realm – und sein Gold zählte doppelt.
+**Gold und Taschen nicht mehr doppelt gezählt.** Seit einer Änderung am
+Spielclient konnte derselbe Charakter zweimal im Bestand stehen – einmal mit einem
+leeren oder anders geschriebenen Realm – und sein Gold und seine
+Gegenstände zählten doppelt.
 Die Companion legt solche Einträge jetzt zusammen und zeigt den zuletzt
 gelesenen Stand. Charaktere gleichen Namens auf wirklich verschiedenen
 Realms bleiben getrennt.
