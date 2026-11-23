@@ -2,6 +2,19 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.10
+
+**Charaktere und Berufe nicht mehr doppelt.** Wie zuvor beim Gold konnte
+derselbe Charakter seit der Änderung am Spielclient auf „Meine Charaktere“
+und bei den Berufen zweimal stehen – einmal ohne Realm. Die Companion legt
+beide zusammen: es bleibt die neueste Meldung, der Realm bleibt erhalten,
+gelernte Rezepte gehen nicht verloren. Main und Ausblenden ziehen mit.
+Gleichnamige Charaktere auf verschiedenen Realms bleiben getrennt.
+
+**Berufe-Seite ohne Überlappung.** Der Hinweis unter der Charakterliste lag
+bei zweizeiligem Text über der Liste, und der Reiter hieß „Berufe_Aufträge“.
+Beides ist behoben; die Auftragsliste nimmt den Berufen keinen Platz mehr weg.
+
 ## 1.0.9
 
 **Gold und Taschen nicht mehr doppelt gezählt.** Seit einer Änderung am

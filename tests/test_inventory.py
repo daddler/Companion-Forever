@@ -199,3 +199,24 @@ WeintCodex_SavedData = {
     merged = merge([inventory, inventory])
 
     assert len(merged.characters) == 4
+
+
+def test_professions_of_one_character_under_two_keys_count_once():
+
+    from core import professions as P
+
+    saved = {"professions": {
+        "Shooty-": {"skills": {"mining": {"rank": 178, "max": 225}}, "skillsAt": 1,
+                    "known": {7: True}},
+        "Shooty-CAMWOWEU4Realm3PvE": {"skills": {"mining": {"rank": 194, "max": 225}}, "skillsAt": 2},
+        "Echo-A": {"skills": {"mining": {"rank": 1, "max": 75}}, "skillsAt": 1},
+        "Echo-B": {"skills": {"mining": {"rank": 2, "max": 75}}, "skillsAt": 1},
+    }}
+    catalog = {"mining": P.ProfessionInfo("mining", "Bergbau", recipes={7: P.Recipe(7, "X")})}
+
+    result = P.parse_professions(saved, catalog)
+
+    labels = [c.label for c in result.characters]
+    assert labels == ["Echo-A", "Echo-B", "Shooty-CAMWOWEU4Realm3PvE"]
+    mining = result.characters[2].professions[0]
+    assert (mining.rank, mining.known) == (194, [7])

@@ -339,9 +339,107 @@ def parse_professions(saved: dict, catalog: dict | None = None) -> Professions:
             skills_at=_int(data.get("skillsAt")) or 0,
         ))
 
+    characters = dedupe(characters)
+
     characters.sort(key=lambda c: c.label.lower())
 
     return Professions(known=True, characters=characters, catalog=catalog, local_names=local_names)
+
+
+def _split_label(label: str) -> tuple[str, str]:
+
+    name, sep, realm = label.partition("-")
+
+    return (name, realm) if sep else (label, "")
+
+
+def _merge_into(into: CharacterProfessions, other: CharacterProfessions) -> None:
+
+    newer = other.skills_at > into.skills_at
+
+    by_key = {prof.key: prof for prof in into.professions}
+
+    for prof in other.professions:
+
+        mine = by_key.get(prof.key)
+
+        if mine is None:
+            into.professions.append(prof)
+            by_key[prof.key] = prof
+            continue
+
+        if (newer and prof.rank is not None) or mine.rank is None:
+            mine.rank, mine.max = prof.rank, prof.max
+
+        mine.scanned = mine.scanned or prof.scanned
+
+        mine.known = sorted(set(mine.known) | set(prof.known))
+
+    into.skills_at = max(into.skills_at, other.skills_at)
+
+
+def dedupe(characters: list) -> list:
+    """
+    Derselbe Charakter unter zwei Schlüsseln zählt einmal.
+
+    Rückmeldung (1.0.9): seit der Änderung am Client stand „Shooty-“
+    (Anmeldung ohne Realm) neben „Shooty-Realm“. Dieselben Regeln wie
+    `inventory.dedupe` und `PRO.Dedupe` im Addon: gleicher Name, Realm
+    gleich nach `realm_key` - oder leer bei genau einem echten Realm.
+    Zusammengelegt wird in den Eintrag mit Realm; Rezepte vereint, die
+    Stufe vom jüngeren Stand. Verschiedene Realms bleiben getrennt.
+    """
+
+    from core.inventory import realm_key
+
+    by_name: dict = {}
+
+    for character in characters:
+        by_name.setdefault(_split_label(character.label)[0], []).append(character)
+
+    drop = set()
+
+    for group in by_name.values():
+
+        if len(group) < 2:
+            continue
+
+        real: dict = {}
+
+        blank = []
+
+        for character in group:
+
+            key = realm_key(_split_label(character.label)[1])
+
+            if key:
+                real.setdefault(key, []).append(character)
+            else:
+                blank.append(character)
+
+        groups = list(real.values())
+
+        if blank and len(groups) == 1:
+            groups[0].extend(blank)
+
+        elif len(blank) > 1:
+            groups.append(blank)
+
+        for same in groups:
+
+            if len(same) < 2:
+                continue
+
+            same.sort(
+                key=lambda c: (bool(realm_key(_split_label(c.label)[1])), c.skills_at),
+                reverse=True,
+            )
+
+            for other in same[1:]:
+                _merge_into(same[0], other)
+                drop.add(id(other))
+
+    return [c for c in characters if id(c) not in drop]
 
 
 def merge(results) -> Professions:
@@ -377,7 +475,7 @@ def merge(results) -> Professions:
 
     return Professions(
         known=known,
-        characters=sorted(by_label.values(), key=lambda c: c.label.lower()),
+        characters=sorted(dedupe(list(by_label.values())), key=lambda c: c.label.lower()),
         catalog=catalog,
         error="; ".join(errors),
         local_names=local_names,

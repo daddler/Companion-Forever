@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QComboBox,
     QPushButton,
+    QSizePolicy,
     QStackedWidget,
     QTreeWidget,
     QTreeWidgetItem,
@@ -55,7 +56,7 @@ from gui.theme.restyle import restyle
 from gui.widgets.card import Card
 from gui.widgets.empty_state import EmptyState
 from gui.widgets.eyebrow import eyebrow_label
-from gui.widgets.wrapped_label import enable_wrap
+from gui.widgets.wrapped_label import fit_wrap
 
 
 def style_tree(tree: QTreeWidget):
@@ -100,7 +101,7 @@ def muted_label() -> QLabel:
 
     label.setFont(font("small"))
 
-    enable_wrap(label)
+    fit_wrap(label)
 
     restyle(label, f"color:{tokens.TEXT['muted']};background:transparent;")
 
@@ -175,7 +176,7 @@ class ProfessionsPage(Page):
 
         self.tab_buttons = []
 
-        for index, text in enumerate(("Berufe & Aufträge", "Preise")):
+        for index, text in enumerate(("Berufe && Aufträge", "Preise")):
 
             button = QPushButton(text)
 
@@ -229,7 +230,7 @@ class ProfessionsPage(Page):
 
         self.chars.setHeaderLabels(["Charakter / Beruf", "Stufe", "Rezepte"])
 
-        self.chars.setMinimumHeight(320)
+        self.chars.setMinimumHeight(120)
 
         style_tree(self.chars)
 
@@ -269,7 +270,7 @@ class ProfessionsPage(Page):
 
         self.hits.setHeaderLabels(["Rezept", "Beruf"])
 
-        self.hits.setMinimumHeight(320)
+        self.hits.setMinimumHeight(120)
 
         style_tree(self.hits)
 
@@ -287,9 +288,18 @@ class ProfessionsPage(Page):
 
         self.stack.addWidget(content)
 
+        #
+        # Berufe vor Aufträgen: die Auftragsliste nahm sonst ihre volle
+        # Wunschhöhe (~190 px Liste) und quetschte die Charaktere.
+        #
+
         self._crafting.addWidget(self.stack, 1)
 
-        self._crafting.addWidget(self._build_orders())
+        orders = self._build_orders()
+
+        orders.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+
+        self._crafting.addWidget(orders)
 
         self.tabs.addWidget(crafting)
 
@@ -475,7 +485,9 @@ class ProfessionsPage(Page):
 
         self.orders.setHeaderLabels(["Auftrag", "Für / bei", "Material", "Status"])
 
-        self.orders.setMinimumHeight(140)
+        self.orders.setMinimumHeight(60)
+
+        self.orders.setMaximumHeight(180)
 
         self.orders.setRootIsDecorated(False)
 

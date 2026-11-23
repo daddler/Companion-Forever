@@ -271,6 +271,9 @@ class CharacterStore:
 
         self.adopt_untagged()
 
+        if self.merge_duplicates():
+            self.save()
+
     #
     # 1.0.0: einmal alles weg. Viele haben die Beta gespielt, und deren
     # Charaktere stehen hier - auf Forever gibt es sie nicht. Die Liste
@@ -572,9 +575,157 @@ class CharacterStore:
 
         self.data[key] = sheet
 
+        self.merge_duplicates()
+
         self.save()
 
-        return sheet
+        return self.data.get(key) or self.get(sheet["name"], sheet["realm"]) or sheet
+
+
+    # --------------------------------------------------
+    # Doppelte zusammenlegen (1.0.9)
+    # --------------------------------------------------
+
+    def merge_duplicates(self) -> int:
+        """
+        Derselbe Charakter unter zwei Schlüsseln zählt einmal.
+
+        Rückmeldung: seit der Änderung am Client stand „Shooty“ zweimal
+        auf „Meine Charaktere“ - einmal mit Realm, einmal ohne (eine
+        Anmeldung, bei der das Addon den Realm nicht kannte). Dieselben
+        Regeln wie `core/inventory.dedupe`: gleiche Spielversion, gleicher
+        Name, Realm gleich nach `realm_key` oder leer bei genau einem
+        echten Realm. Die jüngste Meldung bleibt; fehlt ihr der Realm,
+        bekommt sie den des anderen Eintrags (derselbe Charakter) und
+        seinen Schlüssel. Main und Ausblenden ziehen mit. Wirklich
+        verschiedene Realms bleiben getrennt.
+        """
+
+        from core.inventory import realm_key
+
+        groups: dict = {}
+
+        for key, sheet in self.data.items():
+
+            name = str(sheet.get("name", "")).strip().lower()
+
+            if name:
+                groups.setdefault((sheet_client(sheet), name), []).append(key)
+
+        renames: dict = {}
+
+        originals = set(self.data)
+
+        for keys in groups.values():
+
+            if len(keys) < 2:
+                continue
+
+            real: dict = {}
+
+            blank = []
+
+            for key in keys:
+
+                rk = realm_key(self.data[key].get("realm", ""))
+
+                if rk:
+                    real.setdefault(rk, []).append(key)
+                else:
+                    blank.append(key)
+
+            sets = list(real.values())
+
+            if blank and len(sets) == 1:
+                sets[0].extend(blank)
+
+            elif len(blank) > 1:
+                sets.append(blank)
+
+            for same in sets:
+
+                if len(same) < 2:
+                    continue
+
+                same.sort(key=lambda k: self.data[k].get("updated", 0) or 0, reverse=True)
+
+                keep = self.data[same[0]]
+
+                if not realm_key(keep.get("realm", "")):
+
+                    for other in same[1:]:
+
+                        realm = self.data[other].get("realm", "")
+
+                        if realm_key(realm):
+                            keep["realm"] = realm
+                            break
+
+                target = sheet_key(keep.get("name", ""), keep.get("realm", ""))
+
+                for key in same:
+
+                    del self.data[key]
+
+                    if key != target:
+                        renames[key] = target
+
+                self.data[target] = keep
+
+        if renames:
+            self._follow_renames(renames, originals)
+
+        return len(renames)
+
+    def _follow_renames(self, renames: dict, originals: set) -> None:
+
+        data = self._config_data()
+
+        if not isinstance(data, dict):
+            return
+
+        changed = False
+
+        main = self.main_key()
+
+        if main in renames:
+            data["character_main"] = renames[main]
+            changed = True
+
+        untracked = self._untracked_keys()
+
+        if untracked & set(renames):
+
+            #
+            # Ausgeblendet bleibt nur, was unter **allen** alten
+            # Schlüsseln ausgeblendet war - sonst verschwände ein
+            # verfolgter Charakter wegen eines alten Doppels.
+            #
+
+            targets: dict = {}
+
+            for old, new in renames.items():
+                targets.setdefault(new, []).append(old)
+
+            for new, olds in targets.items():
+
+                sources = olds + ([new] if new in originals else [])
+
+                hidden = all(k in untracked for k in sources)
+
+                untracked -= set(olds)
+
+                if hidden:
+                    untracked.add(new)
+                else:
+                    untracked.discard(new)
+
+            data["characters_untracked"] = sorted(untracked)
+
+            changed = True
+
+        if changed:
+            self._save_config()
 
     # --------------------------------------------------
     # Lesen

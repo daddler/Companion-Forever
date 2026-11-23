@@ -21,7 +21,7 @@ wann und ob das Layout `heightForWidth` aufruft.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QRect, Qt
+from PySide6.QtCore import QEvent, QObject, QRect, Qt
 from PySide6.QtWidgets import QLabel, QSizePolicy
 
 
@@ -112,3 +112,65 @@ class WrappedLabel(QLabel):
         )
 
         self.setMinimumHeight(rect.height())
+
+
+class _FitFilter(QObject):
+
+    def eventFilter(self, obj, event):
+
+        if event.type() in (QEvent.Resize, QEvent.FontChange, QEvent.Show):
+            _fit(obj)
+
+        return False
+
+
+def _fit(label: QLabel) -> None:
+
+    width = label.width()
+
+    if width <= 0:
+        return
+
+    margins = label.contentsMargins()
+
+    rect = label.fontMetrics().boundingRect(
+        QRect(0, 0, max(1, width - margins.left() - margins.right()), 0),
+        Qt.TextWordWrap | int(label.alignment()),
+        label.text(),
+    )
+
+    height = rect.height() + margins.top() + margins.bottom() if label.text() else 0
+
+    if label.minimumHeight() != height:
+        label.setMinimumHeight(height)
+
+
+def fit_wrap(label: QLabel) -> QLabel:
+    """
+    Wie `enable_wrap`, aber die Mindesthöhe folgt der **tatsächlichen**
+    Breite: bei jeder Größen- und Textänderung ausgemessen.
+
+    Nötig, wo das Label in einer Karte neben einer zweiten Karte steht
+    (`QHBoxLayout` in einem `QStackedWidget`): dort kommt
+    `heightForWidth` nicht bis nach oben durch, die Karte bekommt die
+    Höhe einer Zeile, und der zweizeilige Hinweis lag über der Liste
+    (Berufe-Seite, 1.0.9).
+    """
+
+    enable_wrap(label)
+
+    fit = _FitFilter(label)
+
+    label.installEventFilter(fit)
+
+    label._fit_filter = fit
+
+    original = label.setText
+
+    def set_text(text):
+        original(text)
+        _fit(label)
+
+    label.setText = set_text
+
+    return label

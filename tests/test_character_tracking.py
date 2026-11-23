@@ -73,3 +73,43 @@ def test_untracked_characters_are_not_reported_to_the_bot(tmp_path, monkeypatch)
     assert store.filter_roster_payload(
         "Main|WARRIOR|Realm,Bank|MAGE|Realm,Bank|MAGE"
     ) == "Main|WARRIOR|Realm"
+
+
+def test_one_character_under_two_realm_spellings_is_shown_once(tmp_path, monkeypatch):
+
+    # Rückmeldung 1.0.9: „Shooty“ zweimal, einmal ohne Realm.
+    store = _store(tmp_path, monkeypatch)
+    client = store.client_id()
+    store.data["Shooty"] = {"name": "Shooty", "realm": "", "level": 46, "updated": 100, "wow_client": client}
+    store.data["Shooty-CAMWOWEU4Realm3PvE"] = {
+        "name": "Shooty", "realm": "CAMWOWEU4Realm3PvE", "level": 49, "updated": 200, "wow_client": client}
+    store.data["Echo-Other"] = {"name": "Echo", "realm": "Other", "level": 60, "updated": 1, "wow_client": client}
+    store.data["Echo-Realm"] = {"name": "Echo", "realm": "Realm", "level": 60, "updated": 2, "wow_client": client}
+    store.manager.config.data["character_main"] = "Shooty"
+
+    assert store.merge_duplicates() == 1
+
+    shooty = [s for s in store.characters() if s["name"] == "Shooty"]
+    assert len(shooty) == 1 and shooty[0]["level"] == 49
+    assert "Shooty" not in store.data
+    assert store.main_key() == "Shooty-CAMWOWEU4Realm3PvE"
+    # Wirklich verschiedene Realms bleiben getrennt.
+    assert "Echo-Other" in store.data and "Echo-Realm" in store.data
+
+
+def test_newest_report_without_realm_keeps_the_known_realm(tmp_path, monkeypatch):
+
+    store = _store(tmp_path, monkeypatch)
+    client = store.client_id()
+    store.data["Shooty-My Realm"] = {"name": "Shooty", "realm": "My Realm", "level": 46, "updated": 100, "wow_client": client}
+    store.data["Shooty"] = {"name": "Shooty", "realm": "", "level": 49, "updated": 200, "wow_client": client}
+    store.set_tracked(store.data["Shooty"], False)
+    store.set_tracked(store.data["Shooty-My Realm"], True)
+
+    store.merge_duplicates()
+
+    kept = store.data["Shooty-My Realm"]
+    assert kept["level"] == 49 and kept["realm"] == "My Realm"
+    assert "Shooty" not in store.data
+    # Nur einer der beiden war ausgeblendet: der Charakter bleibt sichtbar.
+    assert store.is_tracked(kept)
