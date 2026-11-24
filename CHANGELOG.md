@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen an WeintCompanion.
 
+## 1.0.11
+
+**Logo statt Fragezeichen in der Addon-Liste.** Der Ordner „WeintCodex Töne“,
+den die Companion für eigene Töne anlegt, zeigt in der Addon-Liste des Spiels
+jetzt das WeintCodex-Logo. Schon vorhandene Ordner frischt die Companion beim
+nächsten Öffnen der Töne-Seite auf.
+
 ## 1.0.10
 
 **Charaktere und Berufe nicht mehr doppelt.** Wie zuvor beim Gold konnte
