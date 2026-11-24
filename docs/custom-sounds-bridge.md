@@ -15,6 +15,8 @@ ins Netz.
 ```
 Interface/AddOns/WeintCodex_Sounds/
     WeintCodex_Sounds.toc   ## Interface wie im installierten WeintCodex.toc
+                            ## IconTexture: Logo aus WeintCodex/media/ui/logo_64
+                            (beim Lesen aufgefrischt, `refresh_toc`)
     sounds.lua              WeintCodex_CustomSounds = { … }
     sounds.json             Ablage der Companion (Name, Herkunft)
     eigen1.ogg … eigen5.ogg

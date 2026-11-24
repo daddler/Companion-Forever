@@ -292,3 +292,15 @@ def test_cut_length_is_measured_and_kept_through_rename(addons, tmp_path):
     assert cs.load(addons)[0].length == sound.length
     lua = (addons / cs.FOLDER_NAME / cs.LUA_FILE).read_text(encoding="utf-8")
     assert "len = " in lua
+
+
+def test_an_old_toc_gets_the_logo_when_the_sounds_are_read(addons, tmp_path):
+
+    cs.add(addons, _ogg(tmp_path), ffmpeg="")
+    toc = addons / cs.FOLDER_NAME / cs.TOC_FILE
+    toc.write_text("## Title: alt\n" + cs.LUA_FILE + "\n", encoding="utf-8")
+
+    assert [s.key for s in cs.load(addons)] == ["eigen1"]
+    text = toc.read_text(encoding="utf-8")
+    assert "## IconTexture: Interface\\AddOns\\WeintCodex\\media\\ui\\logo_64" in text
+    assert cs.refresh_toc(addons) is False

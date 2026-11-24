@@ -192,7 +192,37 @@ def load(addons_path) -> list[CustomSound]:
             length=_length(entry.get("length")),
         ))
 
+    refresh_toc(addons_path)
+
     return sorted(out, key=lambda s: s.key)
+
+
+def refresh_toc(addons_path) -> bool:
+    """
+    Schreibt die .toc des Ordners neu, wenn sie vom heutigen Stand abweicht
+    (z. B. das Logo in der Addon-Liste seit 1.0.11). Nur, wo der Ordner mit
+    Manifest schon da ist; ein Fehler beim Schreiben bleibt still.
+    """
+
+    base = folder(addons_path)
+
+    if base is None or not (base / MANIFEST).is_file():
+        return False
+
+    want = render_toc(addons_path)
+
+    try:
+        if (base / TOC_FILE).read_text(encoding="utf-8") == want:
+            return False
+    except OSError:
+        pass
+
+    try:
+        _write(base / TOC_FILE, want)
+    except OSError:
+        return False
+
+    return True
 
 
 def _length(value) -> float | None:
@@ -278,6 +308,9 @@ def render_toc(addons_path) -> str:
         "## Title: |cff7C6CFFWeintCodex|r Töne",
         "## Notes: Eigene Töne für Raus da!, verwaltet von WeintCompanion",
         "## Author: WeintCompanion",
+        # Logo des Addons in der Addon-Liste (liegt im Ordner WeintCodex;
+        # ohne ihn steht dort nichts statt des roten Fragezeichens).
+        "## IconTexture: Interface\\AddOns\\WeintCodex\\media\\ui\\logo_64",
         LUA_FILE,
     ]
 
